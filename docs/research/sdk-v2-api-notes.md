@@ -463,3 +463,51 @@ test failure rather than a silent legacy fallback.
 whichever side they own. Worth a line in the generated README (TIP §73/§74): a client connecting
 with default settings will speak legacy `initialize` and get rejected by a `legacy: 'reject'` server —
 that is correct behavior, not a bug, but it will look like one to an integrator who hasn't read this.
+
+---
+
+## 16. Streamable HTTP: `createMcpHandler` + `@modelcontextprotocol/node`, and the mandatory header contract is real
+
+| Field | Value |
+|---|---|
+| Probe date | 2026-08-17 |
+| Source | `@modelcontextprotocol/server@2.0.0` `dist/createMcpHandler-*.d.mts`; `@modelcontextprotocol/node@2.0.0` `dist/index.d.mts`; a live 400 response |
+
+**`createMcpHandler(factory, options)` is the HTTP counterpart to `serveStdio(factory)`** — same
+one-factory-both-eras design, same `legacy: 'stateless' | 'reject'` policy knob (default
+`'stateless'`, which — like stdio's `'serve'` default — silently accommodates legacy traffic; pass
+`'reject'` explicitly for TIP §27's `legacyMode: "disabled"`). Its face is `handler.fetch: (Request)
+=> Promise<Response>` — Cloudflare Workers/Deno/Bun/Hono-native.
+
+**For Node, a separate package is required: `@modelcontextprotocol/node`.** It is not a subpath of
+`@modelcontextprotocol/server`. It provides:
+
+- `toNodeHandler(handler, opts?)` — adapts `handler.fetch` to a Node `(req, res, parsedBody?)`
+  function.
+- `localhostHostValidation()` / `hostHeaderValidation(hostnames)` and
+  `localhostOriginValidation()` / `originValidation(hostnames)` — Node-native `(req, res) => boolean`
+  guards. **`createMcpHandler`'s own doc comment states the entry is "deliberately validation-free"**
+  and shows composing these in front of it. Skipping this step ships an HTTP server with no
+  DNS-rebinding protection — the SDK will not add it for you, unlike tool-input validation, which it
+  always performs.
+- `NodeStreamableHTTPServerTransport` — a **legacy-shaped**, sessionful (`Mcp-Session-Id`) transport,
+  the HTTP analogue of `McpServer#connect()`. Not used here, for the same reason `connect()` isn't
+  used for stdio: it serves the era we've deliberately disabled.
+
+**The mandatory request-metadata header contract (TIP §92.2) is real and enforced**, discovered by a
+raw request actually failing:
+
+```json
+{"error":{"code":-32020,"message":"Bad Request: the request headers and body disagree: the body names method server/discover but the required Mcp-Method header is absent"}}
+```
+
+A hand-constructed request (bypassing the SDK's own client transport, which adds these
+automatically) must set `MCP-Protocol-Version: 2026-07-28`, `Mcp-Method: <method>`, and — for
+`tools/call`/`resources/read`/`prompts/get` — `Mcp-Name: <name>`, matching the body exactly, or the
+server rejects it with HTTP 400 / JSON-RPC `-32020` before doing anything else. Verified this is a
+real, load-bearing check, not a documentation aspiration.
+
+**One more empirical correction, not a Node quirk:** `fetch()` (Node's built-in, undici-based)
+silently drops an attempt to override the `Host` header — a request sent with
+`headers: { host: 'evil.example.com' }` arrives at the server with the *real* connection host.
+Testing Host-header rejection requires `node:http.request()` directly, which does not restrict it.

@@ -9,35 +9,53 @@ interface ParsedArgs {
   readonly command: string;
   readonly configPath: string;
   readonly specPath: string;
+  readonly transport: 'stdio' | 'http';
+  readonly host?: string;
+  readonly port?: number;
 }
 
 function parseArgs(argv: readonly string[]): ParsedArgs {
   const command = argv[0] ?? 'serve';
   let configPath = './mcp.config.json';
   let specPath = './openapi.json';
+  let transport: 'stdio' | 'http' = 'stdio'; // TIP §31: stdio is the default transport
+  let host: string | undefined;
+  let port: number | undefined;
 
   for (let i = 1; i < argv.length; i++) {
     if (argv[i] === '--config') configPath = argv[++i] ?? configPath;
     else if (argv[i] === '--spec') specPath = argv[++i] ?? specPath;
+    else if (argv[i] === '--transport') {
+      const value = argv[++i];
+      if (value === 'stdio' || value === 'http') transport = value;
+    } else if (argv[i] === '--host') host = argv[++i];
+    else if (argv[i] === '--port') {
+      const value = argv[++i];
+      if (value !== undefined) port = Number(value);
+    }
   }
 
-  return { command, configPath, specPath };
+  return { command, configPath, specPath, transport, ...(host ? { host } : {}), ...(port !== undefined ? { port } : {}) };
 }
 
 async function main(): Promise<number> {
-  const { command, configPath, specPath } = parseArgs(process.argv.slice(2));
+  const args = parseArgs(process.argv.slice(2));
 
-  switch (command) {
+  switch (args.command) {
     case 'serve':
-      return runServe(configPath, specPath);
+      return runServe(args.configPath, args.specPath, {
+        transport: args.transport,
+        ...(args.host ? { host: args.host } : {}),
+        ...(args.port !== undefined ? { port: args.port } : {}),
+      });
     case 'validate':
-      return runValidate(configPath, specPath);
+      return runValidate(args.configPath, args.specPath);
     case 'print-tools':
-      return runPrintTools(configPath, specPath);
+      return runPrintTools(args.configPath, args.specPath);
     case 'print-config':
-      return runPrintConfig(configPath);
+      return runPrintConfig(args.configPath);
     default:
-      process.stderr.write(`Unknown command "${command}". Expected: serve | validate | print-tools | print-config\n`);
+      process.stderr.write(`Unknown command "${args.command}". Expected: serve | validate | print-tools | print-config\n`);
       return 1;
   }
 }

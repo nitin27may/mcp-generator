@@ -2309,8 +2309,8 @@ Status values: `todo` · `in-progress` · `blocked` · `done`.
 | P1-W09-T01 | Retry policy per §21 with backoff+jitter, `Retry-After`, total deadline | `upstream-http` | P0-W09-T01 | L | 4 | FR-POL-003/004, BR-006 | Unit: DELETE/POST never retried | todo |
 | P1-W09-T02 | Response limits, content-type allowlist, safe oversize handling | `upstream-http` | P0-W09-T01 | M | 3 | FR-RESP-003 | Unit: oversized JSON rejected, not corrupted | todo |
 | P1-W13-T01 | Cancellation propagation: MCP cancel → `AbortSignal` → upstream | `mcp-runtime` | P0-W13-T01, P1-W09-T01 | M | 3 | FR-HTTP-004, §22 | Integration: in-flight cancel | todo |
-| P1-W14-T01 | Streamable HTTP transport: POST endpoint, Origin validation, 127.0.0.1 default, body caps, `/health` + `/ready` | `mcp-protocol` | P0-W07-T01 | L | 6 | FR-HTTP-MCP-001/003/004/005 | HTTP protocol E2E | todo |
-| P1-W14-T02 | Request metadata contract: `MCP-Protocol-Version`/`Mcp-Method`/`Mcp-Name`, header↔body validation, `-32020`, legacy 405/ignore rules | `mcp-protocol` | P1-W14-T01 | L | 4 | FR-HTTP-MCP-006 | Unit + E2E mismatch → 400/-32020 | todo |
+| P1-W14-T01 | Streamable HTTP transport: POST endpoint, Origin validation, 127.0.0.1 default, `/health` + `/ready` | `mcp-protocol` | P0-W07-T01 | L | 6 | FR-HTTP-MCP-001/003/004/005 | HTTP protocol E2E | **done** — inbound request-body size cap not yet configured (upstream-http's response cap is separate and already done; this is the transport's own inbound limit) |
+| P1-W14-T02 | Request metadata contract: `MCP-Protocol-Version`/`Mcp-Method`/`Mcp-Name`, header↔body validation, `-32020`, legacy 405 on GET | `mcp-protocol` | P1-W14-T01 | L | 4 | FR-HTTP-MCP-006 | Unit + E2E mismatch → 400/-32020 | **done** — via `createMcpHandler`'s built-in enforcement, confirmed empirically (research notes §16), not reimplemented |
 | P1-W06-T01 | `x-mcp-header` annotation support with full constraint enforcement | `binding-engine`, `config-schema` | P0-W06-T01, P1-W14-T02 | M | 3 | FR-BIND-007 | Unit: invalid annotation rejected at config time | todo |
 | P1-W05-T01 | Config inheritance engine with explicit per-policy resolvers + provenance | `config-schema` | P0-W05-T01 | L | 5 | FR-INH-001/002 | Unit per resolver | todo |
 | P1-W29-T01 | Config migration framework + `ConfigMigration` chain + CLI backup | `config-migrations` | P0-W05-T01 | L | 4 | FR-VER-001, §34 | Unit: 1.0→1.1 round trip | todo |
@@ -2435,10 +2435,14 @@ not when the tasks feel finished.
 - [ ] API key, bearer, and basic auth work against fixture APIs.
 - [ ] DELETE/POST/PATCH are never retried unless explicitly configured. *(BR-006, ADR-0008)*
 - [ ] Oversized JSON responses are rejected without producing corrupted JSON.
-- [ ] Streamable HTTP serves the same registry as stdio; Origin validated (403 on invalid); binds
-      `127.0.0.1` by default; `/health` and `/ready` are separate from `/mcp`.
-- [ ] Header↔body mismatch returns HTTP 400 with JSON-RPC `-32020`.
-- [ ] GET and DELETE on the MCP endpoint return 405; `Mcp-Session-Id` and `Last-Event-ID` ignored.
+- [x] Streamable HTTP serves the same registry as stdio; Origin validated (403 on invalid); binds
+      `127.0.0.1` by default; `/health` and `/ready` are separate from `/mcp`. Verified: `mcp-protocol`
+      unit tests (real HTTP requests) + `test-fixtures` E2E (real spawned CLI, real cross-origin 403).
+- [x] Header↔body mismatch returns HTTP 400 with JSON-RPC `-32020`. Enforced by `createMcpHandler`
+      itself (research notes §16) — not reimplemented, confirmed by a real mismatched request.
+- [ ] GET on the MCP endpoint returns 405 — verified. DELETE, and `Mcp-Session-Id`/`Last-Event-ID`
+      being ignored, not yet exercised by a test; moot under `legacy: 'reject'` (no 2025 serving at
+      all in this mode) but the specific assertions are still open.
 - [ ] Cancellation propagates to upstream `AbortSignal` on both transports.
 - [ ] Config inheritance resolves through project → api → group → tool with visible provenance.
 - [ ] `1.0 → 1.1` config migration round-trips.
