@@ -1,0 +1,15 @@
+{
+  "extends": "../../tooling/tsconfig/app.json",
+  "compilerOptions": { "rootDir": "src", "outDir": "dist" },
+  "include": ["src/**/*.ts"],
+  "references": [
+    { "path": "../../packages/domain" },
+    { "path": "../../packages/config-schema" },
+    { "path": "../../packages/binding-engine" },
+    { "path": "../../packages/upstream-auth" },
+    { "path": "../../packages/mcp-protocol" },
+    { "path": "../../packages/mcp-runtime" },
+    { "path": "../../packages/openapi-adapter" },
+    { "path": "../../packages/redaction" }
+  ]
+}

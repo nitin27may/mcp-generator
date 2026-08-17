@@ -121,7 +121,7 @@ export function buildToolRegistry(
     tools.push({
       name: toolConfig.name,
       description: toolConfig.description,
-      inputSchema: buildInputSchema(operation),
+      inputSchema: buildInputSchema(operation, toolConfig),
       execute: buildExecute(toolConfig, operation, config, deps),
     });
   }
@@ -130,28 +130,54 @@ export function buildToolRegistry(
 }
 
 /**
- * P0's schema assembly: parameters become required/optional properties by
- * location, request-body fields are flattened alongside them (matching
- * binding-engine's own key-space — see build-request.ts). The real
- * generator (P2-W15-E01) will use schema-normalizer's sanitized, budget-
- * checked schemas directly; this is the minimum needed to prove the P0 slice.
+ * The agent-facing input schema is driven by `toolConfig.bindings`, not
+ * directly by `operation.parameters` — the two live in different
+ * namespaces. A binding's *key* is the operation-side name (how
+ * binding-engine routes a resolved value into a path/query/header/body
+ * field, matching `param.sourceName`); a `tool-input` binding's `inputName`
+ * is the agent-facing name (BRD FR-BIND-004: "MCP input `customer_id` ← API
+ * path parameter `customerIdentifier`" — the whole point is these can
+ * differ). Building the schema from `operation.parameters` directly — using
+ * `param.sourceName` as the property name — publishes the *upstream* name
+ * and asks the agent to supply arguments the SDK's own input validation
+ * then rejects, because the tool's `execute()` reads `ctx.toolInput[inputName]`.
+ * Caught by the E2E suite: the SDK returned "must have required property
+ * 'customerId'" while the config's binding named the input `customer_id`.
+ *
+ * P0's schema assembly: only `source: 'tool-input'` bindings become input
+ * properties (environment/secret/static bindings are resolved without agent
+ * involvement, by construction). The real generator (P2-W15-E01) will use
+ * schema-normalizer's sanitized, budget-checked schemas directly; this is
+ * the minimum needed to prove the P0 slice.
  */
-function buildInputSchema(operation: CanonicalOperation): Record<string, unknown> {
+function buildInputSchema(operation: CanonicalOperation, toolConfig: ToolConfig): Record<string, unknown> {
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
 
-  for (const param of operation.parameters) {
-    properties[param.sourceName] = param.schema.kind === 'inline' ? param.schema.schema.schema : {};
-    if (param.required) required.push(param.sourceName);
+  const parameterBySourceName = new Map(operation.parameters.map((param) => [param.sourceName, param]));
+
+  let bodyProperties: Record<string, unknown> = {};
+  let bodyRequired: ReadonlySet<string> = new Set();
+  if (operation.requestBody?.schema.kind === 'inline') {
+    const bodySchema = operation.requestBody.schema.schema.schema;
+    bodyProperties = (bodySchema.properties as Record<string, unknown>) ?? {};
+    bodyRequired = new Set(Array.isArray(bodySchema.required) ? bodySchema.required.map(String) : []);
   }
 
-  if (operation.requestBody) {
-    const bodySchema = operation.requestBody.schema;
-    if (bodySchema.kind === 'inline' && bodySchema.schema.schema.properties) {
-      const bodyProps = bodySchema.schema.schema.properties as Record<string, unknown>;
-      for (const [key, schema] of Object.entries(bodyProps)) properties[key] = schema;
-      const bodyRequired = bodySchema.schema.schema.required;
-      if (Array.isArray(bodyRequired)) required.push(...bodyRequired.map(String));
+  for (const [bindingKey, binding] of Object.entries(toolConfig.bindings)) {
+    if (binding.source !== 'tool-input') continue;
+    const { inputName } = binding;
+
+    const param = parameterBySourceName.get(bindingKey);
+    if (param) {
+      properties[inputName] = param.schema.kind === 'inline' ? param.schema.schema.schema : {};
+      if (param.required) required.push(inputName);
+      continue;
+    }
+
+    if (bindingKey in bodyProperties) {
+      properties[inputName] = bodyProperties[bindingKey];
+      if (bodyRequired.has(bindingKey)) required.push(inputName);
     }
   }
 

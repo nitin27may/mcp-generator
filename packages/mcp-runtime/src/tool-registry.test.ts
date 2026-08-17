@@ -93,10 +93,12 @@ describe('buildToolRegistry — the P0 fixture end to end', () => {
     expect(diagnostics).toEqual([]);
     expect(tools).toHaveLength(1);
     expect(tools[0]?.name).toBe('get_customer');
+    // Property names are the tool-input binding's inputName ("customer_id"),
+    // not the upstream parameter's sourceName ("customerId") — FR-BIND-004.
     expect(tools[0]?.inputSchema).toMatchObject({
       type: 'object',
-      properties: { customerId: { type: 'string' }, expand: { type: 'string', enum: ['orders', 'invoices'] } },
-      required: ['customerId'],
+      properties: { customer_id: { type: 'string' }, expand: { type: 'string', enum: ['orders', 'invoices'] } },
+      required: ['customer_id'],
     });
 
     const result = await tools[0]!.execute({ customer_id: 'c-42', expand: 'orders' });

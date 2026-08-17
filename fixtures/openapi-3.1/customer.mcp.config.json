@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0",
+  "project": {
+    "name": "customer-mcp",
+    "description": "P0 vertical slice (TIP §82) — three tools over the customer-oas31 fixture."
+  },
+  "api": {
+    "baseUrl": { "source": "environment", "name": "CUSTOMER_API_URL", "required": true }
+  },
+  "upstreamAuthentication": {
+    "type": "bearer",
+    "token": { "source": "secret", "name": "CUSTOMER_API_KEY" }
+  },
+  "tools": {
+    "get_customer": {
+      "enabled": true,
+      "sourceOperation": {
+        "internalOperationId": "getCustomer",
+        "method": "GET",
+        "path": "/customers/{customerId}",
+        "operationId": "getCustomer"
+      },
+      "name": "get_customer",
+      "description": "Fetch a customer by id",
+      "bindings": {
+        "customerId": { "source": "tool-input", "inputName": "customer_id" },
+        "expand": { "source": "tool-input", "inputName": "expand" }
+      },
+      "risk": "READ_ONLY"
+    },
+    "list_customers": {
+      "enabled": true,
+      "sourceOperation": {
+        "internalOperationId": "listCustomers",
+        "method": "GET",
+        "path": "/customers",
+        "operationId": "listCustomers"
+      },
+      "name": "list_customers",
+      "description": "List customers",
+      "bindings": {
+        "page": { "source": "tool-input", "inputName": "page" },
+        "pageSize": { "source": "tool-input", "inputName": "page_size" }
+      },
+      "risk": "READ_ONLY"
+    },
+    "create_customer": {
+      "enabled": true,
+      "sourceOperation": {
+        "internalOperationId": "createCustomer",
+        "method": "POST",
+        "path": "/customers",
+        "operationId": "createCustomer"
+      },
+      "name": "create_customer",
+      "description": "Create a customer",
+      "bindings": {
+        "name": { "source": "tool-input", "inputName": "name" },
+        "email": { "source": "tool-input", "inputName": "email" }
+      },
+      "risk": "WRITE"
+    }
+  },
+  "generation": {
+    "packageName": "@acme/customer-mcp",
+    "binName": "customer-mcp",
+    "version": "0.1.0",
+    "transports": ["stdio"],
+    "emitDockerfile": true,
+    "mode": "thin"
+  }
+}

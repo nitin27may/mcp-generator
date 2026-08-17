@@ -33,6 +33,37 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@types/node@22.20.1)(vite@8.2.1(@types/node@22.20.1)(yaml@2.9.0))
 
+  apps/cli:
+    dependencies:
+      '@mcpgen/binding-engine':
+        specifier: workspace:*
+        version: link:../../packages/binding-engine
+      '@mcpgen/config-schema':
+        specifier: workspace:*
+        version: link:../../packages/config-schema
+      '@mcpgen/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@mcpgen/mcp-protocol':
+        specifier: workspace:*
+        version: link:../../packages/mcp-protocol
+      '@mcpgen/mcp-runtime':
+        specifier: workspace:*
+        version: link:../../packages/mcp-runtime
+      '@mcpgen/openapi-adapter':
+        specifier: workspace:*
+        version: link:../../packages/openapi-adapter
+      '@mcpgen/redaction':
+        specifier: workspace:*
+        version: link:../../packages/redaction
+      '@mcpgen/upstream-auth':
+        specifier: workspace:*
+        version: link:../../packages/upstream-auth
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.1
+
   packages/binding-engine:
     dependencies:
       '@mcpgen/config-schema':
@@ -140,6 +171,18 @@ importers:
         specifier: workspace:*
         version: link:../domain
     devDependencies:
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.1
+
+  packages/test-fixtures:
+    devDependencies:
+      '@mcpgen/cli':
+        specifier: workspace:*
+        version: link:../../apps/cli
+      '@modelcontextprotocol/client':
+        specifier: 2.0.0
+        version: 2.0.0
       '@types/node':
         specifier: ^22.19.0
         version: 22.20.1

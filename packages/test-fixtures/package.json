@@ -1,0 +1,21 @@
+{
+  "name": "@mcpgen/test-fixtures",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Fixture HTTP API + protocol E2E harness for the P0 vertical slice (TIP §82, §69).",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "devDependencies": {
+    "@mcpgen/cli": "workspace:*",
+    "@modelcontextprotocol/client": "2.0.0",
+    "@types/node": "^22.19.0"
+  }
+}

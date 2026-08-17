@@ -1,0 +1,27 @@
+{
+  "name": "@mcpgen/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "P0 dogfood CLI: serve, validate, print-tools, print-config. Not the generated-package CLI (that's P2-W15-E02).",
+  "main": "./dist/cli.js",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@mcpgen/binding-engine": "workspace:*",
+    "@mcpgen/config-schema": "workspace:*",
+    "@mcpgen/domain": "workspace:*",
+    "@mcpgen/mcp-protocol": "workspace:*",
+    "@mcpgen/mcp-runtime": "workspace:*",
+    "@mcpgen/openapi-adapter": "workspace:*",
+    "@mcpgen/redaction": "workspace:*",
+    "@mcpgen/upstream-auth": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0"
+  }
+}
