@@ -18,15 +18,21 @@ export interface ParseOpenApiOptions {
  * `openapi()` pipeline builder that appears in the package's README is
  * deprecated (research notes §12) and is not used here.
  */
+/**
+ * validate() error codes that don't invalidate the *operative* API surface
+ * (paths/components/security) and are safe to downgrade to a warning when
+ * dereference() still produced a usable schema. Seen in the wild: Bump.sh's
+ * `x-topics` vendor extension embeds a `$ref` to an external markdown file
+ * (docs content, not schema) — validate() treats that as fatal, but it isn't.
+ * Everything else (missing required fields, malformed schema, ...) stays fatal.
+ */
+const NON_FATAL_VALIDATION_CODES: ReadonlySet<string> = new Set(['EXTERNAL_REFERENCE_NOT_FOUND']);
+
 export async function parseOpenApi(
   document: unknown,
   options: ParseOpenApiOptions,
 ): Promise<StageResult<CanonicalApi>> {
   const validation = await validate(document as never);
-
-  if (!validation.valid) {
-    return stageFail(validation.errors.map(toValidationDiagnostic));
-  }
 
   if (validation.version !== '3.1') {
     // Not a hard failure of the parser — a scope boundary of this build.
@@ -34,16 +40,30 @@ export async function parseOpenApi(
   }
 
   const dereferenced = dereference(document as never);
-  const diagnostics = (dereferenced.errors ?? []).map(toDereferenceDiagnostic);
+  const dereferenceDiagnostics = (dereferenced.errors ?? []).map(toDereferenceDiagnostic);
 
-  if (!dereferenced.schema) {
-    return stageFail([...diagnostics, unsupportedVersionDiagnostic(validation.version)]);
+  const validationErrors = validation.valid ? [] : validation.errors;
+  const fatalValidationErrors = validationErrors.filter((error) => !NON_FATAL_VALIDATION_CODES.has(error.code ?? ''));
+  const nonFatalValidationErrors = validationErrors.filter((error) => NON_FATAL_VALIDATION_CODES.has(error.code ?? ''));
+
+  if (!dereferenced.schema || fatalValidationErrors.length > 0) {
+    return stageFail([
+      ...fatalValidationErrors.map(toValidationDiagnostic),
+      ...nonFatalValidationErrors.map(toValidationDiagnostic),
+      ...dereferenceDiagnostics,
+      ...(!dereferenced.schema ? [unsupportedVersionDiagnostic(validation.version)] : []),
+    ]);
   }
+
+  const validationWarnings = nonFatalValidationErrors.map((error) => ({
+    ...toValidationDiagnostic(error),
+    severity: 'warning' as const,
+  }));
 
   const canonical = canonicalizeOpenApi31(dereferenced.schema as Record<string, unknown>, {
     id: options.sourceId,
     rawFingerprint: fingerprintOf(document),
   });
 
-  return stageOk(canonical, diagnostics);
+  return stageOk(canonical, [...validationWarnings, ...dereferenceDiagnostics]);
 }

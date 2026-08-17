@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { parseProjectConfig, type McpProjectConfig } from '@mcpgen/config-schema';
 import { stageFail, stageOk, type CanonicalOperation, type StageResult } from '@mcpgen/domain';
-import { parseOpenApi } from '@mcpgen/openapi-adapter';
+import { normalizeOpenApiSource, parseOpenApi } from '@mcpgen/openapi-adapter';
 
 export interface LoadedProject {
   readonly config: McpProjectConfig;
@@ -11,6 +11,15 @@ export interface LoadedProject {
 function readJson(path: string, code: string): { value?: unknown; error?: string } {
   try {
     return { value: JSON.parse(readFileSync(path, 'utf8')) };
+  } catch (error) {
+    return { error: `[${code}] Failed to read/parse "${path}": ${(error as Error).message}` };
+  }
+}
+
+/** The mcp.config.json is always JSON, but real-world OpenAPI documents are overwhelmingly YAML. */
+function readOpenApiSource(path: string, code: string): { value?: unknown; error?: string } {
+  try {
+    return { value: normalizeOpenApiSource(readFileSync(path, 'utf8')) };
   } catch (error) {
     return { error: `[${code}] Failed to read/parse "${path}": ${(error as Error).message}` };
   }
@@ -32,7 +41,7 @@ export async function loadProject(configPath: string, specPath: string): Promise
   const configResult = parseProjectConfig(configRead.value);
   if (!configResult.value) return stageFail(configResult.diagnostics);
 
-  const specRead = readJson(specPath, 'IMP-003');
+  const specRead = readOpenApiSource(specPath, 'IMP-003');
   if (specRead.error) {
     return stageFail([{ severity: 'error', code: 'IMP-003', message: specRead.error }]);
   }
