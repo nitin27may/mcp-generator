@@ -84,6 +84,37 @@ importers:
         specifier: ^22.19.0
         version: 22.20.1
 
+  packages/mcp-runtime:
+    dependencies:
+      '@mcpgen/binding-engine':
+        specifier: workspace:*
+        version: link:../binding-engine
+      '@mcpgen/config-schema':
+        specifier: workspace:*
+        version: link:../config-schema
+      '@mcpgen/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@mcpgen/mcp-protocol':
+        specifier: workspace:*
+        version: link:../mcp-protocol
+      '@mcpgen/redaction':
+        specifier: workspace:*
+        version: link:../redaction
+      '@mcpgen/upstream-auth':
+        specifier: workspace:*
+        version: link:../upstream-auth
+      '@mcpgen/upstream-http':
+        specifier: workspace:*
+        version: link:../upstream-http
+    devDependencies:
+      '@mcpgen/openapi-adapter':
+        specifier: workspace:*
+        version: link:../openapi-adapter
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.1
+
   packages/openapi-adapter:
     dependencies:
       '@mcpgen/domain':

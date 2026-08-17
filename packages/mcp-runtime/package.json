@@ -1,0 +1,36 @@
+{
+  "name": "@mcpgen/mcp-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ToolRegistry + startup sequence (TIP \u00a728, \u00a733): config load, verify secrets, validate tool refs, fail fast.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@mcpgen/binding-engine": "workspace:*",
+    "@mcpgen/config-schema": "workspace:*",
+    "@mcpgen/domain": "workspace:*",
+    "@mcpgen/mcp-protocol": "workspace:*",
+    "@mcpgen/redaction": "workspace:*",
+    "@mcpgen/upstream-auth": "workspace:*",
+    "@mcpgen/upstream-http": "workspace:*"
+  },
+  "devDependencies": {
+    "@mcpgen/openapi-adapter": "workspace:*",
+    "@types/node": "^22.19.0"
+  }
+}
