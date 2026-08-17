@@ -940,12 +940,29 @@ interface BearerAuth { type: "bearer"; token: ValueBinding }
 interface BasicAuth  { type: "basic"; username: ValueBinding; password: SecretBinding }
 ```
 
-**V1.5/V2 — OAuth client credentials.** Needs token endpoint, client ID, client secret, scopes, token
-cache, expiration handling, clock skew, refresh/acquire lock. Complexity: L/XL.
+**V1.5/V2 — OAuth client credentials — done** (`upstream-auth`, `P5-W10-E01`, pulled forward):
 
-**User-delegated external OAuth.** A separate feature. Current MCP external authorization patterns
-require careful user binding and must not route third-party credentials through the MCP client.
-Complexity XL; not MVP.
+```typescript
+interface OAuth2ClientCredentialsAuth {
+  type: "oauth2ClientCredentials";
+  tokenUrl: string;
+  clientId: ValueBinding;
+  clientSecret: SecretBinding;
+  scopes?: string[];
+}
+```
+
+`OAuthTokenProvider` owns the token endpoint call (RFC 6749 §4.4), an in-memory cache keyed by
+`tokenUrl::clientId::scopes` with a 30s expiry safety margin, and an acquire lock (an in-flight
+request map) so concurrent tool calls sharing one auth config make at most one token-endpoint
+request. Must be constructed once per server process and threaded through — a fresh instance per
+call has no cache to hit. `attachUpstreamAuth` became async to accommodate the token-acquisition
+round trip; every other auth type still resolves synchronously.
+
+**User-delegated external OAuth.** Still a separate, out-of-scope feature — the redirect/consent UX
+has no place in a headless tool-execution path (no human is present during a tool call). Current MCP
+external authorization patterns require careful user binding and must not route third-party
+credentials through the MCP client. Complexity XL; not MVP.
 
 ---
 
@@ -987,6 +1004,14 @@ Transient candidates: network reset, `408`, `429` with policy, `502`, `503`, `50
 Use exponential backoff with jitter. Respect `Retry-After`. Set a maximum total execution budget.
 
 *(1.1: fixed a formatting break in v1.0 where `504` was orphaned from this list — §93 C4.)*
+
+**Done** (`upstream-http`, `P1-W09-T01`): `RetryPolicy` fixed at `{maxAttempts: 3, baseDelayMs: 250,
+maxDelayMs: 5000, totalDeadlineMs: 30000}` — not per-project configurable in this pass, only the PUT/
+POST/DELETE/PATCH eligibility override is (`ToolConfig.retry.enabled`). One additional rule beyond
+this table: `DESTRUCTIVE`/`PRIVILEGED` risk classification is a **hard floor** — no `retry.enabled`
+override can turn retry back on for those, since retrying an ambiguous failure on a destructive
+operation risks double execution (BR-006's "never auto-enable a destructive action" extended to
+retry). `ExecutionResult.attempts` reports how many HTTP attempts were actually made.
 
 ---
 
@@ -2384,7 +2409,7 @@ Status values: `todo` · `in-progress` · `blocked` · `done`.
 | P1-W03-T04 | Structural validation + diagnostic classification (Error/Warning/Recommendation/Info) | `openapi-adapter` | P1-W03-T03 | M | 4 | FR-VAL-001/002/003/004 | Golden `bad-docs`, `malformed/` | todo |
 | P1-W02-T01 | Operation identity: source + semantic fingerprints | `domain` | P0-W02-T01 | L | 3 | FR-VER-001, §7 | Unit: rename stability | todo |
 | P1-W10-T01 | Bearer + basic auth; group/operation-level auth override | `upstream-auth` | P0-W10-T01 | M | 3 | FR-AUTH-UP-002/004 | Fixture APIs per scheme | todo |
-| P1-W09-T01 | Retry policy per §21 with backoff+jitter, `Retry-After`, total deadline | `upstream-http` | P0-W09-T01 | L | 4 | FR-POL-003/004, BR-006 | Unit: DELETE/POST never retried | todo |
+| P1-W09-T01 | **Done.** Retry policy per §21: backoff+jitter, `Retry-After`, total deadline. Eligibility: GET/HEAD on by default, others off; per-tool `retry.enabled` override in either direction; `DESTRUCTIVE`/`PRIVILEGED` risk is a hard floor no override can lift (BR-006) | `upstream-http` | P0-W09-T01 | L | 4 | FR-POL-003/004, BR-006 | Unit (`retry-policy.test.ts`, `execute-retry.test.ts`) + real E2E (`retry.test.ts`: transient 503 retried and recovers; POST never retried) | done |
 | P1-W09-T02 | Response limits, content-type allowlist, safe oversize handling | `upstream-http` | P0-W09-T01 | M | 3 | FR-RESP-003 | Unit: oversized JSON rejected, not corrupted | todo |
 | P1-W13-T01 | Cancellation propagation: MCP cancel → `AbortSignal` → upstream | `mcp-runtime` | P0-W13-T01, P1-W09-T01 | M | 3 | FR-HTTP-004, §22 | Integration: in-flight cancel | todo |
 | P1-W14-T01 | Streamable HTTP transport: POST endpoint, Origin validation, 127.0.0.1 default, `/health` + `/ready` | `mcp-protocol` | P0-W07-T01 | L | 6 | FR-HTTP-MCP-001/003/004/005 | HTTP protocol E2E | **done** — inbound request-body size cap not yet configured (upstream-http's response cap is separate and already done; this is the transport's own inbound limit) |
@@ -2430,7 +2455,7 @@ Decomposed into tasks at the start of each phase. Effort bands from §63.
 | P5-W22-E01 | Reconciliation with conflict surfacing and preview | P5 | P5-W21-E01 | XL | 10–20 | FR-REC-001…004, FR-NAME-005 |
 | P5-W23-E01 | Persistence: projects, source versions, snapshots, config revisions (§38) | P5 | P2-W23-E01 | L | 6–10 | FR-PROJ-001/002/004, FR-VER-001 |
 | P5-W28-E01 | AI optimizer behind `AiOptimizer`, suggestion provenance, disable switch | P5 | P3-W16-E02 | M/L | 4–8 | FR-AI-001…005, FR-DESC-003, FR-NAME-002 |
-| P5-W10-E01 | OAuth2 client credentials with token cache and acquire lock | P5 | P1-W10-T01 | L/XL | 6–10 | FR-AUTH-UP-003 |
+| P5-W10-E01 | **Done — pulled forward from P5.** OAuth2 client_credentials (RFC 6749 §4.4 only — no user-delegated/authorization-code grant, deliberately, §19) with token cache and acquire lock (`OAuthTokenProvider`, `upstream-auth`, long-lived per server process), attaching as `Authorization: Bearer` via the existing bearer code path. Verified: unit (`oauth-token-provider.test.ts` — cache hit/expiry/dedup/malformed-response; `attach-auth.test.ts`) + real E2E (`oauth-retry.test.ts` — real token-endpoint round trip, cross-call caching, AUT-003 on rejection) | P5 | P1-W10-T01 | L/XL | 6–10 | FR-AUTH-UP-003 |
 | P6-W24-E01 | Hosted MCP: per-deployment container, secret providers | P6 | P5-W23-E01 | XL | 15–30 | §57, §58, OQ-04 |
 | P6-W23-E01 | MCP HTTP authorization: audience validation, no passthrough | P6 | P1-W14-T02 | XL | 8–12 | FR-AUTH-MCP-002/003/004 |
 | P6-W23-E02 | Teams, RBAC, environments, audit events (§62) | P6 | P5-W23-E01 | XL | ongoing | §62, BRD §34 |

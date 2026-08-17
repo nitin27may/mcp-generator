@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "The shared UpstreamExecutor (TIP §20): auth attachment, timeout/abort, response limits, error mapping. No retry at P0 (TIP §21).",
+  "description": "The shared UpstreamExecutor (TIP §20): auth attachment, timeout/abort, response limits, error mapping, retry with backoff+jitter (TIP §21).",
   "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

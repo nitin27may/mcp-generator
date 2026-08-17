@@ -3,7 +3,7 @@ import type { McpProjectConfig, ToolConfig, ValueBinding } from '@mcpgen/config-
 import type { CanonicalOperation, Diagnostic } from '@mcpgen/domain';
 import type { ProtocolTool, ProtocolToolResult } from '@mcpgen/mcp-protocol';
 import { redactValue } from '@mcpgen/redaction';
-import { authBindingsOf } from '@mcpgen/upstream-auth';
+import { authBindingsOf, type OAuthTokenProvider } from '@mcpgen/upstream-auth';
 import { executeUpstreamRequest } from '@mcpgen/upstream-http';
 
 export interface RuntimeDeps {
@@ -11,6 +11,8 @@ export interface RuntimeDeps {
   readonly getEnv: (name: string) => string | undefined;
   readonly resolveSecret: (name: string) => Promise<string | undefined>;
   readonly fetchImpl?: typeof fetch;
+  /** Long-lived (constructed once per server process) so its token cache actually caches — see `OAuthTokenProvider`'s class doc. */
+  readonly oauthTokenProvider?: OAuthTokenProvider;
 }
 
 /**
@@ -75,8 +77,16 @@ function buildExecute(
     }
 
     const { result, diagnostics } = await executeUpstreamRequest(
-      { baseUrl: deps.baseUrl, parts, ...(auth ? { auth } : {}) },
-      { ...(deps.fetchImpl ? { fetchImpl: deps.fetchImpl } : {}) },
+      {
+        baseUrl: deps.baseUrl,
+        parts,
+        ...(auth ? { auth } : {}),
+        retry: { risk: toolConfig.risk, ...(toolConfig.retry ? { config: toolConfig.retry } : {}) },
+      },
+      {
+        ...(deps.fetchImpl ? { fetchImpl: deps.fetchImpl } : {}),
+        ...(deps.oauthTokenProvider ? { oauthTokenProvider: deps.oauthTokenProvider } : {}),
+      },
     );
     if (!result) return diagnosticsToResult(diagnostics);
 

@@ -16,18 +16,22 @@ export {
   ApiKeyAuthSchema,
   BearerAuthSchema,
   BasicAuthSchema,
+  OAuth2ClientCredentialsAuthSchema,
   type UpstreamAuthentication,
   type ApiKeyAuth,
   type BearerAuth,
   type BasicAuth,
+  type OAuth2ClientCredentialsAuth,
 } from './upstream-auth.js';
 export { GenerationConfigSchema, type GenerationConfig } from './generation-config.js';
 export {
   ToolConfigSchema,
   ToolRiskSchema,
+  RetryConfigSchema,
   SourceOperationRefSchema,
   type ToolConfig,
   type ToolRisk,
+  type RetryConfig,
   type SourceOperationRef,
 } from './tool-config.js';
 export {

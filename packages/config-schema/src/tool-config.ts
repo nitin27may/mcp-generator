@@ -12,6 +12,17 @@ export type ToolRisk = z.infer<typeof ToolRiskSchema>;
  */
 const TOOL_NAME = /^[a-zA-Z0-9_-]{1,128}$/;
 
+/**
+ * TIP §21: retry eligibility defaults from HTTP method (GET/HEAD on; PUT/
+ * POST/DELETE/PATCH off). `enabled` lets a tool override that default in
+ * either direction — e.g. a PUT that's genuinely idempotent, or a GET that
+ * happens to trigger a side effect upstream and must never be retried.
+ * `DESTRUCTIVE`/`PRIVILEGED` risk classification overrides this at the
+ * upstream-http layer regardless (BR-006) — not configurable, by design.
+ */
+export const RetryConfigSchema = z.object({ enabled: z.boolean() }).strict();
+export type RetryConfig = z.infer<typeof RetryConfigSchema>;
+
 export const SourceOperationRefSchema = z
   .object({
     internalOperationId: z.string().min(1),
@@ -35,6 +46,7 @@ export const ToolConfigSchema = z
     description: z.string().min(1),
     bindings: z.record(z.string(), ValueBindingSchema),
     risk: ToolRiskSchema,
+    retry: RetryConfigSchema.optional(),
   })
   .strict();
 

@@ -1,3 +1,4 @@
 export { authBindingsOf } from './auth-bindings.js';
-export { attachUpstreamAuth, type AuthTarget } from './attach-auth.js';
+export { attachUpstreamAuth, type AttachUpstreamAuthDeps, type AuthTarget } from './attach-auth.js';
 export { EnvironmentSecretProvider, type SecretResolver } from './secret-resolver.js';
+export { OAuthTokenProvider, type OAuthTokenResult } from './oauth-token-provider.js';

@@ -29,4 +29,17 @@ describe('authBindingsOf', () => {
       password: { source: 'secret', name: 'PASSWORD' },
     });
   });
+
+  it('extracts oauth2ClientCredentials as two bindings, clientId and clientSecret (never the token itself — there is no static token to bind)', () => {
+    const auth: UpstreamAuthentication = {
+      type: 'oauth2ClientCredentials',
+      tokenUrl: 'https://auth.example.com/token',
+      clientId: { source: 'static', value: 'client-abc' },
+      clientSecret: { source: 'secret', name: 'CLIENT_SECRET' },
+    };
+    expect(authBindingsOf(auth)).toEqual({
+      clientId: { source: 'static', value: 'client-abc' },
+      clientSecret: { source: 'secret', name: 'CLIENT_SECRET' },
+    });
+  });
 });

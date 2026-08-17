@@ -3,7 +3,7 @@ import type { BindingResolutionContext } from '@mcpgen/binding-engine';
 import { serveToolsOverHttp, serveToolsOverStdio } from '@mcpgen/mcp-protocol';
 import { buildToolRegistry, validateStartupRequirements } from '@mcpgen/mcp-runtime';
 import { createLogger } from '@mcpgen/redaction';
-import { EnvironmentSecretProvider } from '@mcpgen/upstream-auth';
+import { EnvironmentSecretProvider, OAuthTokenProvider } from '@mcpgen/upstream-auth';
 import { loadProject } from '../load-project.js';
 import { logDiagnostic } from '../log-diagnostic.js';
 
@@ -29,6 +29,8 @@ export async function runServe(configPath: string, specPath: string, options: Se
 
   const { config, operations } = project.value;
   const secretProvider = new EnvironmentSecretProvider({ logger });
+  // One instance for the process lifetime — its token cache only helps across calls if it survives between them.
+  const oauthTokenProvider = new OAuthTokenProvider();
   const ctx: BindingResolutionContext = {
     toolInput: {},
     getEnv: (name) => process.env[name],
@@ -46,6 +48,7 @@ export async function runServe(configPath: string, specPath: string, options: Se
     baseUrl: startup.baseUrl,
     getEnv: (name) => process.env[name],
     resolveSecret: (name) => secretProvider.get(name),
+    oauthTokenProvider,
   });
   const registryErrors = registryDiagnostics.filter((d) => d.severity === 'error');
   if (registryErrors.length > 0) {

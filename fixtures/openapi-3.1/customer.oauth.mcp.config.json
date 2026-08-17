@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0",
+  "project": {
+    "name": "customer-oauth-mcp",
+    "description": "OAuth2 client_credentials + retry E2E fixture — same customer-oas31 spec, different upstream auth."
+  },
+  "api": {
+    "baseUrl": { "source": "environment", "name": "CUSTOMER_API_URL", "required": true }
+  },
+  "upstreamAuthentication": {
+    "type": "oauth2ClientCredentials",
+    "tokenUrl": "http://placeholder.invalid/token",
+    "clientId": { "source": "static", "value": "e2e-client" },
+    "clientSecret": { "source": "secret", "name": "OAUTH_CLIENT_SECRET" },
+    "scopes": ["customers:read"]
+  },
+  "tools": {
+    "get_customer": {
+      "enabled": true,
+      "sourceOperation": {
+        "internalOperationId": "getCustomer",
+        "method": "GET",
+        "path": "/customers/{customerId}",
+        "operationId": "getCustomer"
+      },
+      "name": "get_customer",
+      "description": "Fetch a customer by id",
+      "bindings": {
+        "customerId": { "source": "tool-input", "inputName": "customer_id" },
+        "expand": { "source": "tool-input", "inputName": "expand" }
+      },
+      "risk": "READ_ONLY"
+    }
+  },
+  "generation": {
+    "packageName": "@acme/customer-oauth-mcp",
+    "binName": "customer-oauth-mcp",
+    "version": "0.1.0",
+    "transports": ["stdio"],
+    "emitDockerfile": false,
+    "mode": "thin"
+  }
+}
