@@ -1,0 +1,31 @@
+{
+  "name": "@mcpgen/readiness-engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic agent-readiness analysis (TIP \u00a714, \u00a785). Must never depend on the SDK, the parser, or UI \u2014 ADR-0007.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@mcpgen/domain": "workspace:*",
+    "@mcpgen/schema-normalizer": "workspace:*"
+  },
+  "devDependencies": {
+    "@mcpgen/openapi-adapter": "workspace:*",
+    "@types/node": "^22.19.0"
+  }
+}

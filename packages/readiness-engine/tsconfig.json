@@ -1,0 +1,6 @@
+{
+  "extends": "../../tooling/tsconfig/library.json",
+  "compilerOptions": { "rootDir": "src", "outDir": "dist", "types": ["node"] },
+  "include": ["src/**/*.ts"],
+  "references": [{ "path": "../domain" }, { "path": "../schema-normalizer" }]
+}

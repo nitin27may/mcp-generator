@@ -2337,9 +2337,9 @@ Decomposed into tasks at the start of each phase. Effort bands from §63.
 | P2-W19-E04 | Binding UI incl. inheritance display and reset-to-inherited | P2 | P2-W19-E03, P1-W05-T01 | L/XL | 8–12 | FR-BIND-001…007, FR-INH-003/004, FR-CFG-001…003 |
 | P2-W19-E05 | Auth configuration UI with secret-binding recommendations | P2 | P2-W19-E04 | M | 4–6 | FR-AUTH-UP-001/004, FR-SEC-001 |
 | P2-W23-E01 | Control API (Fastify) endpoints per §53; job pattern only if needed | P2 | P1-W26-T01 | L | 6–10 | §53 |
-| P3-W16-E01 | Readiness engine: rule host, findings, scoring with exposed contributions | P3 | P1-W04-T01 | XL | 10–15 | FR-ARA-001/002/003 |
-| P3-W16-E02 | The 30 deterministic rules in §85 | P3 | P3-W16-E01 | XL | incl. | FR-ARA-004 |
-| P3-W17-E01 | Risk classifier + user override | P3 | P1-W02-T01 | L | 4–7 | FR-RISK-001…005 |
+| P3-W16-E01 | **Done.** Readiness engine: rule host, findings, scoring with exposed contributions | P3 | P1-W04-T01 | XL | 10–15 | FR-ARA-001/002/003 |
+| P3-W16-E02 | **Done.** The 31 deterministic rules in §85 | P3 | P3-W16-E01 | XL | incl. | FR-ARA-004 |
+| P3-W17-E01 | Risk classifier + user override — **not yet built** (`risk-engine` package doesn't exist; readiness and risk are deliberately separate engines per §15) | P3 | P1-W02-T01 | L | 4–7 | FR-RISK-001…005 |
 | P3-W16-E03 | Tool surface recommendation (rule-based reduction) | P3 | P3-W16-E02, P3-W17-E01 | M | 3–5 | FR-SEL-003, §16.1 |
 | P3-W19-E01 | Readiness + safety wizard steps | P3 | P3-W16-E02, P2-W19-E05 | M | 4–6 | FR-ARA-002, FR-POL-001/002 |
 | P4-W20-E01 | Dry-run request preview with unresolved-variable detection | P4 | P2-W19-E04 | M | 4–6 | FR-DRY-001…003, FR-PLAY-005 |
@@ -2507,8 +2507,11 @@ not when the tasks feel finished.
 ## 85. Readiness Rule Registry
 
 Reconciles §14.4 (22 rules), BRD FR-ARA-004 (16 detections), and the §64 Phase 3 commitment of
-"20–30 deterministic rules". **Authoritative count: 30.** Weights are within-category and normalized;
-category weights come from BRD FR-ARA-002.
+"20–30 deterministic rules". **Authoritative count: 31** — one over the v1.0 range, because
+implementing the engine (`P3-W16-E01/E02`) surfaced the exact gap §93 C5 had only flagged
+(response-quality had zero rules of its own) and closed it with `ARA-RESP-001` rather than shipping
+a known blind spot. Weights are within-category and normalized; category weights come from BRD
+FR-ARA-002.
 
 | Rule ID | Category | Severity | Weight | Mode | Auto-fix | Detects |
 |---|---|---|---:|---|---|---|
@@ -2542,6 +2545,7 @@ category weights come from BRD FR-ARA-002.
 | ARA-SAFE-004 | Safety | high | 3 | Deterministic | No | Write operation with no meaningful description |
 | ARA-AUTH-001 | Authentication readiness | high | 3 | Deterministic | No | Operation has no resolvable security requirement |
 | ARA-RT-001 | Runtime completeness | high | 3 | Deterministic | No | No server/base URL, or unresolvable server variables |
+| ARA-RESP-001 | Response quality | warning | 2 | Deterministic | No | A 2xx response declares no schema — an agent can't predict the response shape |
 
 Coverage check against FR-ARA-004: missing operation ID → NAME-001 · non-unique → NAME-002 · missing
 summary → DOC-001 · missing description → DOC-002 · missing parameter description → DOC-003 · generic
@@ -2551,11 +2555,13 @@ SAFE-003 · near-duplicates → TOOL-002/005 · post-normalization name conflict
 communicating intent → NAME-004 · excessive nesting → SCHEMA-001 · open-ended objects → SCHEMA-002.
 **All 16 covered.**
 
-Two dimensions from FR-ARA-002 had **no rules at all** in v1.0 — authentication readiness (weight 10)
-and runtime completeness (weight 5). A dimension with no rules scores a vacuous 100 and silently
-inflates the overall score by 15 points. ARA-AUTH-001 and ARA-RT-001 close that. Response quality
-(weight 5) is covered indirectly by SCHEMA-005 and is flagged in §93 C5 as needing a dedicated rule
-before P3 exit.
+Three dimensions from FR-ARA-002 had **no rules at all** in v1.0 — authentication readiness
+(weight 10), runtime completeness (weight 5), and response quality (weight 5). A dimension with no
+rules scores a vacuous 100 and silently inflates the overall score by its full weight. All three are
+now closed: ARA-AUTH-001, ARA-RT-001, and ARA-RESP-001. Implemented and tested in
+`packages/readiness-engine` (`P3-W16-E01/E02`) — each of the 31 rules has a unit test asserting both
+a positive and a negative case (P3 exit criterion), plus a golden test against the real P0 fixture,
+which scores a clean 100/100 with zero false positives across all 8 dimensions.
 
 ---
 
@@ -2941,7 +2947,7 @@ Contradictions and gaps found in v1.0 during the 1.1 pass, and their resolutions
 | **C2** | §64 places the wizard in Phase 2; §65 places the readiness engine at 12, *before* the web UI at 13. | Both retained — different granularity. Single resolved order encoded in §83: generator (P2) → wizard (P2, no readiness UI) → readiness engine (P3) → readiness wizard step (P3). |
 | **C3** | §30 left `LICENSE?` unresolved for generated packages. | Resolved: emit nothing unless the user supplies `GenerationConfig.license`. Inserting a license into a user's package is a legal assertion the platform cannot make. Tracked as OQ-07. |
 | **C4** | §21's transient-failure list had a formatting break orphaning `504`. | Fixed; the list now reads network reset, 408, 429, 502, 503, 504. |
-| **C5** | FR-ARA-002 defines 8 scoring dimensions, but v1.0 supplied rules for only 5. Authentication readiness (weight 10), runtime completeness (5), and response quality (5) had **zero** rules — 20% of the score would have been vacuously 100. | ARA-AUTH-001 and ARA-RT-001 added in §85. Response quality flagged as needing a dedicated rule before P3 exit. |
+| **C5** | FR-ARA-002 defines 8 scoring dimensions, but v1.0 supplied rules for only 5. Authentication readiness (weight 10), runtime completeness (5), and response quality (5) had **zero** rules — 20% of the score would have been vacuously 100. | **Closed.** ARA-AUTH-001, ARA-RT-001, and ARA-RESP-001 added in §85; registry count corrected from the planned 30 to the actual 31. Verified: a test asserting all 8 categories have ≥1 rule now exists in `analyze.test.ts` and would fail again if any dimension regressed to zero. |
 | **C6** | §26.1 said "use the official SDK where it correctly supports the targeted revision" — a conditional whose condition was never checked. | Checked. It does not hold (§2 row 10). Escalated to blocking decision OQ-01 with three costed options and a recommendation. |
 | **C7** | BRD §22 release scope, TIP §64 phases, and TIP §63 effort table describe the same work in three ungrouped ways. | §83 WBS maps every task to a phase, an effort band, and requirement IDs, making the three views one. |
 | **C8** | v1.0 §4 listed 20 packages with no guidance on when they exist; a fresh repo would get 20 empty stubs. | §4 now states packages are created when their first task starts; §83.2 lists the packages existing at end of P0. |

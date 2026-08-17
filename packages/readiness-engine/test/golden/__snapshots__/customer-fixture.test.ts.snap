@@ -1,0 +1,58 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`analyzeReadiness — the real P0 customer-oas31 fixture > produces a stable, reviewable report matching the committed golden snapshot 1`] = `
+{
+  "categoryScores": [
+    {
+      "category": "discoverability",
+      "findingCount": 0,
+      "score": 100,
+      "weight": 15,
+    },
+    {
+      "category": "semantic-clarity",
+      "findingCount": 0,
+      "score": 100,
+      "weight": 20,
+    },
+    {
+      "category": "schema-usability",
+      "findingCount": 0,
+      "score": 100,
+      "weight": 15,
+    },
+    {
+      "category": "tool-set-quality",
+      "findingCount": 0,
+      "score": 100,
+      "weight": 15,
+    },
+    {
+      "category": "safety",
+      "findingCount": 0,
+      "score": 100,
+      "weight": 15,
+    },
+    {
+      "category": "authentication-readiness",
+      "findingCount": 0,
+      "score": 100,
+      "weight": 10,
+    },
+    {
+      "category": "runtime-completeness",
+      "findingCount": 0,
+      "score": 100,
+      "weight": 5,
+    },
+    {
+      "category": "response-quality",
+      "findingCount": 0,
+      "score": 100,
+      "weight": 5,
+    },
+  ],
+  "findings": [],
+  "overallScore": 100,
+}
+`;
