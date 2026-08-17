@@ -1,0 +1,23 @@
+{
+  "name": "@mcpgen/binding-engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Resolves ValueBindings and assembles the HTTP request shape (path/query/headers/body). Pure — no network.",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@mcpgen/config-schema": "workspace:*",
+    "@mcpgen/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0"
+  }
+}
