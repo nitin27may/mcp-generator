@@ -388,3 +388,78 @@ z.object({ source: z.literal('secret'), name: z.string().min(1) }).strict()
 This is now a house rule for the package, not a one-off: an unknown key anywhere in `mcp.config.json`
 must be a validation error, never a silent drop — the same principle applies beyond secrets (a typo'd
 field name should fail loudly, not disappear).
+
+---
+
+## 14. `serveStdio`'s default silently accommodates the legacy era too
+
+| Field | Value |
+|---|---|
+| Probe date | 2026-08-17 |
+| Source | `@modelcontextprotocol/server@2.0.0` `dist/stdio.d.mts`, read directly (not the README) |
+
+`serveStdio` is **synchronous** — `declare function serveStdio(factory, options?): StdioServerHandle`,
+not a Promise. The returned handle has one lifecycle method: `close(): Promise<void>`.
+
+**The default behavior is not "modern only."** `ServeStdioOptions.legacy` defaults to `'serve'`:
+
+> *"`'serve'` (default) — the connection is pinned to a 2025-era instance from the same factory and
+> served exactly as a hand-wired stdio server serves it today."*
+> *"`'reject'` — the opening request is answered with the unsupported-protocol-version error naming
+> the supported modern revisions."*
+
+So out of the box, `serveStdio(factory)` auto-detects the client's opening message and serves
+**whichever era the client speaks** — legacy `initialize` included. TIP §27 sets
+`legacyMode: "disabled"` for MVP; the SDK does not enforce that by default, we do, by passing
+`{ legacy: 'reject' }` explicitly. Omitting this option would silently contradict our own documented
+policy — the server would work fine, just not the way ADR-0009 says it does.
+
+`onerror` is available for out-of-band transport errors (reporting only — never alters wire output),
+useful for wiring into `RuntimeLogger`. `transport` allows injecting a custom `Transport` (e.g. a
+Unix socket) instead of real process stdio, not needed for P0's E2E, which spawns a real child
+process to exercise the real thing.
+
+---
+
+## 15. The high-level `Client` also defaults to the legacy era — symmetric opt-in
+
+| Field | Value |
+|---|---|
+| Probe date | 2026-08-17 |
+| Source | `@modelcontextprotocol/client@2.0.0` `dist/index.d.mts`, and a real failure it produced |
+
+Building `mcp-protocol`'s tests, a `Client` connected to a `serveStdio({ legacy: 'reject' })` server
+via `InMemoryTransport.createLinkedPair()` failed immediately:
+
+```
+ProtocolError: Unsupported protocol version: 2025-11-25
+```
+
+**The client opened with a legacy `initialize` by default — it did not probe with `server/discover`
+first.** `ClientOptions.versionNegotiation` is a **constructor** option (`new Client(info, options)`,
+not `connect(transport, options)`), and its documented default is `'legacy'`:
+
+> *"The default is `'legacy'`: absent (or `mode: 'legacy'`), `connect()` runs the plain 2025 sequence,
+> byte-identical to today's behavior (no probe, no new headers). Opt into `'auto'` or pin to talk to
+> a 2026-07-28 server."*
+
+Two opt-in modes:
+
+- `mode: 'auto'` — probes with `server/discover` first; falls back to legacy `initialize` on any
+  unrecognized or legacy signal (including a probe timeout on stdio, since some legacy servers never
+  answer an unknown pre-`initialize` method).
+- `mode: { pin: '2026-07-28' }` — modern era at exactly that revision, no probe, no fallback; a
+  mismatch fails loudly rather than silently negotiating down.
+
+**Consequence: neither side of an MCP connection is modern by default.** The server needs
+`legacy: 'reject'` (§14) and the client needs `versionNegotiation` set, or the pair silently
+negotiates down to 2025-11-25 — which is exactly the failure mode risk R21 exists to catch, just on
+the client side instead of the server side. `mcp-protocol`'s tests now construct clients via a
+`modernClient()` helper pinning `{ mode: { pin: '2026-07-28' } }`, so a version mismatch is a loud
+test failure rather than a silent legacy fallback.
+
+**This is not just a testing concern.** The generated CLI, the future `test-fixtures` E2E harness
+(`P0-W25-T02`), and any real MCP client integrating a generated server all need this same opt-in on
+whichever side they own. Worth a line in the generated README (TIP §73/§74): a client connecting
+with default settings will speak legacy `initialize` and get rejected by a `legacy: 'reject'` server —
+that is correct behavior, not a bug, but it will look like one to an integrator who hasn't read this.
