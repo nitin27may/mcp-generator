@@ -1,0 +1,24 @@
+{
+  "name": "@mcpgen/upstream-auth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Upstream API credential plane (Plane B). Must never import mcp-protocol — ADR-0005.",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@mcpgen/config-schema": "workspace:*",
+    "@mcpgen/domain": "workspace:*",
+    "@mcpgen/redaction": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0"
+  }
+}

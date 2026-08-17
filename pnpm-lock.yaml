@@ -94,6 +94,22 @@ importers:
         specifier: ^22.19.0
         version: 22.20.1
 
+  packages/upstream-auth:
+    dependencies:
+      '@mcpgen/config-schema':
+        specifier: workspace:*
+        version: link:../config-schema
+      '@mcpgen/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@mcpgen/redaction':
+        specifier: workspace:*
+        version: link:../redaction
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.1
+
   tooling/scripts: {}
 
   tooling/tsconfig: {}
