@@ -1,9 +1,9 @@
 {
-  "name": "@mcpgen/domain",
+  "name": "@mcpgen/redaction",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Canonical API model. Zero dependencies by design \u2014 see ADR-0003.",
+  "description": "Structured stderr logging and secret redaction. Zero external dependencies \u2014 no reason for the one package everyone imports to widen the boundary graph.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

@@ -105,6 +105,29 @@ describe('boundaries checker', () => {
     expect(stderr).toContain(`[${rule}]`);
   });
 
+  it('does not flag a test-only import against domain-pure', () => {
+    // vitest never ships in dist/; a *.test.ts importing it is not a production
+    // dependency and must not trip the zero-dependency invariant.
+    const root = makeWorkspace({
+      domain: {
+        manifest: {},
+        files: {
+          'index.ts': 'export const VERSION = "1.0";\n',
+          'index.test.ts': 'import { describe } from "vitest";\ndescribe("x", () => {});\n',
+        },
+      },
+    });
+    expect(run(root)).toBeNull();
+  });
+
+  it('still rejects domain-pure for a production (non-test) import', () => {
+    const root = makeWorkspace({
+      domain: { manifest: {}, files: { 'index.ts': 'import { z } from "zod";\nexport { z };\n' } },
+    });
+    const stderr = run(root);
+    expect(stderr).toContain('[domain-pure]');
+  });
+
   it('allows a deliberate legacy fixture via the opt-out marker', () => {
     const root = makeWorkspace({
       'mcp-protocol': {

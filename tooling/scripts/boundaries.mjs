@@ -138,6 +138,10 @@ for (const pkg of listWorkspacePackages()) {
     checked.files++;
     const text = readFileSync(file, 'utf8');
     const isLegacyFixture = /@boundaries-allow\s+modern-era-only/.test(text);
+    // Test files never ship in `dist/`, so a devDependency import (vitest, a
+    // mock, a test-only client) is not a domain-purity violation — only
+    // production source under domain-pure's zero-dependency invariant.
+    const isTestFile = /\.(test|spec)\.[cm]?[jt]sx?$/.test(file);
 
     for (const spec of importsOf(text)) {
       if (spec.startsWith(SDK_SCOPE) && !SDK_ALLOWED.has(shortName) && !isTestOnlySdkUse) {
@@ -146,7 +150,7 @@ for (const pkg of listWorkspacePackages()) {
       if (spec.startsWith(PARSER_SCOPE) && !PARSER_ALLOWED.has(shortName)) {
         fail('parser-confined', shortName, `imports ${spec}`, file);
       }
-      if (shortName === 'domain' && !spec.startsWith('.') && !spec.startsWith('node:')) {
+      if (shortName === 'domain' && !isTestFile && !spec.startsWith('.') && !spec.startsWith('node:')) {
         fail('domain-pure', shortName, `imports ${spec}`, file);
       }
       if (shortName === 'upstream-auth' && spec.includes('mcp-protocol')) {

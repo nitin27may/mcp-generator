@@ -33,7 +33,17 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@types/node@22.20.1)(vite@8.2.1(@types/node@22.20.1))
 
-  packages/domain: {}
+  packages/domain:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.1
+
+  packages/redaction:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.1
 
   tooling/scripts: {}
 
