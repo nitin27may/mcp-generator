@@ -1,7 +1,26 @@
-import { describe, expect, it } from 'vitest';
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { afterEach, describe, expect, it } from 'vitest';
 import { parseOpenApi } from './parse.js';
+import { DEFAULT_FETCH_POLICY } from './remote-fetch/index.js';
 
 const SOURCE_ID = 'src-1';
+
+let server: Server | undefined;
+
+async function startServer(handler: (req: IncomingMessage, res: ServerResponse) => void): Promise<string> {
+  server = createServer(handler);
+  await new Promise<void>((resolve) => server!.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  return `http://127.0.0.1:${port}`;
+}
+
+afterEach(async () => {
+  if (server) {
+    await new Promise<void>((resolve) => server!.close(() => resolve()));
+    server = undefined;
+  }
+});
 
 describe('parseOpenApi', () => {
   it('parses a well-formed 3.1 document with no upgrade notice', async () => {
@@ -119,5 +138,76 @@ describe('parseOpenApi', () => {
     expect(result.value?.operations).toHaveLength(1);
     expect(result.diagnostics.length).toBeGreaterThan(0);
     expect(result.diagnostics.every((d) => d.severity === 'warning')).toBe(true);
+  });
+
+  it('resolves a real remote $ref end to end — the full parseOpenApi pipeline, not just resolveRemoteReferences in isolation', async () => {
+    const baseUrl = await startServer((_req, res) => {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ type: 'object', required: ['id'], properties: { id: { type: 'string' } } }));
+    });
+
+    const result = await parseOpenApi(
+      {
+        openapi: '3.1.0',
+        info: { title: 'X', version: '1.0.0' },
+        paths: {
+          '/x': {
+            get: {
+              operationId: 'getX',
+              responses: { '200': { description: 'ok', content: { 'application/json': { schema: { $ref: `${baseUrl}/pet.json` } } } } },
+            },
+          },
+        },
+      },
+      { sourceId: SOURCE_ID, fetchPolicy: { ...DEFAULT_FETCH_POLICY, allowedSchemes: ['http'], allowPrivateNetworks: true } },
+    );
+
+    expect(result.diagnostics).toEqual([]);
+    const schemaRef = result.value?.operations[0]?.responses[0]?.schema;
+    expect(schemaRef?.kind).toBe('inline');
+    if (schemaRef?.kind === 'inline') {
+      expect(schemaRef.schema.schema).toMatchObject({ type: 'object', required: ['id'] });
+    }
+  });
+
+  it('rejects a document whose remote $ref resolves to a blocked address — fatal, not a silently incomplete parse', async () => {
+    const result = await parseOpenApi(
+      {
+        openapi: '3.1.0',
+        info: { title: 'X', version: '1.0.0' },
+        paths: {
+          '/x': { get: { responses: { '200': { description: 'ok', content: { 'application/json': { schema: { $ref: 'https://127.0.0.1/pet.json' } } } } } } },
+        },
+      },
+      { sourceId: SOURCE_ID }, // default policy: private networks blocked
+    );
+
+    expect(result.value).toBeUndefined();
+    expect(result.diagnostics.some((d) => d.code === 'SEC-IMP-002')).toBe(true);
+  });
+
+  it('fetchPolicy: null disables remote resolution entirely — the $ref is left unresolved rather than fetched', async () => {
+    const baseUrl = await startServer((_req, res) => {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ type: 'object' }));
+    });
+
+    const result = await parseOpenApi(
+      {
+        openapi: '3.1.0',
+        info: { title: 'X', version: '1.0.0' },
+        paths: {
+          '/x': { get: { responses: { '200': { description: 'ok', content: { 'application/json': { schema: { $ref: `${baseUrl}/pet.json` } } } } } } },
+        },
+      },
+      { sourceId: SOURCE_ID, fetchPolicy: null },
+    );
+
+    // Not fatal — an unresolved $ref left in place, same as the vendor-extension case above.
+    expect(result.value).toBeDefined();
+    const schemaRef = result.value?.operations[0]?.responses[0]?.schema;
+    if (schemaRef?.kind === 'inline') {
+      expect(schemaRef.schema.schema).toHaveProperty('$ref');
+    }
   });
 });

@@ -188,6 +188,9 @@ importers:
       '@mcpgen/domain':
         specifier: workspace:*
         version: link:../domain
+      '@scalar/json-magic':
+        specifier: 0.13.0
+        version: 0.13.0
       '@scalar/openapi-parser':
         specifier: 0.28.14
         version: 0.28.14

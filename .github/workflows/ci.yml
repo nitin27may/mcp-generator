@@ -61,9 +61,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # No-op until the security suite lands in P0-W25-T04 / P1-W18-T01.
-      # `--passWithNoTests` keeps the job honest rather than absent: the slot
-      # exists, so an empty suite is visible instead of forgotten.
+      # P1-W18-T01 landed the safe-fetch security suite in openapi-adapter
+      # (ip-blocklist, safe-fetch, resolve-remote-refs). `--passWithNoTests`
+      # stays as a safety net, not because the suite is empty anymore.
       - name: Security and secret-leakage tests
         run: pnpm exec vitest run --project security --passWithNoTests
 

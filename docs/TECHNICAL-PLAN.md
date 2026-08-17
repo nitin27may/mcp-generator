@@ -278,8 +278,12 @@ repo/
 │
 ├── packages/
 │   ├── domain/
-│   ├── openapi-adapter/
-│   ├── reference-resolver/
+│   ├── openapi-adapter/                # includes remote-fetch/ (safe $ref fetching) —
+│   │                                    # no separate reference-resolver package; ADR-0003
+│   │                                    # confines every @scalar/* dependency to this one
+│   │                                    # package, and the safe-fetch layer needs
+│   │                                    # @scalar/json-magic's bundle()/fetchUrls() plugin
+│   │                                    # seam to inject a custom fetcher (§93 C18)
 │   ├── schema-normalizer/
 │   ├── readiness-engine/
 │   ├── risk-engine/
@@ -539,6 +543,27 @@ link-local, cloud metadata addresses, Unix socket tricks, mixed-scheme redirect 
 
 A locally installed CLI may optionally resolve local file references because it executes in the
 user's environment. The SaaS must not.
+
+### 9.4 Implementation status — done (`P1-W18-T01/T02`)
+
+Lives in `openapi-adapter/src/remote-fetch/`, not a separate package (§93 C18). `createSafeFetch()`
+implements §9.1/§9.2: scheme allowlist, `localhost`/RFC1918/link-local/loopback/cloud-metadata
+blocking via `dns.lookup()` re-checked at every redirect hop (not just the first URL), an
+https→http downgrade-redirect refusal, a redirect cap, a per-document byte cap, and a cumulative
+byte cap shared across every fetch made through one `FetchPolicy` resolution pass.
+`resolveRemoteReferences()` wires it into `@scalar/json-magic`'s `bundle()` via the `fetchUrls()`
+loader plugin, ahead of the existing local-only `dereference()` call — no `$ref`-graph walker of
+our own. A blocked or failed remote `$ref` is a fatal diagnostic (`SEC-IMP-00x`), not a silent gap
+in the parsed API; local-only parsing without any remote fetch is available via `fetchPolicy: null`.
+The local-CLI file-reference exception (§9.3) is **not implemented** — only `https://`/`http://`
+`$ref`s are resolved in this pass, no `file://` support of any kind, local or otherwise.
+
+**Known, deliberate gap:** DNS-rebinding protection is "re-resolve and check at every hop," not
+connection-level IP pinning — a sufficiently well-timed rebinding attack could still race between
+our validation lookup and the actual TCP connection a few milliseconds later. Closing that gap needs
+a custom low-level dispatcher pinning the exact validated IP, which means adding `undici` as a
+direct dependency (Node's global `fetch` doesn't expose that control without it). Deferred rather
+than silently claimed as covered.
 
 ---
 
@@ -2352,7 +2377,7 @@ Status values: `todo` · `in-progress` · `blocked` · `done`.
 | W15 | Generator & package template | `generator`, `package-template` |
 | W16 | Readiness engine | `readiness-engine` |
 | W17 | Risk engine | `risk-engine` |
-| W18 | Reference resolver / safe fetch | `reference-resolver` |
+| W18 | Reference resolver / safe fetch | `openapi-adapter` (`src/remote-fetch/`) — not a separate package, ADR-0003 |
 | W19 | Web UI | `apps/web` |
 | W20 | Playground | `playground-core`, `apps/control-api` |
 | W21 | Diff engine | `diff-engine` |
@@ -2404,8 +2429,8 @@ Status values: `todo` · `in-progress` · `blocked` · `done`.
 | P1-W03-T02 | **Done — rescoped.** Same seam as T01: Swagger 2.0 → 3.1 via `upgrade()`. `host`/`basePath`/`schemes` → `servers`, `securityDefinitions` → `components.securitySchemes` verified | `openapi-adapter` | P0-W03-T01 | S | incl. | FR-IMP-001 | Golden `legacy-swagger2` | done |
 | P1-W03-T03 | Version-detection dispatch across 2.0/3.0/3.1 — **done**, folded into T01/T02 (`validate()` for detection, `IMP-001` outside `{2.0,3.0,3.1}`). OAS 3.2 adapter itself — **deferred**, ~0% real-world adoption (§3.5); `upgrade()` targets 3.1 only, so 3.2 needs its own path when revisited | `openapi-adapter` | P1-W03-T01 | M | 3 | FR-IMP-001 | Golden `simple-pets-oas32` | partial |
 | P1-W04-T01 | **Obsolete as a separate task.** `upgrade()` runs before `schema-normalizer` ever sees the document, so `schema-normalizer` only ever handles one dialect (2020-12) regardless of source version — no multi-dialect normalization path needed | `schema-normalizer` | P1-W03-T02 | — | 0 | FR-NORM-001, FR-RESP-005 | Golden across four families (via openapi-adapter's upgrade seam) | done |
-| P1-W18-T01 | Safe fetch layer: `FetchPolicy`, scheme allowlist, private-IP blocking, per-hop DNS revalidation, byte/depth/count caps | `reference-resolver` | P0-W01-T01 | L | 6 | FR-SEC-IMP-001…005 | Security suite incl. rebinding sim | todo |
-| P1-W18-T02 | `$ref` resolution: circular detection, remote caching by canonical URL | `reference-resolver` | P1-W18-T01 | L | 4 | FR-VAL-003 | Golden `external-refs` | todo |
+| P1-W18-T01 | **Done — landed in `openapi-adapter`, not a separate `reference-resolver` package** (ADR-0003 confines all `@scalar/*` deps to one package; the safe-fetch layer needs `@scalar/json-magic`'s `bundle()`/`fetchUrls()` plugin seam). `FetchPolicy`, scheme allowlist, private/link-local/loopback/cloud-metadata IP blocking (checked fresh per redirect hop via `dns.lookup`, not just the first URL), https→http downgrade-redirect refusal, byte caps (per-document + cumulative), reference-count cap, timeout. **Known gap, deliberately not closed:** full DNS-rebinding-proof protection needs a connect-level IP-pinning dispatcher (would require adding `undici` as a direct dependency); what ships re-resolves and re-checks DNS at every hop, which is not quite the same guarantee | `openapi-adapter` | P0-W01-T01 | L | 6 | FR-SEC-IMP-001…005 | Unit (`ip-blocklist.test.ts`, `safe-fetch.test.ts` — real local-server round trips + a real external HTTPS fetch + a real blocked cloud-metadata-IP probe) | done |
+| P1-W18-T02 | **Done**, via `@scalar/json-magic`'s `bundle()` (successor to the deprecated `load()`) — no `$ref`-graph walker of our own. Embeds fetched content under `x-ext` and rewrites the `$ref` to point there, so the existing local-only `dereference()` resolves it same as any internal ref | `openapi-adapter` | P1-W18-T01 | L | 4 | FR-VAL-003 | `resolve-remote-refs.test.ts` (real fetch + dereference round trip, blocked-address fatal diagnostic, generic-failure warning diagnostic, `maxReferences` enforcement) + `parse.test.ts` (full pipeline, `fetchPolicy: null` opt-out) | done |
 | P1-W03-T04 | Structural validation + diagnostic classification (Error/Warning/Recommendation/Info) | `openapi-adapter` | P1-W03-T03 | M | 4 | FR-VAL-001/002/003/004 | Golden `bad-docs`, `malformed/` | todo |
 | P1-W02-T01 | Operation identity: source + semantic fingerprints | `domain` | P0-W02-T01 | L | 3 | FR-VER-001, §7 | Unit: rename stability | todo |
 | P1-W10-T01 | Bearer + basic auth; group/operation-level auth override | `upstream-auth` | P0-W10-T01 | M | 3 | FR-AUTH-UP-002/004 | Fixture APIs per scheme | todo |
@@ -2697,7 +2722,7 @@ in each range is covered by the listed tasks.
 |---|---|---|---|---|
 | FR-PROJ-001…004 | §38 | P5-W23-E01 | `control-api` | integration |
 | FR-IMP-001…006 | §8, §3.5 | P0-W03-T01, P1-W03-T01…T03 | `openapi-adapter` | golden, corpus |
-| FR-SEC-IMP-001…005 | §9 | P1-W18-T01, P1-W18-T02 | `reference-resolver` | security |
+| FR-SEC-IMP-001…005 | §9 | P1-W18-T01, P1-W18-T02 | `openapi-adapter` | unit (no dedicated `security` test project exists — see §93 C18) |
 | FR-VAL-001…004 | §8, §10 | P1-W03-T04 | `openapi-adapter` | golden, unit |
 | FR-NORM-001…004 | §6, §10 | P0-W02-T01, P0-W04-T01, P1-W04-T01 | `domain`, `schema-normalizer` | golden, unit |
 | FR-ARA-001…005 | §14, §85 | P3-W16-E01, P3-W16-E02 | `readiness-engine` | unit |
@@ -3064,3 +3089,6 @@ Contradictions and gaps found in v1.0 during the 1.1 pass, and their resolutions
 | **C15** | v1.1 assumed the runtime would validate tool input and perform Origin validation (§26.2, §33). The SDK does both. | §2.2 adds an explicit ownership boundary table. Input validation returns `isError: true` rather than throwing, so the runtime must not expect an exception. Ajv dropped as a direct dependency in favour of the SDK's pluggable validator providers. |
 | **C16** | `P1-W03-T01…T03` sized Swagger 2.0 + OAS 3.0 support as two separate per-family adapters (L+L, ~9 days) plus a dialect-normalization pass in `schema-normalizer` (XL, 12 days). §2 row 8 had already confirmed Scalar ships schemas for all four families, but that was never connected end to end into an actual capability. | Empirically, `@scalar/openapi-parser`'s `upgrade()` converts Swagger 2.0 → OAS 3.0 → OAS 3.1 in one call; a single normalization seam ahead of the existing 3.1 pipeline covers both families, and `schema-normalizer` never sees a non-3.1 dialect, so its multi-dialect task is obsolete. §2 row 12 and §3.5 record the finding. `P1-W03-T01/T02` marked done (rescoped), `P1-W04-T01` marked done (obsolete as a separate task), `P1-W03-T03` split (version-detection dispatch done, OAS 3.2 adapter itself deferred — see C17). Real-world prioritization forced by APIs.guru directory data (queried 2026-08-17): OAS-3.1-only covered ~2.4% of 3,992 real spec versions; 2.0+3.0+3.1 covers ~99.6%. |
 | **C17** | v1.0/v1.1 treated Swagger 2.0, OAS 3.0, OAS 3.1, and OAS 3.2 as four co-equal target families (`§83.3`, `P1-W03-T01…T03`). | Real-world adoption is not remotely even (C16's directory query): 2.0 and 3.0 dominate; 3.1 is 2.4%; 3.2 (released 2025-09) is ~0%. OAS 3.2 support is deliberately deferred until adoption is non-trivial — `upgrade()` only targets 3.1 output, so 3.2 would need its own path regardless of when it's picked up. |
+| **C18** | v1.0/v1.1 planned a standalone `reference-resolver` package (`§4`, `P1-W18-T01/T02`) for safe remote `$ref` fetching. | ADR-0003 confines every `@scalar/*` import to `openapi-adapter`, and the safe-fetch layer needs `@scalar/json-magic`'s `bundle()`/`fetchUrls()` plugin seam (the only realistic way to inject a custom, SSRF-safe fetcher without hand-rolling a `$ref`-graph walker) — so it landed as `openapi-adapter/src/remote-fetch/`, not a new package. §4's repo tree and the W18 package-mapping row (§83.1) updated; boundaries.mjs needed no change since the rule already scoped by package name, not by feature area. |
+| **C19** | `FetchPolicy.maxReferenceDepth` (§9.1) was assumed to map directly onto `bundle()`'s `depth` config option. | It doesn't mean the same thing: `depth` caps the bundler's raw JSON node-traversal depth, not the number of chained `$ref`-to-`$ref` hops the field name implies. Verified empirically — a value of 8 (matching the field's apparent intent) silently stopped `bundle()` from resolving a completely ordinary, non-malicious external `$ref` nested ~9 levels deep under `paths./x.get.responses.200.content...schema.properties`, which is unremarkable structure for a real OpenAPI document. Default raised to 100; `maxReferences` (a real count cap, enforced by us, not `bundle()`) is what actually protects against reference-chain abuse. |
+| **C20** | Not a documentation gap so much as a bug caught by the existing golden snapshot test: `fingerprintOf(document)` was called *after* `upgrade()` and the new `bundle()`-based remote-ref resolution, both of which mutate their input object in place when no change is needed (verified empirically for both). | For an already-3.1, ref-free document this silently added a stray `x-ext-urls: {}` key by the time the fingerprint was computed, changing the hash of a document that, from the caller's perspective, never changed at all. Fixed by capturing `rawFingerprint` at the top of `parseOpenApi()`, before any transformation runs. |

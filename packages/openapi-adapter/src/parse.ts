@@ -1,5 +1,5 @@
 import { dereference, upgrade, validate } from '@scalar/openapi-parser';
-import { stageFail, stageOk, type CanonicalApi, type StageResult } from '@mcpgen/domain';
+import { stageFail, stageOk, type CanonicalApi, type Diagnostic, type StageResult } from '@mcpgen/domain';
 import { canonicalizeOpenApi31 } from './canonicalize-openapi-3-1.js';
 import {
   toDereferenceDiagnostic,
@@ -8,10 +8,13 @@ import {
   upgradedDiagnostic,
 } from './errors.js';
 import { fingerprintOf } from './fingerprint.js';
+import { DEFAULT_FETCH_POLICY, resolveRemoteReferences, type FetchPolicy } from './remote-fetch/index.js';
 
 export interface ParseOpenApiOptions {
   /** Identity of the SourceDocument this parse belongs to — see TIP §6.1. */
   readonly sourceId: string;
+  /** TIP §9. Defaults to `DEFAULT_FETCH_POLICY` (HTTPS-only, private networks blocked). Pass `null` to refuse every remote `$ref` outright rather than fetch it. */
+  readonly fetchPolicy?: FetchPolicy | null;
 }
 
 /**
@@ -47,6 +50,11 @@ export async function parseOpenApi(
   document: unknown,
   options: ParseOpenApiOptions,
 ): Promise<StageResult<CanonicalApi>> {
+  // Captured before upgrade()/bundle() run — both mutate their input in place when no
+  // change is needed (verified empirically), which would otherwise silently change the
+  // fingerprint of a document that, from the caller's perspective, never changed at all.
+  const rawFingerprint = fingerprintOf(document);
+
   const detection = await validate(document as never);
   const sourceVersion = detection.version;
 
@@ -54,7 +62,17 @@ export async function parseOpenApi(
     return stageFail([unsupportedVersionDiagnostic(sourceVersion)]);
   }
 
-  const normalized = upgrade(document as never).specification;
+  const upgraded = upgrade(document as never).specification;
+
+  const fetchPolicy = options.fetchPolicy === undefined ? DEFAULT_FETCH_POLICY : options.fetchPolicy;
+  const remoteRefDiagnostics: Diagnostic[] = [];
+  let normalized: unknown = upgraded;
+  if (fetchPolicy !== null) {
+    const resolved = await resolveRemoteReferences(upgraded, fetchPolicy);
+    normalized = resolved.document;
+    remoteRefDiagnostics.push(...resolved.diagnostics);
+  }
+
   const validation = await validate(normalized as never);
   const dereferenced = dereference(normalized as never);
   const dereferenceDiagnostics = (dereferenced.errors ?? []).map(toDereferenceDiagnostic);
@@ -62,9 +80,13 @@ export async function parseOpenApi(
   const validationErrors = validation.valid ? [] : validation.errors;
   const fatalValidationErrors = validationErrors.filter((error) => !NON_FATAL_VALIDATION_CODES.has(error.code ?? ''));
   const nonFatalValidationErrors = validationErrors.filter((error) => NON_FATAL_VALIDATION_CODES.has(error.code ?? ''));
+  // A blocked/failed remote $ref is fatal, not a warning — presenting a "successful" parse
+  // with silently-missing content from a security-blocked fetch would be actively dangerous.
+  const fatalRemoteRefErrors = remoteRefDiagnostics.filter((d) => d.severity === 'error');
 
-  if (!dereferenced.schema || fatalValidationErrors.length > 0) {
+  if (!dereferenced.schema || fatalValidationErrors.length > 0 || fatalRemoteRefErrors.length > 0) {
     return stageFail([
+      ...fatalRemoteRefErrors,
       ...fatalValidationErrors.map(toValidationDiagnostic),
       ...nonFatalValidationErrors.map(toValidationDiagnostic),
       ...dereferenceDiagnostics,
@@ -80,8 +102,8 @@ export async function parseOpenApi(
 
   const canonical = canonicalizeOpenApi31(dereferenced.schema as Record<string, unknown>, {
     id: options.sourceId,
-    rawFingerprint: fingerprintOf(document),
+    rawFingerprint,
   });
 
-  return stageOk(canonical, [...upgradeNotice, ...validationWarnings, ...dereferenceDiagnostics]);
+  return stageOk(canonical, [...upgradeNotice, ...remoteRefDiagnostics, ...validationWarnings, ...dereferenceDiagnostics]);
 }
