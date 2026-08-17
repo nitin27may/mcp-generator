@@ -58,6 +58,16 @@ importers:
         specifier: ^22.19.0
         version: 22.20.1
 
+  packages/schema-normalizer:
+    dependencies:
+      '@mcpgen/domain':
+        specifier: workspace:*
+        version: link:../domain
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.1
+
   tooling/scripts: {}
 
   tooling/tsconfig: {}
