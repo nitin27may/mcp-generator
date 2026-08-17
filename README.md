@@ -7,6 +7,40 @@ production-grade.
 
 > Import OpenAPI. Configure once. Run MCP anywhere.
 
+[![Status](https://img.shields.io/badge/status-pre--implementation-blue)](docs/TECHNICAL-PLAN.md#83-work-breakdown-structure)
+[![MCP](https://img.shields.io/badge/MCP-2026--07--28-0f766e)](docs/adr/0009-mcp-sdk-v2-and-modern-era.md)
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-2.0%20%7C%203.0%20%7C%203.1%20%7C%203.2-c2410c)](docs/BRD.md#102-openapi-import)
+[![Node](https://img.shields.io/badge/node-22%20LTS-15803d)](docs/TECHNICAL-PLAN.md#3-technology-stack--pinned)
+[![License](https://img.shields.io/badge/license-MIT-64748b)](LICENSE)
+
+## About
+
+`mcp-generator` sits between enterprise APIs and AI agents. It ingests an OpenAPI/Swagger document,
+analyzes whether the API is actually *fit* for agent consumption, lets a human curate a safe tool
+surface, and emits a **portable MCP definition** (`mcp.config.json`) that a shared runtime executes
+over stdio or Streamable HTTP.
+
+The strategic question it answers is not "how do I convert this API to MCP?" but:
+
+> Which parts of our API ecosystem should agents be allowed to use, and how should they safely use
+> them?
+
+**Topics:** `model-context-protocol` · `mcp` · `mcp-server` · `openapi` · `swagger` ·
+`api-governance` · `ai-agents` · `typescript` · `openapi-to-mcp` · `agent-tools` · `llm-tools` ·
+`api-security`
+
+### What makes it not just a converter
+
+| | Basic generator | This platform |
+|---|---|---|
+| Endpoint→tool conversion | Yes | Yes |
+| Agent readiness scoring | Rare | **Core** — 30 deterministic rules |
+| Risk classification | Limited | **Core** — destructive ops never auto-enabled |
+| Secret binding model | Variable | **Core** — references only, never literals |
+| Portable governance manifest | Rare | **Core** — the durable artifact |
+| API change reconciliation | Rare | Strategic |
+| Governance lifecycle | No | Strategic |
+
 ## What this is
 
 Organizations already have large investments in REST APIs described through Swagger/OpenAPI. AI
