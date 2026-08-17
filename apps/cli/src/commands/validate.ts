@@ -4,15 +4,14 @@ import { buildToolRegistry, validateStartupRequirements } from '@mcpgen/mcp-runt
 import { createLogger } from '@mcpgen/redaction';
 import { EnvironmentSecretProvider } from '@mcpgen/upstream-auth';
 import { loadProject } from '../load-project.js';
+import { logDiagnostic } from '../log-diagnostic.js';
 
 /** Checks everything `serve` would need, without starting a server: config shape, operation references, and — against the current environment — whether required secrets are actually available. */
 export async function runValidate(configPath: string, specPath: string): Promise<number> {
   const logger = createLogger();
   const project = await loadProject(configPath, specPath);
 
-  for (const diagnostic of project.diagnostics) {
-    (diagnostic.severity === 'error' ? logger.error : logger.warn)(diagnostic.message, { code: diagnostic.code });
-  }
+  for (const diagnostic of project.diagnostics) logDiagnostic(logger, diagnostic);
   if (!project.value) return 1;
 
   const { config, operations } = project.value;

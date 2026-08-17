@@ -65,12 +65,13 @@ describe('parseOpenApi — customer-oas31 fixture (TIP §69, §82)', () => {
     }
   });
 
-  it('rejects a structurally valid but unsupported OpenAPI version (Swagger 2.0) with an actionable diagnostic', async () => {
-    // A structurally valid Swagger 2.0 document (`swagger`, not `openapi`, is
-    // the version field) so this exercises the version-dispatch branch, not
-    // the structural-validation branch covered by the next test.
+  it('rejects a structurally valid but unsupported OpenAPI version (3.2) with an actionable diagnostic', async () => {
+    // Swagger 2.0 and OAS 3.0 are supported (normalized to 3.1 via `upgrade()`,
+    // see parse.test.ts) — this exercises the version-dispatch branch with a
+    // genuinely unsupported family (TIP §2 row 12: 3.2 is deliberately
+    // deferred), not the structural-validation branch covered by the next test.
     const result = await parseOpenApi(
-      { swagger: '2.0', info: { title: 'x', version: '1' }, paths: {} },
+      { openapi: '3.2.0', info: { title: 'x', version: '1' }, paths: {} },
       { sourceId: 'x' },
     );
     expect(isStageOk(result)).toBe(false);

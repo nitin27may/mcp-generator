@@ -1,7 +1,12 @@
-import { dereference, validate } from '@scalar/openapi-parser';
+import { dereference, upgrade, validate } from '@scalar/openapi-parser';
 import { stageFail, stageOk, type CanonicalApi, type StageResult } from '@mcpgen/domain';
 import { canonicalizeOpenApi31 } from './canonicalize-openapi-3-1.js';
-import { toDereferenceDiagnostic, toValidationDiagnostic, unsupportedVersionDiagnostic } from './errors.js';
+import {
+  toDereferenceDiagnostic,
+  toValidationDiagnostic,
+  unsupportedVersionDiagnostic,
+  upgradedDiagnostic,
+} from './errors.js';
 import { fingerprintOf } from './fingerprint.js';
 
 export interface ParseOpenApiOptions {
@@ -10,14 +15,13 @@ export interface ParseOpenApiOptions {
 }
 
 /**
- * OpenAPI/Swagger -> `CanonicalApi`. P0 supports OAS 3.1 only; the remaining
- * three families (Swagger 2.0, OAS 3.0, OAS 3.2) are P1 (TIP §83.3,
- * `P1-W03-T01…T03`) — see the version dispatch below for the seam.
- *
- * Scalar's `validate`/`dereference` utilities are used directly. The fluent
- * `openapi()` pipeline builder that appears in the package's README is
- * deprecated (research notes §12) and is not used here.
+ * Source versions accepted by `upgrade()` (TIP §2 row 12, §3.5). OAS 3.2 is
+ * deliberately excluded — real-world adoption is ~0% (APIs.guru directory,
+ * queried 2026-08-17), and `upgrade()` only targets 3.1 output, so 3.2 would
+ * need its own path whenever it's picked up.
  */
+const SUPPORTED_SOURCE_VERSIONS: ReadonlySet<string> = new Set(['2.0', '3.0', '3.1']);
+
 /**
  * validate() error codes that don't invalidate the *operative* API surface
  * (paths/components/security) and are safe to downgrade to a warning when
@@ -28,18 +32,31 @@ export interface ParseOpenApiOptions {
  */
 const NON_FATAL_VALIDATION_CODES: ReadonlySet<string> = new Set(['EXTERNAL_REFERENCE_NOT_FOUND']);
 
+/**
+ * OpenAPI/Swagger -> `CanonicalApi`. Accepts Swagger 2.0, OAS 3.0, and OAS
+ * 3.1 by normalizing everything to 3.1 via `upgrade()` before running the
+ * single 3.1 validate/dereference/canonicalize pipeline — there is no
+ * separate per-family adapter (TIP §2 row 12). `upgrade()` is a verified
+ * no-op for documents that are already 3.1.
+ *
+ * Scalar's `validate`/`dereference`/`upgrade` utilities are used directly.
+ * The fluent `openapi()` pipeline builder that appears in the package's
+ * README is deprecated (research notes §12) and is not used here.
+ */
 export async function parseOpenApi(
   document: unknown,
   options: ParseOpenApiOptions,
 ): Promise<StageResult<CanonicalApi>> {
-  const validation = await validate(document as never);
+  const detection = await validate(document as never);
+  const sourceVersion = detection.version;
 
-  if (validation.version !== '3.1') {
-    // Not a hard failure of the parser — a scope boundary of this build.
-    return stageFail([unsupportedVersionDiagnostic(validation.version)]);
+  if (sourceVersion === undefined || !SUPPORTED_SOURCE_VERSIONS.has(sourceVersion)) {
+    return stageFail([unsupportedVersionDiagnostic(sourceVersion)]);
   }
 
-  const dereferenced = dereference(document as never);
+  const normalized = upgrade(document as never).specification;
+  const validation = await validate(normalized as never);
+  const dereferenced = dereference(normalized as never);
   const dereferenceDiagnostics = (dereferenced.errors ?? []).map(toDereferenceDiagnostic);
 
   const validationErrors = validation.valid ? [] : validation.errors;
@@ -59,11 +76,12 @@ export async function parseOpenApi(
     ...toValidationDiagnostic(error),
     severity: 'warning' as const,
   }));
+  const upgradeNotice = sourceVersion === '3.1' ? [] : [upgradedDiagnostic(sourceVersion)];
 
   const canonical = canonicalizeOpenApi31(dereferenced.schema as Record<string, unknown>, {
     id: options.sourceId,
     rawFingerprint: fingerprintOf(document),
   });
 
-  return stageOk(canonical, [...validationWarnings, ...dereferenceDiagnostics]);
+  return stageOk(canonical, [...upgradeNotice, ...validationWarnings, ...dereferenceDiagnostics]);
 }

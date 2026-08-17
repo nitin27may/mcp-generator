@@ -38,6 +38,15 @@ export function unsupportedVersionDiagnostic(version: string | undefined): Diagn
   return {
     severity: 'error',
     code: 'IMP-001',
-    message: `Unsupported OpenAPI version "${version ?? 'unknown'}" — only 3.1 is supported in this build`,
+    message: `Unsupported OpenAPI/Swagger version "${version ?? 'unknown'}" — supported: Swagger 2.0, OpenAPI 3.0, OpenAPI 3.1`,
+  };
+}
+
+/** §88 IMP-006 — informational: the document was normalized to 3.1 via `upgrade()` before parsing (TIP §2 row 12, §3.5). */
+export function upgradedDiagnostic(fromVersion: string): Diagnostic {
+  return {
+    severity: 'info',
+    code: 'IMP-006',
+    message: `Document auto-upgraded from ${fromVersion === '2.0' ? 'Swagger 2.0' : `OpenAPI ${fromVersion}`} to OpenAPI 3.1 for processing`,
   };
 }

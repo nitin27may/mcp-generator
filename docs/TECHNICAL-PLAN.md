@@ -92,6 +92,7 @@ materialized once.
 | 9 | Node.js LTS is the runtime target | **Confirmed** | Local toolchain Node v22.23.2 (LTS) |
 | 10 | *"Use the official SDK where it correctly supports the targeted protocol revision"* (§26.1) | **Confirmed — via the v2 packages and the modern entry point** | `@modelcontextprotocol/{core,server,client}@2.0.0` (2026-07-27). `server/discover` on the wire returns `supportedVersions: ["2026-07-28"]`. See §2.1. |
 | 11 | Which SDK package to depend on | **Corrected** | `@modelcontextprotocol/sdk@1.30.0` is the **legacy** single package, capped at 2025-11-25. The v2 **scoped** packages are current. An earlier pass inspected the legacy package and wrongly concluded the target revision was unsupported. |
+| 12 | Swagger 2.0 / OAS 3.0 support requires a per-family adapter (original P1-W03-T01/T02 sizing: L+L) | **Corrected** | Row 8 already showed Scalar ships schemas for all four families, but that was never connected end to end. Empirically, `upgrade(document)` converts Swagger 2.0 → OAS 3.0 → OAS 3.1 in one call — verified against hand-built 2.0 (`host`/`basePath`/`schemes`/`securityDefinitions`) and 3.0 (`nullable`) documents, both re-validating as fully valid 3.1. One normalization call ahead of the existing 3.1 pipeline covers both families; no second adapter. OAS 3.2 (0% real-world adoption, see §3.5) stays deferred. Real-world coverage (APIs.guru directory, 2,529 public APIs / 3,992 spec versions, queried 2026-08-17): Swagger 2.0 54.9%, OAS 3.0.x 42.7%, OAS 3.1.x 2.4%, OAS 3.2.x ~0%. OAS-3.1-only covered ~2.4% of real specs; 2.0+3.0+3.1 covers ~99.6%. |
 
 ### 2.1 SDK v2, and the two eras
 
@@ -223,11 +224,24 @@ validator providers (`@modelcontextprotocol/server/validators/ajv`, `.../validat
 Primary parser: **`@scalar/openapi-parser` 0.28.14** — verified to ship schemas for v2.0, v3.0, v3.1,
 v3.2.
 
+**Version support: Swagger 2.0, OAS 3.0, OAS 3.1 — done.** `parseOpenApi()` detects the source
+version via `validate()`, rejects anything outside `{2.0, 3.0, 3.1}` with `IMP-001`, then runs the
+document through `upgrade()` (a single call — internally composes 2.0→3.0 and 3.0→3.1) before the
+existing 3.1 validate/dereference/canonicalize pipeline. No per-family adapter exists or is needed;
+verified empirically against hand-built 2.0 (`host`/`basePath`/`schemes`/`securityDefinitions` →
+`servers`/`components.securitySchemes`) and 3.0 (`nullable: true` → JSON Schema 2020-12 type union)
+documents, and against two real third-party specs end to end through the CLI (Swagger Petstore 2.0,
+OAS 3.0 Petstore). A non-3.1 source produces an `IMP-006` info diagnostic recording the original
+version. OAS 3.2 stays out of scope — real-world adoption is ~0% (APIs.guru directory, 2,529 public
+APIs / 3,992 spec versions, queried 2026-08-17: Swagger 2.0 54.9%, OAS 3.0.x 42.7%, OAS 3.1.x 2.4%,
+OAS 3.2.x ~0%); 2.0+3.0+3.1 covers ~99.6% of that real-world sample. Revisit 3.2 once adoption is
+non-trivial — `upgrade()` targets 3.1 output only, so 3.2 support would need its own path either way.
+
 **Parser-native types must not be exposed above the adapter package** (ADR-0003).
 
-Optional: Redocly CLI for lint/bundle/reference diagnostics; `swagger2openapi` as a
-compatibility/conversion utility if Scalar's upgrade path proves insufficient for Swagger 2 edge
-cases.
+Optional: Redocly CLI for lint/bundle/reference diagnostics; `swagger2openapi` as a fallback
+compatibility/conversion utility if Scalar's `upgrade()` is ever found insufficient for a Swagger 2
+edge case (none found so far).
 
 ### 3.6 Persistence
 
@@ -2361,10 +2375,10 @@ Status values: `todo` · `in-progress` · `blocked` · `done`.
 
 | ID | Task | Pkg | Depends on | Cx | Days | Satisfies | Verified by | Status |
 |---|---|---|---|---|---:|---|---|---|
-| P1-W03-T01 | OAS 3.0 adapter incl. `nullable`, discriminator semantics | `openapi-adapter` | P0-W03-T01 | L | 4 | FR-IMP-001 | Golden `complex-oas30` | todo |
-| P1-W03-T02 | Swagger 2.0 adapter: body params, `definitions`, security definitions | `openapi-adapter` | P0-W03-T01 | L | 5 | FR-IMP-001 | Golden `legacy-swagger2` | todo |
-| P1-W03-T03 | OAS 3.2 adapter + version detection across all four families | `openapi-adapter` | P1-W03-T01 | M | 3 | FR-IMP-001 | Golden `simple-pets-oas32` | todo |
-| P1-W04-T01 | Full dialect normalization: Swagger 2 / 3.0 → 2020-12 with warnings | `schema-normalizer` | P1-W03-T02 | XL | 12 | FR-NORM-001, FR-RESP-005 | Golden across four families | todo |
+| P1-W03-T01 | **Done — rescoped.** Not a separate OAS 3.0 adapter: `upgrade()` (§3.5, §2 row 12) normalizes 3.0 → 3.1 ahead of the existing pipeline. `nullable`/discriminator semantics verified via `upgrade()`'s own JSON Schema 2020-12 translation | `openapi-adapter` | P0-W03-T01 | S | 1 | FR-IMP-001 | Golden `complex-oas30` | done |
+| P1-W03-T02 | **Done — rescoped.** Same seam as T01: Swagger 2.0 → 3.1 via `upgrade()`. `host`/`basePath`/`schemes` → `servers`, `securityDefinitions` → `components.securitySchemes` verified | `openapi-adapter` | P0-W03-T01 | S | incl. | FR-IMP-001 | Golden `legacy-swagger2` | done |
+| P1-W03-T03 | Version-detection dispatch across 2.0/3.0/3.1 — **done**, folded into T01/T02 (`validate()` for detection, `IMP-001` outside `{2.0,3.0,3.1}`). OAS 3.2 adapter itself — **deferred**, ~0% real-world adoption (§3.5); `upgrade()` targets 3.1 only, so 3.2 needs its own path when revisited | `openapi-adapter` | P1-W03-T01 | M | 3 | FR-IMP-001 | Golden `simple-pets-oas32` | partial |
+| P1-W04-T01 | **Obsolete as a separate task.** `upgrade()` runs before `schema-normalizer` ever sees the document, so `schema-normalizer` only ever handles one dialect (2020-12) regardless of source version — no multi-dialect normalization path needed | `schema-normalizer` | P1-W03-T02 | — | 0 | FR-NORM-001, FR-RESP-005 | Golden across four families (via openapi-adapter's upgrade seam) | done |
 | P1-W18-T01 | Safe fetch layer: `FetchPolicy`, scheme allowlist, private-IP blocking, per-hop DNS revalidation, byte/depth/count caps | `reference-resolver` | P0-W01-T01 | L | 6 | FR-SEC-IMP-001…005 | Security suite incl. rebinding sim | todo |
 | P1-W18-T02 | `$ref` resolution: circular detection, remote caching by canonical URL | `reference-resolver` | P1-W18-T01 | L | 4 | FR-VAL-003 | Golden `external-refs` | todo |
 | P1-W03-T04 | Structural validation + diagnostic classification (Error/Warning/Recommendation/Info) | `openapi-adapter` | P1-W03-T03 | M | 4 | FR-VAL-001/002/003/004 | Golden `bad-docs`, `malformed/` | todo |
@@ -2707,11 +2721,12 @@ may change, codes may not.
 
 | Code | Category | Message template | Remediation |
 |---|---|---|---|
-| `IMP-001` | IMPORT | Unsupported document format: {detected} | Supply OpenAPI 2.0, 3.0, 3.1, or 3.2 as JSON or YAML |
+| `IMP-001` | IMPORT | Unsupported OpenAPI/Swagger version "{detected}" | Supply Swagger 2.0, OpenAPI 3.0, or OpenAPI 3.1 as JSON or YAML (3.2 not yet supported — see §2 row 12) |
 | `IMP-002` | IMPORT | Document exceeds maximum size ({size} > {limit}) | Split the specification or raise the configured limit |
 | `IMP-003` | IMPORT | Malformed {format} at {pointer} | Fix the syntax error at the indicated location |
 | `IMP-004` | IMPORT | Declared version {declared} does not match document structure | Correct the version field or the document |
 | `IMP-005` | IMPORT | Not an HTTP API description | Only HTTP APIs are supported; gRPC/AsyncAPI are out of scope |
+| `IMP-006` | IMPORT | Document auto-upgraded from {from} to OpenAPI 3.1 for processing | Informational only — verify the result if the source relied on a version-specific quirk |
 | `VAL-001` | VALIDATION | Unresolvable `$ref` at {pointer} | Fix the reference or supply the referenced document |
 | `VAL-002` | VALIDATION | Circular reference detected at {pointer} | Break the cycle or accept the bounded expansion |
 | `VAL-003` | VALIDATION | Duplicate operationId "{id}" at {pointer} | Make operation IDs unique |
@@ -3022,3 +3037,5 @@ Contradictions and gaps found in v1.0 during the 1.1 pass, and their resolutions
 | **C13** | §2 row 10 was recorded as "does not hold" based on `@modelcontextprotocol/sdk@1.30.0`. **That was the wrong package** — it is the legacy distribution. The v2 scoped packages implement 2026-07-28. | Row 10 corrected; row 11 added naming the package trap. OQ-01 dissolved. §63's in-house transport row voided; MVP band stays 100–150. `FR-BIND-007`, `FR-HTTP-MCP-006`, `FR-POL-005` stay MVP/MUST. R12 closed. Recorded in [ADR-0009](adr/0009-mcp-sdk-v2-and-modern-era.md) with evidence in [`research/sdk-v2-api-notes.md`](research/sdk-v2-api-notes.md). |
 | **C14** | Nothing in v1.0 or v1.1 distinguished the SDK's two entry points. `McpServer#connect()` silently serves the **legacy** era; `serveStdio(factory)` serves 2026-07-28. A conforming-looking server can ship on the wrong revision. | §2.1 documents both paths with wire evidence; §25.1 shows the factory pattern; ADR-0009 makes the modern path mandatory and enforces it by a wire assertion plus a lint ban. New task `P0-W07-T02`. |
 | **C15** | v1.1 assumed the runtime would validate tool input and perform Origin validation (§26.2, §33). The SDK does both. | §2.2 adds an explicit ownership boundary table. Input validation returns `isError: true` rather than throwing, so the runtime must not expect an exception. Ajv dropped as a direct dependency in favour of the SDK's pluggable validator providers. |
+| **C16** | `P1-W03-T01…T03` sized Swagger 2.0 + OAS 3.0 support as two separate per-family adapters (L+L, ~9 days) plus a dialect-normalization pass in `schema-normalizer` (XL, 12 days). §2 row 8 had already confirmed Scalar ships schemas for all four families, but that was never connected end to end into an actual capability. | Empirically, `@scalar/openapi-parser`'s `upgrade()` converts Swagger 2.0 → OAS 3.0 → OAS 3.1 in one call; a single normalization seam ahead of the existing 3.1 pipeline covers both families, and `schema-normalizer` never sees a non-3.1 dialect, so its multi-dialect task is obsolete. §2 row 12 and §3.5 record the finding. `P1-W03-T01/T02` marked done (rescoped), `P1-W04-T01` marked done (obsolete as a separate task), `P1-W03-T03` split (version-detection dispatch done, OAS 3.2 adapter itself deferred — see C17). Real-world prioritization forced by APIs.guru directory data (queried 2026-08-17): OAS-3.1-only covered ~2.4% of 3,992 real spec versions; 2.0+3.0+3.1 covers ~99.6%. |
+| **C17** | v1.0/v1.1 treated Swagger 2.0, OAS 3.0, OAS 3.1, and OAS 3.2 as four co-equal target families (`§83.3`, `P1-W03-T01…T03`). | Real-world adoption is not remotely even (C16's directory query): 2.0 and 3.0 dominate; 3.1 is 2.4%; 3.2 (released 2025-09) is ~0%. OAS 3.2 support is deliberately deferred until adoption is non-trivial — `upgrade()` only targets 3.1 output, so 3.2 would need its own path regardless of when it's picked up. |

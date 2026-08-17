@@ -4,7 +4,7 @@ import { parseOpenApi } from './parse.js';
 const SOURCE_ID = 'src-1';
 
 describe('parseOpenApi', () => {
-  it('parses a well-formed 3.1 document', async () => {
+  it('parses a well-formed 3.1 document with no upgrade notice', async () => {
     const result = await parseOpenApi(
       { openapi: '3.1.0', info: { title: 'X', version: '1.0.0' }, paths: {} },
       { sourceId: SOURCE_ID },
@@ -13,9 +13,81 @@ describe('parseOpenApi', () => {
     expect(result.diagnostics).toEqual([]);
   });
 
-  it('rejects a document declaring an unsupported OpenAPI version', async () => {
+  it('accepts a Swagger 2.0 document, normalizing it to 3.1 with an IMP-006 notice', async () => {
     const result = await parseOpenApi(
-      { openapi: '3.0.0', info: { title: 'X', version: '1.0.0' }, paths: {} },
+      {
+        swagger: '2.0',
+        info: { title: 'Legacy Pet Store', version: '1.0.0' },
+        host: 'api.example.com',
+        basePath: '/v2',
+        schemes: ['https'],
+        securityDefinitions: { apiKeyAuth: { type: 'apiKey', name: 'X-API-Key', in: 'header' } },
+        paths: {
+          '/pets/{id}': {
+            get: {
+              operationId: 'getPet',
+              parameters: [{ name: 'id', in: 'path', required: true, type: 'string' }],
+              responses: { '200': { description: 'ok', schema: { $ref: '#/definitions/Pet' } } },
+            },
+          },
+        },
+        definitions: {
+          Pet: { type: 'object', required: ['id', 'name'], properties: { id: { type: 'string' }, name: { type: 'string' } } },
+        },
+      },
+      { sourceId: SOURCE_ID },
+    );
+
+    expect(result.value).toBeDefined();
+    expect(result.value?.servers).toEqual([{ url: 'https://api.example.com/v2' }]);
+    expect(result.value?.securitySchemes).toEqual([{ name: 'apiKeyAuth', type: 'apiKey', in: 'header', paramName: 'X-API-Key' }]);
+    expect(result.value?.operations).toHaveLength(1);
+    expect(result.value?.operations[0]?.responses[0]?.schema).toBeDefined();
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ severity: 'info', code: 'IMP-006', message: expect.stringContaining('Swagger 2.0') }),
+    );
+  });
+
+  it('accepts an OAS 3.0 document, normalizing `nullable` to a 2020-12 type union with an IMP-006 notice', async () => {
+    const result = await parseOpenApi(
+      {
+        openapi: '3.0.3',
+        info: { title: 'X', version: '1.0.0' },
+        paths: {
+          '/x': {
+            get: {
+              operationId: 'getX',
+              responses: {
+                '200': {
+                  description: 'ok',
+                  content: {
+                    'application/json': {
+                      schema: { type: 'object', nullable: true, properties: { a: { type: 'string' } } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      { sourceId: SOURCE_ID },
+    );
+
+    expect(result.value).toBeDefined();
+    const schemaRef = result.value?.operations[0]?.responses[0]?.schema;
+    expect(schemaRef?.kind).toBe('inline');
+    if (schemaRef?.kind === 'inline') {
+      expect(schemaRef.schema.schema).toMatchObject({ type: ['object', 'null'] });
+    }
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ severity: 'info', code: 'IMP-006', message: expect.stringContaining('OpenAPI 3.0') }),
+    );
+  });
+
+  it('rejects OAS 3.2 — real-world adoption is negligible and upgrade() only targets 3.1 (TIP §2 row 12)', async () => {
+    const result = await parseOpenApi(
+      { openapi: '3.2.0', info: { title: 'X', version: '1.0.0' }, paths: {} },
       { sourceId: SOURCE_ID },
     );
     expect(result.value).toBeUndefined();

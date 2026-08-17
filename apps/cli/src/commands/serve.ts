@@ -5,6 +5,7 @@ import { buildToolRegistry, validateStartupRequirements } from '@mcpgen/mcp-runt
 import { createLogger } from '@mcpgen/redaction';
 import { EnvironmentSecretProvider } from '@mcpgen/upstream-auth';
 import { loadProject } from '../load-project.js';
+import { logDiagnostic } from '../log-diagnostic.js';
 
 export interface ServeOptions {
   readonly transport: 'stdio' | 'http';
@@ -23,9 +24,7 @@ export async function runServe(configPath: string, specPath: string, options: Se
 
   const project = await loadProject(configPath, specPath);
   const loadErrors = project.diagnostics.filter((d) => d.severity === 'error');
-  for (const diagnostic of project.diagnostics) {
-    (diagnostic.severity === 'error' ? logger.error : logger.warn)(diagnostic.message, { code: diagnostic.code });
-  }
+  for (const diagnostic of project.diagnostics) logDiagnostic(logger, diagnostic);
   if (!project.value || loadErrors.length > 0) return 1;
 
   const { config, operations } = project.value;

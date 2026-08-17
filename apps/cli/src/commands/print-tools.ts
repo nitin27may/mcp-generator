@@ -2,14 +2,13 @@ import process from 'node:process';
 import { buildToolRegistry } from '@mcpgen/mcp-runtime';
 import { createLogger } from '@mcpgen/redaction';
 import { loadProject } from '../load-project.js';
+import { logDiagnostic } from '../log-diagnostic.js';
 
 export async function runPrintTools(configPath: string, specPath: string): Promise<number> {
   const logger = createLogger();
   const project = await loadProject(configPath, specPath);
 
-  for (const diagnostic of project.diagnostics) {
-    (diagnostic.severity === 'error' ? logger.error : logger.warn)(diagnostic.message, { code: diagnostic.code });
-  }
+  for (const diagnostic of project.diagnostics) logDiagnostic(logger, diagnostic);
   if (!project.value) return 1;
 
   // Registry construction only checks operation references (BR-001); it
