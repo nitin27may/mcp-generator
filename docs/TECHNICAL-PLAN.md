@@ -2655,6 +2655,7 @@ may change, codes may not.
 | `AUT-001` | AUTH | Upstream credential "{name}" not found | Provide the secret via environment or provider |
 | `AUT-002` | AUTH | Unsupported upstream auth scheme "{scheme}" | Use apiKey, bearer, or basic in this release |
 | `AUT-003` | AUTH | OAuth token acquisition failed: {reason} | Verify token endpoint, client credentials, and scopes |
+| `UPS-000` | UPSTREAM | Upstream request failed: {reason} | Network-level failure (DNS, connection refused, TLS) — distinct from UPS-002, which covers a response that was received but carried an error status |
 | `UPS-001` | UPSTREAM | Upstream request timed out after {ms}ms | Raise the timeout or investigate upstream latency |
 | `UPS-002` | UPSTREAM | Upstream returned {status} | Inspect the redacted trace |
 | `UPS-003` | UPSTREAM | Response exceeded {limit} bytes | Narrow the request or raise the response limit |
