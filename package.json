@@ -1,0 +1,38 @@
+{
+  "name": "mcp-generator",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Agent Readiness and Governance Layer for APIs — OpenAPI to a governed, portable MCP tool surface",
+  "license": "MIT",
+  "author": "Nitin Singh <nitin27may@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nitin27may/mcp-generator.git"
+  },
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=22.11"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "eslint . && pnpm run lint:boundaries",
+    "lint:boundaries": "node tooling/scripts/boundaries.mjs",
+    "test": "vitest run --project unit --project golden",
+    "test:e2e": "vitest run --project e2e",
+    "test:security": "vitest run --project security",
+    "test:all": "vitest run",
+    "golden:update": "vitest run --project golden -u"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.19.0",
+    "eslint": "^10.8.1",
+    "globals": "^17.11.0",
+    "turbo": "2.10.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "4.1.10"
+  }
+}

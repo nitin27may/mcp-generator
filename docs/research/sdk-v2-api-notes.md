@@ -249,9 +249,27 @@ column.
 - `@modelcontextprotocol/client` pulls `cross-spawn`, `eventsource`, `eventsource-parser`, `jose`,
   `pkce-challenge` — it is a test/E2E dependency for us, never a runtime dependency of a generated
   server.
-- **Not yet verified:** whether TypeScript 7.0.2 compiles this dependency set cleanly. The probe ran
-  plain ESM JavaScript. This is checked in `P0-W01-T01`; if TS 7 misbehaves, pin TypeScript 5.x and
-  record the reason here.
+### TypeScript version — resolved 2026-08-17 in `P0-W01-T01`
+
+Tested empirically, not assumed:
+
+| Version | `tsc` | `typescript-eslint` 8.67.0 | Verdict |
+|---|---|---|---|
+| 7.0.2 (latest) | Compiles cleanly | **Hard refusal** — *"typescript-eslint does not support TS 7.0"* | Rejected |
+| **6.0.3** | Compiles cleanly | Works | **Pinned** |
+| 5.9.3 | Works | Works | Viable fallback |
+
+typescript-eslint tracks TS ≥ 7.1 support in
+[typescript-eslint#10940](https://github.com/typescript-eslint/typescript-eslint/issues/10940); TS 7
+users are directed to run the TS 6 API side-by-side.
+
+**Decision: pin TypeScript 6.0.3.** Lint is a blocking quality gate (TIP §49) and carries two
+enforcement mechanisms that nothing else provides — `no-console` in runtime packages (BR-009) and the
+`connect()` ban (ADR-0009). Trading a working lint gate for a newer compiler is a bad trade, and TS 6
+is one major behind, not five.
+
+**Revisit trigger:** typescript-eslint announces TS ≥ 7.1 support. Re-run
+`pnpm run lint && pnpm run typecheck && pnpm run build` after bumping.
 
 ## 10. Client API for E2E tests
 

@@ -178,7 +178,8 @@ Versions resolved from npm on 2026-08-17. Pin exact majors in `package.json`; re
 |---|---|---|
 | pnpm workspaces | 11.22.0 | **Pinned** via `packageManager` + corepack |
 | Turborepo | 2.10.10 | **Pinned** (chosen over Nx: lighter, sufficient task graph) |
-| TypeScript | 7.0.2 | **Pinned.** Strict, plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, `module: nodenext` |
+| TypeScript | **6.0.3** | **Pinned.** Strict, plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`, `module: nodenext`. **Not 7.0.2** — `typescript-eslint` 8.67.0 hard-refuses TS 7.0, and lint is a blocking gate carrying the `no-console` (BR-009) and `connect()` (ADR-0009) enforcement. Revisit when typescript-eslint supports TS ≥ 7.1. Evidence: research notes §9. |
+| ESLint | 10.8.1 + typescript-eslint 8.67.0 | **Pinned** |
 | Node.js | 22 LTS (22.23.2 local) | **Pinned** via `.nvmrc` + `engines` |
 
 Why one language across UI, parser pipeline, runtime, CLI, and generator: shared types and schemas,

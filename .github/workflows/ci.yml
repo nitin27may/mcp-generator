@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Reproducible installs; fail rather than silently resolving a different tree.
+  CI: true
+
+jobs:
+  verify:
+    name: lint · typecheck · build · test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # `lint` runs eslint and then the boundaries checker, which enforces
+      # ADR-0003/0004/0005/0007/0009. Both are blocking gates per TIP §49.
+      - name: Lint and package boundaries
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Unit and golden tests
+        run: pnpm run test
+
+  security:
+    name: security suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - name: Enable corepack
+        run: corepack enable
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # No-op until the security suite lands in P0-W25-T04 / P1-W18-T01.
+      # `--passWithNoTests` keeps the job honest rather than absent: the slot
+      # exists, so an empty suite is visible instead of forgotten.
+      - name: Security and secret-leakage tests
+        run: pnpm exec vitest run --project security --passWithNoTests
+
+      - name: Scan fixtures for secret literals
+        run: |
+          if grep -rniE '(api[_-]?key|secret|token|password)[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"'<{$]{8,}' \
+               --include='*.ts' --include='*.json' --include='*.md' \
+               packages apps fixtures docs 2>/dev/null; then
+            echo "::error::Secret-shaped literal found. Secrets are references only — see ADR-0006."
+            exit 1
+          fi
+          echo "No secret literals found."
+
+  e2e:
+    name: protocol E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - name: Enable corepack
+        run: corepack enable
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+
+      # Drives a real MCP client against the spawned server. Includes the
+      # ADR-0009 era assertion: server/discover must report 2026-07-28.
+      - name: stdio + HTTP protocol E2E
+        run: pnpm exec vitest run --project e2e --passWithNoTests
