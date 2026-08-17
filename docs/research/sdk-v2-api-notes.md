@@ -305,3 +305,49 @@ printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_me
 
 Re-run this at each phase gate and on every SDK release. Update this file, then the documents that
 cite it.
+
+---
+
+## 12. `@scalar/openapi-parser` — empirical API notes
+
+| Field | Value |
+|---|---|
+| Probe date | 2026-08-17 |
+| Version | 0.28.14 |
+| Method | Installed the package, enumerated exports, ran `validate`/`dereference` against a realistic OAS 3.1 fixture (bearer auth, path+query params, nested `$ref` schema, request body) |
+
+**The fluent `openapi()` builder is deprecated.** Its own type declaration says: *"Creates a fluent
+OpenAPI pipeline. @deprecated We are about to drop the pipeline syntax. Use the individual utilities
+instead."* Do not build `openapi-adapter` around it — an obvious-looking API that reads well in an
+example is not automatically the current one.
+
+**Use `validate()` and `dereference()` directly.**
+
+```ts
+declare function validate(value: string | UnknownObject | Filesystem, options?: ValidateOptions): Promise<ValidateResult>;
+declare function dereference(value: AnyApiDefinitionFormat | Filesystem, options?: DereferenceOptions): DereferenceResult;
+```
+
+- `validate` is **async**; `dereference` is **synchronous** despite the similar shape. Verified by
+  calling it without `await` and observing `errors`/`schema` populated immediately.
+- `dereference()` resolves every `$ref` **inline**, in place, in the returned `schema`. An
+  operation's response schema that pointed at `#/components/schemas/Customer` comes back as the full
+  object — confirmed by dereferencing the fixture and inspecting
+  `paths['/customers/{customerId}'].get.responses['200'].content['application/json'].schema`, which
+  contained the resolved `Customer` object rather than a `$ref`. **Consequence:** `openapi-adapter`
+  does not need to implement its own `$ref` walker for P0; every `CanonicalSchemaRef` can be
+  `{ kind: 'inline' }`. `reference-resolver` (P1) is about *safe remote fetch* of external refs, not
+  re-implementing local resolution the parser already does.
+- Result shapes:
+
+  ```ts
+  type ValidateResult =
+    | { valid: true; specification: StrictOpenApiDocument; version: OpenApiVersion; errors?: ErrorObject[]; schema: StrictOpenApiDocument }
+    | { valid: false; specification?: UnknownObject; version?: OpenApiVersion; errors: ErrorObject[]; schema?: UnknownObject };
+
+  type DereferenceResult = { version?: OpenApiVersion; specification?: UnknownObject; schema?: UnknownObject; errors?: ErrorObject[] };
+  type ErrorObject = { path?: string[]; message: string; code?: string };
+  ```
+
+  Confirmed on an invalid document (missing `paths`): `errors: [{ message: "must have required property 'paths'", path: "" }, ...]` — one entry per missing/invalid top-level requirement, not just the first.
+- `version` on a successful validate of an OAS 3.1 document reports `"3.1"` (not `"3.1.0"`, not `"3.1.1"`)  — the major.minor family, not the full `info.version` or the document's declared `openapi` string.

@@ -1,0 +1,387 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parseOpenApi — customer-oas31 fixture (TIP §69, §82) > parses the fixture into a canonical model matching the committed golden snapshot 1`] = `
+{
+  "diagnostics": [],
+  "info": {
+    "description": "Fixture used by the P0 vertical slice (TIP §82): one GET with path+query, one GET list with pagination, one POST with a JSON body.",
+    "title": "Customer API",
+    "version": "1.0.0",
+  },
+  "operations": [
+    {
+      "deprecated": false,
+      "description": "Returns a single customer, optionally expanding related resources.",
+      "id": "getCustomer",
+      "method": "GET",
+      "operationId": "getCustomer",
+      "parameters": [
+        {
+          "description": "Customer identifier",
+          "id": "path:customerId",
+          "location": "path",
+          "required": true,
+          "schema": {
+            "kind": "inline",
+            "schema": {
+              "dialect": "2020-12",
+              "kind": "json-schema",
+              "schema": {
+                "type": "string",
+              },
+              "sourceDialect": "json-schema-2020-12",
+              "warnings": [],
+            },
+          },
+          "sourceName": "customerId",
+        },
+        {
+          "description": "Related resource to include",
+          "id": "query:expand",
+          "location": "query",
+          "required": false,
+          "schema": {
+            "kind": "inline",
+            "schema": {
+              "dialect": "2020-12",
+              "kind": "json-schema",
+              "schema": {
+                "enum": [
+                  "orders",
+                  "invoices",
+                ],
+                "type": "string",
+              },
+              "sourceDialect": "json-schema-2020-12",
+              "warnings": [],
+            },
+          },
+          "sourceName": "expand",
+        },
+      ],
+      "path": "/customers/{customerId}",
+      "responses": [
+        {
+          "contentType": "application/json",
+          "description": "OK",
+          "schema": {
+            "kind": "inline",
+            "schema": {
+              "dialect": "2020-12",
+              "kind": "json-schema",
+              "schema": {
+                "properties": {
+                  "email": {
+                    "type": "string",
+                  },
+                  "id": {
+                    "type": "string",
+                  },
+                  "name": {
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "id",
+                  "name",
+                ],
+                "type": "object",
+              },
+              "sourceDialect": "json-schema-2020-12",
+              "warnings": [],
+            },
+          },
+          "statusCode": "200",
+        },
+      ],
+      "security": [
+        {
+          "schemeName": "bearerAuth",
+          "scopes": [],
+        },
+      ],
+      "sourceFingerprint": "cc1c9370825e96dbb8bf8852ca8cad7884704541a65248e230e26c3c70c92712",
+      "sourcePointer": "#/paths/~1customers~1{customerId}/get",
+      "summary": "Fetch a customer by id",
+      "tags": [],
+    },
+    {
+      "deprecated": false,
+      "description": "Returns a page of customers.",
+      "id": "listCustomers",
+      "method": "GET",
+      "operationId": "listCustomers",
+      "parameters": [
+        {
+          "description": "Page number, starting at 1",
+          "id": "query:page",
+          "location": "query",
+          "required": false,
+          "schema": {
+            "kind": "inline",
+            "schema": {
+              "dialect": "2020-12",
+              "kind": "json-schema",
+              "schema": {
+                "minimum": 1,
+                "type": "integer",
+              },
+              "sourceDialect": "json-schema-2020-12",
+              "warnings": [],
+            },
+          },
+          "sourceName": "page",
+        },
+        {
+          "description": "Results per page",
+          "id": "query:pageSize",
+          "location": "query",
+          "required": false,
+          "schema": {
+            "kind": "inline",
+            "schema": {
+              "dialect": "2020-12",
+              "kind": "json-schema",
+              "schema": {
+                "maximum": 100,
+                "minimum": 1,
+                "type": "integer",
+              },
+              "sourceDialect": "json-schema-2020-12",
+              "warnings": [],
+            },
+          },
+          "sourceName": "pageSize",
+        },
+      ],
+      "path": "/customers",
+      "responses": [
+        {
+          "contentType": "application/json",
+          "description": "OK",
+          "schema": {
+            "kind": "inline",
+            "schema": {
+              "dialect": "2020-12",
+              "kind": "json-schema",
+              "schema": {
+                "properties": {
+                  "items": {
+                    "items": {
+                      "properties": {
+                        "email": {
+                          "type": "string",
+                        },
+                        "id": {
+                          "type": "string",
+                        },
+                        "name": {
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                      ],
+                      "type": "object",
+                    },
+                    "type": "array",
+                  },
+                  "nextPage": {
+                    "type": [
+                      "integer",
+                      "null",
+                    ],
+                  },
+                },
+                "required": [
+                  "items",
+                ],
+                "type": "object",
+              },
+              "sourceDialect": "json-schema-2020-12",
+              "warnings": [],
+            },
+          },
+          "statusCode": "200",
+        },
+      ],
+      "security": [
+        {
+          "schemeName": "bearerAuth",
+          "scopes": [],
+        },
+      ],
+      "sourceFingerprint": "23c6eef642831a504fea6cc5d8dd8a0b02101d4028e9a0277f45550424095fa0",
+      "sourcePointer": "#/paths/~1customers/get",
+      "summary": "List customers",
+      "tags": [],
+    },
+    {
+      "deprecated": false,
+      "description": "Creates a new customer record.",
+      "id": "createCustomer",
+      "method": "POST",
+      "operationId": "createCustomer",
+      "parameters": [],
+      "path": "/customers",
+      "requestBody": {
+        "contentType": "application/json",
+        "required": true,
+        "schema": {
+          "kind": "inline",
+          "schema": {
+            "dialect": "2020-12",
+            "kind": "json-schema",
+            "schema": {
+              "properties": {
+                "email": {
+                  "type": "string",
+                },
+                "name": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "name",
+                "email",
+              ],
+              "type": "object",
+            },
+            "sourceDialect": "json-schema-2020-12",
+            "warnings": [],
+          },
+        },
+      },
+      "responses": [
+        {
+          "contentType": "application/json",
+          "description": "Created",
+          "schema": {
+            "kind": "inline",
+            "schema": {
+              "dialect": "2020-12",
+              "kind": "json-schema",
+              "schema": {
+                "properties": {
+                  "email": {
+                    "type": "string",
+                  },
+                  "id": {
+                    "type": "string",
+                  },
+                  "name": {
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "id",
+                  "name",
+                ],
+                "type": "object",
+              },
+              "sourceDialect": "json-schema-2020-12",
+              "warnings": [],
+            },
+          },
+          "statusCode": "201",
+        },
+      ],
+      "security": [
+        {
+          "schemeName": "bearerAuth",
+          "scopes": [],
+        },
+      ],
+      "sourceFingerprint": "13d1ea0de737e9b6f27a3fa462338e0ff95b49d42c1d360f771bf8b0aa21f727",
+      "sourcePointer": "#/paths/~1customers/post",
+      "summary": "Create a customer",
+      "tags": [],
+    },
+  ],
+  "schemaVersion": "1.0",
+  "schemas": {
+    "Customer": {
+      "dialect": "2020-12",
+      "kind": "json-schema",
+      "schema": {
+        "properties": {
+          "email": {
+            "type": "string",
+          },
+          "id": {
+            "type": "string",
+          },
+          "name": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "name",
+        ],
+        "type": "object",
+      },
+      "sourceDialect": "json-schema-2020-12",
+      "warnings": [],
+    },
+    "CustomerList": {
+      "dialect": "2020-12",
+      "kind": "json-schema",
+      "schema": {
+        "properties": {
+          "items": {
+            "items": {
+              "properties": {
+                "email": {
+                  "type": "string",
+                },
+                "id": {
+                  "type": "string",
+                },
+                "name": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "id",
+                "name",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "nextPage": {
+            "type": [
+              "integer",
+              "null",
+            ],
+          },
+        },
+        "required": [
+          "items",
+        ],
+        "type": "object",
+      },
+      "sourceDialect": "json-schema-2020-12",
+      "warnings": [],
+    },
+  },
+  "securitySchemes": [
+    {
+      "name": "bearerAuth",
+      "scheme": "bearer",
+      "type": "http",
+    },
+  ],
+  "servers": [
+    {
+      "url": "https://api.example.com",
+    },
+  ],
+  "source": {
+    "id": "customer-oas31",
+    "rawFingerprint": "d34e7c682e71301d5c87aa873c7ae1c8a6d5204c5283dd937cea177c76c02b60",
+  },
+}
+`;
