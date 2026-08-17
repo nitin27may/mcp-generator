@@ -2396,26 +2396,26 @@ Status values: `todo` · `in-progress` · `blocked` · `done`.
 
 | ID | Task | Pkg | Depends on | Cx | Days | Satisfies | Verified by | Status |
 |---|---|---|---|---|---:|---|---|---|
-| P0-W01-T01 | pnpm workspace, turbo, strict tsconfig, eslint flat config, vitest | root | — | M | 2 | NFR-PORT | `pnpm build && typecheck && lint` clean | todo |
-| P0-W01-T02 | CI: lint → typecheck → unit | `.github` | P0-W01-T01 | S | 1 | §50 | Green PR pipeline | todo |
-| P0-W02-T01 | Canonical model types: `CanonicalApi/Operation/Parameter/Schema`, `Diagnostic`, `StageResult<T>`, `OperationIdentity` | `domain` | P0-W01-T01 | L | 3 | FR-NORM-001/004 | Type-level + unit | todo |
-| P0-W11-T01 | `RuntimeLogger` (stderr sink) + redaction engine: sensitive headers, JSON pointers, binding-aware | `redaction` | P0-W01-T01 | M | 2 | FR-SEC-004, §37 | Unit: known secret never emitted | todo |
-| P0-W03-T01 | Scalar parser → `CanonicalApi` for OAS 3.1; parser types confined to package | `openapi-adapter` | P0-W02-T01 | M | 3 | FR-IMP-001, FR-NORM-001/002/003 | Golden: spec → canonical JSON | todo |
-| P0-W04-T01 | 3.1 → JSON Schema 2020-12 passthrough + MCP sanitizer + `SchemaBudget` warnings | `schema-normalizer` | P0-W02-T01 | L | 3 | FR-RESP-005, §10.4 | Golden + budget-exceeded warning test | todo |
-| P0-W05-T01 | `McpProjectConfig` Zod schema, `ValueBinding` union, `GenerationConfig`; secret-literal and `sensitive:true` rejection | `config-schema` | P0-W02-T01 | L | 3 | FR-SEC-001, FR-PKG-006/007, BR-004, BR-011 | Unit: literal rejected; npm-name validation | todo |
-| P0-W06-T01 | Bindings → `ResolvedHttpRequest`: path substitution, query serialization, headers, JSON body | `binding-engine` | P0-W05-T01, P0-W02-T01 | L | 4 | FR-BIND-001/002/004/006, FR-HTTP-001/002/003 | Unit per location + golden request | todo |
-| P0-W10-T01 | API-key (header) auth + `SecretResolver` + `EnvironmentSecretProvider` | `upstream-auth` | P0-W05-T01, P0-W11-T01 | M | 2 | FR-AUTH-UP-001/002, FR-SEC-001 | Unit + redaction assertion | todo |
-| P0-W09-T01 | `UpstreamExecutor`: URL build, timeout, `AbortController`, error mapping. **No retry in P0** | `upstream-http` | P0-W06-T01, P0-W10-T01 | L | 3 | FR-HTTP-001/004/005 | Unit + fixture-API integration | todo |
+| P0-W01-T01 | pnpm workspace, turbo, strict tsconfig, eslint flat config, vitest | root | — | M | 2 | NFR-PORT | `pnpm build && typecheck && lint` clean | done |
+| P0-W01-T02 | CI: lint → typecheck → unit | `.github` | P0-W01-T01 | S | 1 | §50 | Green PR pipeline | done |
+| P0-W02-T01 | Canonical model types: `CanonicalApi/Operation/Parameter/Schema`, `Diagnostic`, `StageResult<T>`, `OperationIdentity` | `domain` | P0-W01-T01 | L | 3 | FR-NORM-001/004 | Type-level + unit | done |
+| P0-W11-T01 | `RuntimeLogger` (stderr sink) + redaction engine: sensitive headers, JSON pointers, binding-aware | `redaction` | P0-W01-T01 | M | 2 | FR-SEC-004, §37 | Unit: known secret never emitted | done |
+| P0-W03-T01 | Scalar parser → `CanonicalApi` for OAS 3.1; parser types confined to package | `openapi-adapter` | P0-W02-T01 | M | 3 | FR-IMP-001, FR-NORM-001/002/003 | Golden: spec → canonical JSON | done |
+| P0-W04-T01 | 3.1 → JSON Schema 2020-12 passthrough + MCP sanitizer + `SchemaBudget` warnings | `schema-normalizer` | P0-W02-T01 | L | 3 | FR-RESP-005, §10.4 | Golden + budget-exceeded warning test | done |
+| P0-W05-T01 | `McpProjectConfig` Zod schema, `ValueBinding` union, `GenerationConfig`; secret-literal and `sensitive:true` rejection | `config-schema` | P0-W02-T01 | L | 3 | FR-SEC-001, FR-PKG-006/007, BR-004, BR-011 | Unit: literal rejected; npm-name validation | done |
+| P0-W06-T01 | Bindings → `ResolvedHttpRequest`: path substitution, query serialization, headers, JSON body | `binding-engine` | P0-W05-T01, P0-W02-T01 | L | 4 | FR-BIND-001/002/004/006, FR-HTTP-001/002/003 | Unit per location + golden request | done |
+| P0-W10-T01 | API-key (header) auth + `SecretResolver` + `EnvironmentSecretProvider` | `upstream-auth` | P0-W05-T01, P0-W11-T01 | M | 2 | FR-AUTH-UP-001/002, FR-SEC-001 | Unit + redaction assertion | done |
+| P0-W09-T01 | `UpstreamExecutor`: URL build, timeout, `AbortController`, error mapping. Retry added later — see `P1-W09-T01` | `upstream-http` | P0-W06-T01, P0-W10-T01 | L | 3 | FR-HTTP-001/004/005 | Unit + fixture-API integration | done |
 | P0-W07-T00 | ~~Resolve OQ-01~~ — SDK v2 verified to serve 2026-07-28; recorded as ADR-0009 | — | — | M | 1 | §2.1 | ADR-0009 merged | **done** |
-| P0-W07-T01 | `McpProtocolAdapter` + implementation over `@modelcontextprotocol/server` v2 using the **`serveStdio` factory path** and `fromJsonSchema` | `mcp-protocol` | P0-W01-T01 | L | 4 | FR-HTTP-MCP-002, §24 | Protocol E2E | todo |
-| P0-W07-T02 | **Era assertion test** — `server/discover` returns `supportedVersions: ["2026-07-28"]`; lint ban on `McpServer#connect(` | `mcp-protocol` | P0-W07-T01 | S | 1 | ADR-0009, §27 | The test itself | todo |
-| P0-W08-T01 | `ToolRegistry` from config; config load → validate → fail-fast startup sequence | `mcp-runtime` | P0-W05-T01, P0-W06-T01, P0-W09-T01, P0-W07-T01 | L | 3 | FR-CFG-004, BR-001/003/005, §28, §33 | Unit + negative startup test | todo |
-| P0-W12-T01 | CLI: `serve`, `validate`, `print-tools`, `print-config` | `apps/cli` | P0-W08-T01 | M | 2 | FR-PKG-002/003, FR-STDIO-002 | CLI integration tests | todo |
-| P0-W13-T01 | stdio wiring + lifecycle: SIGINT, SIGTERM, stdin EOF, non-zero startup exits | `mcp-protocol`, `apps/cli` | P0-W12-T01, P0-W07-T01 | M | 2 | FR-STDIO-001/003/004, BR-009 | Lifecycle + stdout-purity tests | todo |
-| P0-W25-T01 | Fixture API server + `customer-oas31` spec (GET path+query, GET list, POST body) | `test-fixtures` | P0-W01-T01 | M | 2 | §48.4, §69 | Self-test | todo |
-| P0-W25-T02 | Protocol E2E harness: real MCP client ↔ spawned CLI over stdio; assert upstream request received | `test-fixtures` | P0-W13-T01, P0-W25-T01 | L | 3 | §48.3, §48.7 | The suite itself | todo |
-| P0-W25-T03 | **stdout purity test**: child stdout is pure NDJSON JSON-RPC, no embedded newlines, zero stray bytes | `test-fixtures` | P0-W13-T01 | M | 1 | BR-009, FR-STDIO-003 | The test itself | todo |
-| P0-W25-T04 | Secret-leakage test across config export, logs, traces, and error messages | `test-fixtures` | P0-W11-T01, P0-W12-T01 | M | 1 | BR-004, FR-SEC-001/004 | The test itself | todo |
+| P0-W07-T01 | `McpProtocolAdapter` + implementation over `@modelcontextprotocol/server` v2 using the **`serveStdio` factory path** and `fromJsonSchema` | `mcp-protocol` | P0-W01-T01 | L | 4 | FR-HTTP-MCP-002, §24 | Protocol E2E | done |
+| P0-W07-T02 | **Era assertion test** — `server/discover` returns `supportedVersions: ["2026-07-28"]`; lint ban on `McpServer#connect(` | `mcp-protocol` | P0-W07-T01 | S | 1 | ADR-0009, §27 | The test itself | done |
+| P0-W08-T01 | `ToolRegistry` from config; config load → validate → fail-fast startup sequence | `mcp-runtime` | P0-W05-T01, P0-W06-T01, P0-W09-T01, P0-W07-T01 | L | 3 | FR-CFG-004, BR-001/003/005, §28, §33 | Unit + negative startup test | done |
+| P0-W12-T01 | CLI: `serve`, `validate`, `print-tools`, `print-config` | `apps/cli` | P0-W08-T01 | M | 2 | FR-PKG-002/003, FR-STDIO-002 | CLI integration tests | done |
+| P0-W13-T01 | stdio wiring + lifecycle: SIGINT, SIGTERM, stdin EOF, non-zero startup exits | `mcp-protocol`, `apps/cli` | P0-W12-T01, P0-W07-T01 | M | 2 | FR-STDIO-001/003/004, BR-009 | Lifecycle + stdout-purity tests | done |
+| P0-W25-T01 | Fixture API server + `customer-oas31` spec (GET path+query, GET list, POST body) | `test-fixtures` | P0-W01-T01 | M | 2 | §48.4, §69 | Self-test | done |
+| P0-W25-T02 | Protocol E2E harness: real MCP client ↔ spawned CLI over stdio; assert upstream request received | `test-fixtures` | P0-W13-T01, P0-W25-T01 | L | 3 | §48.3, §48.7 | The suite itself | done |
+| P0-W25-T03 | **stdout purity test**: child stdout is pure NDJSON JSON-RPC, no embedded newlines, zero stray bytes | `test-fixtures` | P0-W13-T01 | M | 1 | BR-009, FR-STDIO-003 | The test itself | done |
+| P0-W25-T04 | Secret-leakage test across config export, logs, traces, and error messages | `test-fixtures` | P0-W11-T01, P0-W12-T01 | M | 1 | BR-004, FR-SEC-001/004 | The test itself | done |
 
 **P0 total: ~45 dev-days.** Packages existing at end of P0: `domain`, `openapi-adapter`,
 `schema-normalizer`, `config-schema`, `binding-engine`, `upstream-auth`, `upstream-http`,
@@ -2431,20 +2431,20 @@ Status values: `todo` · `in-progress` · `blocked` · `done`.
 | P1-W04-T01 | **Obsolete as a separate task.** `upgrade()` runs before `schema-normalizer` ever sees the document, so `schema-normalizer` only ever handles one dialect (2020-12) regardless of source version — no multi-dialect normalization path needed | `schema-normalizer` | P1-W03-T02 | — | 0 | FR-NORM-001, FR-RESP-005 | Golden across four families (via openapi-adapter's upgrade seam) | done |
 | P1-W18-T01 | **Done — landed in `openapi-adapter`, not a separate `reference-resolver` package** (ADR-0003 confines all `@scalar/*` deps to one package; the safe-fetch layer needs `@scalar/json-magic`'s `bundle()`/`fetchUrls()` plugin seam). `FetchPolicy`, scheme allowlist, private/link-local/loopback/cloud-metadata IP blocking (checked fresh per redirect hop via `dns.lookup`, not just the first URL), https→http downgrade-redirect refusal, byte caps (per-document + cumulative), reference-count cap, timeout. **Known gap, deliberately not closed:** full DNS-rebinding-proof protection needs a connect-level IP-pinning dispatcher (would require adding `undici` as a direct dependency); what ships re-resolves and re-checks DNS at every hop, which is not quite the same guarantee | `openapi-adapter` | P0-W01-T01 | L | 6 | FR-SEC-IMP-001…005 | Unit (`ip-blocklist.test.ts`, `safe-fetch.test.ts` — real local-server round trips + a real external HTTPS fetch + a real blocked cloud-metadata-IP probe) | done |
 | P1-W18-T02 | **Done**, via `@scalar/json-magic`'s `bundle()` (successor to the deprecated `load()`) — no `$ref`-graph walker of our own. Embeds fetched content under `x-ext` and rewrites the `$ref` to point there, so the existing local-only `dereference()` resolves it same as any internal ref | `openapi-adapter` | P1-W18-T01 | L | 4 | FR-VAL-003 | `resolve-remote-refs.test.ts` (real fetch + dereference round trip, blocked-address fatal diagnostic, generic-failure warning diagnostic, `maxReferences` enforcement) + `parse.test.ts` (full pipeline, `fetchPolicy: null` opt-out) | done |
-| P1-W03-T04 | Structural validation + diagnostic classification (Error/Warning/Recommendation/Info) | `openapi-adapter` | P1-W03-T03 | M | 4 | FR-VAL-001/002/003/004 | Golden `bad-docs`, `malformed/` | todo |
-| P1-W02-T01 | Operation identity: source + semantic fingerprints | `domain` | P0-W02-T01 | L | 3 | FR-VER-001, §7 | Unit: rename stability | todo |
-| P1-W10-T01 | Bearer + basic auth; group/operation-level auth override | `upstream-auth` | P0-W10-T01 | M | 3 | FR-AUTH-UP-002/004 | Fixture APIs per scheme | todo |
+| P1-W03-T04 | Structural validation + diagnostic classification (Error/Warning/Recommendation/Info) | `openapi-adapter` | P1-W03-T03 | M | 4 | FR-VAL-001/002/003/004 | Golden `bad-docs`, `malformed/` | partial — the `Diagnostic` severity model itself is done and used throughout (error/warning/recommendation/info, see `domain/diagnostic.ts`); no dedicated `bad-docs`/`malformed/` golden corpus exists yet |
+| P1-W02-T01 | Operation identity: source + semantic fingerprints | `domain` | P0-W02-T01 | L | 3 | FR-VER-001, §7 | Unit: rename stability | done |
+| P1-W10-T01 | Bearer + basic auth; group/operation-level auth override | `upstream-auth` | P0-W10-T01 | M | 3 | FR-AUTH-UP-002/004 | Fixture APIs per scheme | partial — bearer + basic done since P0 (`BasicAuthSchema`/`BearerAuthSchema`); group/operation-level auth override not built — `upstreamAuthentication` is project-level only, no per-tool override field |
 | P1-W09-T01 | **Done.** Retry policy per §21: backoff+jitter, `Retry-After`, total deadline. Eligibility: GET/HEAD on by default, others off; per-tool `retry.enabled` override in either direction; `DESTRUCTIVE`/`PRIVILEGED` risk is a hard floor no override can lift (BR-006) | `upstream-http` | P0-W09-T01 | L | 4 | FR-POL-003/004, BR-006 | Unit (`retry-policy.test.ts`, `execute-retry.test.ts`) + real E2E (`retry.test.ts`: transient 503 retried and recovers; POST never retried) | done |
-| P1-W09-T02 | Response limits, content-type allowlist, safe oversize handling | `upstream-http` | P0-W09-T01 | M | 3 | FR-RESP-003 | Unit: oversized JSON rejected, not corrupted | todo |
-| P1-W13-T01 | Cancellation propagation: MCP cancel → `AbortSignal` → upstream | `mcp-runtime` | P0-W13-T01, P1-W09-T01 | M | 3 | FR-HTTP-004, §22 | Integration: in-flight cancel | todo |
+| P1-W09-T02 | Response limits, content-type allowlist, safe oversize handling | `upstream-http` | P0-W09-T01 | M | 3 | FR-RESP-003 | Unit: oversized JSON rejected, not corrupted | done — shipped as part of P0-W09-T01 (`response-policy.ts`), not a separate later pass |
+| P1-W13-T01 | Cancellation propagation: MCP cancel → `AbortSignal` → upstream | `mcp-runtime` | P0-W13-T01, P1-W09-T01 | M | 3 | FR-HTTP-004, §22 | Integration: in-flight cancel | todo — `executeUpstreamRequest`/`performAttempt` accept a `signal` structurally, but nothing in `mcp-runtime` yet derives one from an MCP `notifications/cancelled` message |
 | P1-W14-T01 | Streamable HTTP transport: POST endpoint, Origin validation, 127.0.0.1 default, `/health` + `/ready` | `mcp-protocol` | P0-W07-T01 | L | 6 | FR-HTTP-MCP-001/003/004/005 | HTTP protocol E2E | **done** — inbound request-body size cap not yet configured (upstream-http's response cap is separate and already done; this is the transport's own inbound limit) |
 | P1-W14-T02 | Request metadata contract: `MCP-Protocol-Version`/`Mcp-Method`/`Mcp-Name`, header↔body validation, `-32020`, legacy 405 on GET | `mcp-protocol` | P1-W14-T01 | L | 4 | FR-HTTP-MCP-006 | Unit + E2E mismatch → 400/-32020 | **done** — via `createMcpHandler`'s built-in enforcement, confirmed empirically (research notes §16), not reimplemented |
-| P1-W06-T01 | `x-mcp-header` annotation support with full constraint enforcement | `binding-engine`, `config-schema` | P0-W06-T01, P1-W14-T02 | M | 3 | FR-BIND-007 | Unit: invalid annotation rejected at config time | todo |
+| P1-W06-T01 | `x-mcp-header` annotation support with full constraint enforcement | `binding-engine`, `config-schema` | P0-W06-T01, P1-W14-T02 | M | 3 | FR-BIND-007 | Unit: invalid annotation rejected at config time | done — `schema-normalizer/src/x-mcp-header.ts` |
 | P1-W05-T01 | Config inheritance engine with explicit per-policy resolvers + provenance | `config-schema` | P0-W05-T01 | L | 5 | FR-INH-001/002 | Unit per resolver | todo |
-| P1-W29-T01 | Config migration framework + `ConfigMigration` chain + CLI backup | `config-migrations` | P0-W05-T01 | L | 4 | FR-VER-001, §34 | Unit: 1.0→1.1 round trip | todo |
-| P1-W08-T01 | Response mapping to MCP structured output; output schema policy | `mcp-runtime` | P0-W08-T01, P1-W04-T01 | L | 5 | FR-RESP-001/002/005 | Golden output schemas | todo |
+| P1-W29-T01 | Config migration framework + `ConfigMigration` chain + CLI backup | `config-migrations` | P0-W05-T01 | L | 4 | FR-VER-001, §34 | Unit: 1.0→1.1 round trip | todo — package doesn't exist yet |
+| P1-W08-T01 | Response mapping to MCP structured output; output schema policy | `mcp-runtime` | P0-W08-T01, P1-W04-T01 | L | 5 | FR-RESP-001/002/005 | Golden output schemas | partial — `structuredContent` mapping done (`tool-registry.ts`); no distinct output-schema *policy* layer (declaring/enforcing a tool's `outputSchema`) yet |
 | P1-W25-T01 | Remaining §69 fixtures + four-family corpus with success-rate reporting | `test-fixtures` | P1-W03-T03 | L | 6 | §48.5 | Corpus report in CI | todo |
-| P1-W26-T01 | Full PR pipeline per §50 incl. security suite, dependency-boundary check, secret scan | `.github` | P0-W01-T02 | M | 3 | §49, §50 | Required checks configured | todo |
+| P1-W26-T01 | Full PR pipeline per §50 incl. security suite, dependency-boundary check, secret scan | `.github` | P0-W01-T02 | M | 3 | §49, §50 | Required checks configured | done — `.github/workflows/ci.yml`: `verify` job (lint incl. boundaries, typecheck, build, test), `security` job (now real, not `--passWithNoTests`-empty — see `P1-W18-T01`), `e2e` job |
 | P1-W27-T01 | OTEL spans/metrics per §89 with secret-free attribute enforcement | cross-cutting | P0-W09-T01, P0-W11-T01 | M | 4 | NFR-OBS, §61 | Unit: no secret in span attrs | todo |
 
 **P1 total: ~96 dev-days.**
@@ -2534,35 +2534,42 @@ The graph is acyclic and its topological order matches §65 (domain → adapter 
 §68 covers the MVP only. Each phase now has exit criteria; a phase is done when every box is true,
 not when the tasks feel finished.
 
-### P0 exit criteria
+### P0 exit criteria — all met
 
-- [ ] An OAS 3.1 fixture imports to a canonical model, verified by a committed golden snapshot.
-- [ ] A hand-authored `mcp.config.json` enables exactly 3 operations: GET with path+query, GET list
+- [x] An OAS 3.1 fixture imports to a canonical model, verified by a committed golden snapshot.
+- [x] A hand-authored `mcp.config.json` enables exactly 3 operations: GET with path+query, GET list
       with pagination, POST with JSON body.
-- [ ] Base URL resolves from an `EnvironmentBinding`; API key resolves from a `SecretBinding` through
+- [x] Base URL resolves from an `EnvironmentBinding`; API key resolves from a `SecretBinding` through
       `EnvironmentSecretProvider`.
-- [ ] `api-mcp serve` registers 3 tools; a **real MCP client** lists and calls them over stdio.
-- [ ] The fixture API asserts it received the exact expected method, URL, headers, and body.
-- [ ] **stdout purity:** the child's stdout parses as pure newline-delimited JSON-RPC — no stray
+- [x] `api-mcp serve` registers 3 tools; a **real MCP client** lists and calls them over stdio.
+- [x] The fixture API asserts it received the exact expected method, URL, headers, and body.
+- [x] **stdout purity:** the child's stdout parses as pure newline-delimited JSON-RPC — no stray
       bytes, no embedded newlines. *(BR-009)*
-- [ ] Startup with a missing required env var writes a diagnostic to stderr, exits non-zero, and
+- [x] Startup with a missing required env var writes a diagnostic to stderr, exits non-zero, and
       writes **nothing** to stdout.
-- [ ] `print-config` output contains secret references only; the secret-leakage test passes across
+- [x] `print-config` output contains secret references only; the secret-leakage test passes across
       config, logs, traces, and error messages.
-- [ ] Attempting a secret binding with a literal value is rejected by `config-schema`.
-- [ ] OQ-01 is decided and recorded as an ADR.
-- [ ] `pnpm build && pnpm typecheck && pnpm lint && pnpm test` is clean.
+- [x] Attempting a secret binding with a literal value is rejected by `config-schema`.
+- [x] OQ-01 is decided and recorded as an ADR.
+- [x] `pnpm build && pnpm typecheck && pnpm lint && pnpm test` is clean.
 
 ### P1 exit criteria
 
 - [ ] All four OAS families import, each with a golden snapshot; corpus success rate reported in CI.
-- [ ] Swagger 2 body params and OAS 3.0 `nullable` normalize correctly with recorded warnings.
+      **3 of 4 done**: Swagger 2.0/OAS 3.0/OAS 3.1 import correctly (unit-tested, not yet as committed
+      golden snapshots specifically for 2.0/3.0), covering ~99.6% of real-world specs (§2 row 12). OAS
+      3.2 deliberately deferred (~0% adoption). No corpus success-rate report in CI (`P1-W25-T01`).
+- [x] Swagger 2 body params and OAS 3.0 `nullable` normalize correctly with recorded warnings.
 - [ ] Safe fetch blocks private IPs, metadata addresses, disallowed schemes, and revalidates DNS per
-      redirect hop — proven by the security suite, including a DNS-rebinding simulation.
-- [ ] Circular and remote `$ref` handled within policy bounds; no unbounded recursion.
-- [ ] API key, bearer, and basic auth work against fixture APIs.
-- [ ] DELETE/POST/PATCH are never retried unless explicitly configured. *(BR-006, ADR-0008)*
-- [ ] Oversized JSON responses are rejected without producing corrupted JSON.
+      redirect hop — proven by the security suite, **but not including a DNS-rebinding simulation**:
+      what ships re-resolves and re-checks DNS at every hop (proven), not connection-level IP pinning
+      against a live rebinding race (§9.4 — deliberately deferred, would need `undici` as a direct dep).
+- [ ] Circular and remote `$ref` handled within policy bounds; no unbounded recursion. Remote `$ref`
+      count/byte/depth bounds are enforced and tested; circular-reference handling relies on
+      `bundle()`'s own cycle detection, not separately verified by us.
+- [x] API key, bearer, and basic auth work against fixture APIs.
+- [x] DELETE/POST/PATCH are never retried unless explicitly configured. *(BR-006, ADR-0008)*
+- [x] Oversized JSON responses are rejected without producing corrupted JSON.
 - [x] Streamable HTTP serves the same registry as stdio; Origin validated (403 on invalid); binds
       `127.0.0.1` by default; `/health` and `/ready` are separate from `/mcp`. Verified: `mcp-protocol`
       unit tests (real HTTP requests) + `test-fixtures` E2E (real spawned CLI, real cross-origin 403).
@@ -2571,10 +2578,14 @@ not when the tasks feel finished.
 - [ ] GET on the MCP endpoint returns 405 — verified. DELETE, and `Mcp-Session-Id`/`Last-Event-ID`
       being ignored, not yet exercised by a test; moot under `legacy: 'reject'` (no 2025 serving at
       all in this mode) but the specific assertions are still open.
-- [ ] Cancellation propagates to upstream `AbortSignal` on both transports.
+- [ ] Cancellation propagates to upstream `AbortSignal` on both transports. (`P1-W13-T01`, not started —
+      `executeUpstreamRequest` accepts a `signal` structurally, but nothing derives one from an MCP
+      `notifications/cancelled` message yet.)
 - [ ] Config inheritance resolves through project → api → group → tool with visible provenance.
-- [ ] `1.0 → 1.1` config migration round-trips.
-- [ ] Dependency-boundary check enforced in CI; no `console.*` in any runtime package.
+      (`P1-W05-T01`, not started.)
+- [ ] `1.0 → 1.1` config migration round-trips. (`P1-W29-T01`, not started — `config-migrations`
+      package doesn't exist.)
+- [x] Dependency-boundary check enforced in CI; no `console.*` in any runtime package.
 
 ### P2 exit criteria
 

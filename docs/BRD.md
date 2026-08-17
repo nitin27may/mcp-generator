@@ -1583,7 +1583,7 @@ Priority: **MUST** (release blocker) · **SHOULD** (expected, degradable) · **C
 | Parameter binding | FR-BIND-001…007 | MVP | MUST | `runtime-context`/`derived` in FR-BIND-001 → V2 / COULD |
 | Runtime configuration | FR-CFG-001…004 | MVP | MUST | — |
 | Secrets | FR-SEC-001…005 | MVP | MUST | — |
-| Upstream auth | FR-AUTH-UP-001…005 | MVP | MUST | FR-AUTH-UP-003 OAuth → V1.5 (client credentials) / V2 (auth code) |
+| Upstream auth | FR-AUTH-UP-001…005 | MVP | MUST | FR-AUTH-UP-003 OAuth client credentials — **done**, ahead of its V1.5 slot (`upstream-auth`, `OAuthTokenProvider`; works against any RFC 6749-compliant token endpoint, including Microsoft Entra ID app registrations — see TIP §19). Auth-code / user-delegated grant stays V2, out of scope |
 | MCP authorization | FR-AUTH-MCP-001…004 | MVP | MUST | FR-AUTH-MCP-002/004 full authorization server integration → V2 |
 | Config inheritance | FR-INH-001…004 | MVP | SHOULD | FR-INH-003/004 are UI, → MVP with the wizard |
 | Risk classification | FR-RISK-001…005 | MVP | MUST | — |
