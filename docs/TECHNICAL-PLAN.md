@@ -2403,7 +2403,7 @@ Decomposed into tasks at the start of each phase. Effort bands from §63.
 | P2-W23-E01 | Control API (Fastify) endpoints per §53; job pattern only if needed | P2 | P1-W26-T01 | L | 6–10 | §53 |
 | P3-W16-E01 | **Done.** Readiness engine: rule host, findings, scoring with exposed contributions | P3 | P1-W04-T01 | XL | 10–15 | FR-ARA-001/002/003 |
 | P3-W16-E02 | **Done.** The 31 deterministic rules in §85 | P3 | P3-W16-E01 | XL | incl. | FR-ARA-004 |
-| P3-W17-E01 | Risk classifier + user override — **not yet built** (`risk-engine` package doesn't exist; readiness and risk are deliberately separate engines per §15) | P3 | P1-W02-T01 | L | 4–7 | FR-RISK-001…005 |
+| P3-W17-E01 | **Classifier done** (`risk-engine` package: rule-ordered `classifyOperation`/`classifyApi`, FR-RISK-001/002). **Not yet built:** user override storage, wiring classification into generation defaults, and MCP tool annotations (FR-RISK-003/004/005) — those land with `config-schema`/`generator` integration | P3 | P1-W02-T01 | L | 4–7 | FR-RISK-001…005 |
 | P3-W16-E03 | Tool surface recommendation (rule-based reduction) | P3 | P3-W16-E02, P3-W17-E01 | M | 3–5 | FR-SEL-003, §16.1 |
 | P3-W19-E01 | Readiness + safety wizard steps | P3 | P3-W16-E02, P2-W19-E05 | M | 4–6 | FR-ARA-002, FR-POL-001/002 |
 | P4-W20-E01 | Dry-run request preview with unresolved-variable detection | P4 | P2-W19-E04 | M | 4–6 | FR-DRY-001…003, FR-PLAY-005 |

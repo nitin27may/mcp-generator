@@ -1,0 +1,22 @@
+{
+  "name": "@mcpgen/risk-engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic blast-radius classification (TIP §15). Separate from readiness-engine: readiness asks 'is it usable', risk asks 'what damage can it cause'. Must never depend on the SDK, the parser, or UI — ADR-0007's boundary applies to this engine too.",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@mcpgen/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0"
+  }
+}
