@@ -351,3 +351,40 @@ declare function dereference(value: AnyApiDefinitionFormat | Filesystem, options
 
   Confirmed on an invalid document (missing `paths`): `errors: [{ message: "must have required property 'paths'", path: "" }, ...]` — one entry per missing/invalid top-level requirement, not just the first.
 - `version` on a successful validate of an OAS 3.1 document reports `"3.1"` (not `"3.1.0"`, not `"3.1.1"`)  — the major.minor family, not the full `info.version` or the document's declared `openapi` string.
+
+---
+
+## 13. Zod 4.4.3 — a default that would have quietly broken ADR-0006
+
+| Field | Value |
+|---|---|
+| Probe date | 2026-08-17 |
+| Version | 4.4.3 |
+
+**`z.object()`'s default behavior is to silently strip unknown keys, not reject them.** Confirmed:
+
+```ts
+const Schema = z.discriminatedUnion('source', [
+  z.object({ source: z.literal('secret'), name: z.string().min(1) }),
+  // ...
+]);
+Schema.safeParse({ source: 'secret', name: 'X', value: 'leak' }).success; // => true
+```
+
+The extra `value` key parses away silently. If `SecretBinding` had been validated with a plain
+`z.object()`, a config with a leaked literal on a secret binding would **pass validation** — the
+`value` field would vanish from the parsed result with no error, hiding the exact mistake ADR-0006
+exists to catch, from the person who made it.
+
+**Fix: every `config-schema` object schema uses `.strict()`.** Confirmed it rejects rather than
+strips:
+
+```ts
+z.object({ source: z.literal('secret'), name: z.string().min(1) }).strict()
+  .safeParse({ source: 'secret', name: 'X', value: 'leak' });
+// => { success: false, error: { issues: [{ code: 'unrecognized_keys', keys: ['value'], ... }] } }
+```
+
+This is now a house rule for the package, not a one-off: an unknown key anywhere in `mcp.config.json`
+must be a validation error, never a silent drop — the same principle applies beyond secrets (a typo'd
+field name should fail loudly, not disappear).

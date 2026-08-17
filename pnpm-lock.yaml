@@ -33,6 +33,19 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@types/node@22.20.1)(vite@8.2.1(@types/node@22.20.1)(yaml@2.9.0))
 
+  packages/config-schema:
+    dependencies:
+      '@mcpgen/domain':
+        specifier: workspace:*
+        version: link:../domain
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.1
+
   packages/domain:
     devDependencies:
       '@types/node':
@@ -948,6 +961,9 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
 snapshots:
 
   '@eslint-community/eslint-utils@4.10.1(eslint@10.8.1)':
@@ -1688,3 +1704,5 @@ snapshots:
   yaml@2.9.0: {}
 
   yocto-queue@0.1.0: {}
+
+  zod@4.4.3: {}

@@ -2676,6 +2676,7 @@ may change, codes may not.
 | `GEN-003` | GENERATION | Tool name collision: {names} | Rename one of the tools |
 | `GEN-004` | GENERATION | Generation blocked: {n} unresolved bindings | Resolve them; see BND-001 |
 | `GEN-005` | GENERATION | Config schema version {version} not supported by generator {gen} | Migrate the config or upgrade the generator |
+| `CFG-001` | VALIDATION | Configuration failed schema validation: {detail} | Fix the field named in {detail} per the reported reason |
 
 ---
 
