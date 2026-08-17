@@ -1200,9 +1200,75 @@ Benefits: smaller diffs; easier security patching; consistent behavior; faster r
 
 Optionally add an "expanded source" export later for users who want bespoke code.
 
+### 29.1 Thin mode is deferred — self-contained mode is what actually ships (1.1)
+
+`GenerationConfig.mode` ("thin" | "self-contained", TIP §11.3) was designed before implementation.
+Building `packages/generator` (`P2-W15-E01/E02`) forced the decision the schema had left open:
+**thin mode cannot produce a runnable artifact today**, because it depends on a published
+`@mcpgen/*` runtime package, and none is published (§50 explicitly defers publishing anything to
+npm). A "thin" generated package would be un-installable outside this monorepo.
+
+**What ships instead:** self-contained mode, implemented as a real bundling step. `bundle.ts` uses
+esbuild to compile the runtime entry point (a trimmed copy of `apps/cli`'s command logic, reading a
+baked manifest instead of re-parsing OpenAPI — §29.2) into one `dist/cli.mjs`, inlining every
+`@mcpgen/*` workspace package. Only the real, published SDK packages
+(`@modelcontextprotocol/{core,server,node}`, `zod`) remain as `package.json` dependencies. Verified,
+not assumed: a generated package `npm install`ed in a directory with **no relationship to this
+monorepo** starts, resolves its secret, and calls a real fixture API correctly
+(`test-fixtures/test/e2e/generated-package.test.ts`).
+
+`mode: "thin"` remains a valid, accepted config value — the schema doesn't need to change when
+publishing eventually happens — but the generator does not implement it, and `README.md`/§72 should
+not claim it works. Revisit when `@mcpgen/*` publishing is a real decision (a rename/branding
+decision — OQ-02 — should land first, since publishing under a placeholder scope is a poor first
+impression).
+
+Two bugs found only by actually running a generated package standalone, not by inspection:
+
+1. **Double shebang.** The runtime entry source and esbuild's `banner` option both wrote
+   `#!/usr/bin/env node`, producing two shebang lines. Node only exempts the file's first line — the
+   second was a syntax error on every generated package's first `node dist/cli.mjs` invocation. The
+   source-level shebang was removed; the bundler's banner is now the only one.
+2. **Missing transitive dependency for stdio-only configs.** `mcp-protocol`'s barrel exports both
+   `serveToolsOverStdio` and `serveToolsOverHttp` from one module, so bundling the CLI always pulls
+   in `@modelcontextprotocol/node` (imported at module scope by `serve-http.ts`) — even for a
+   stdio-only project. `buildPackageJson` had only added that dependency when `transports` included
+   `"http"`, so a stdio-only generated package failed to resolve the import at startup. Fixed:
+   the dependency is now unconditional, matching what the bundle actually needs.
+
 ---
 
 ## 30. Generated Package Layout
+
+**As implemented (1.1, self-contained mode — §29.1):**
+
+```text
+generated-api-mcp/
+├── dist/
+│   └── cli.mjs               # bundled: our runtime inlined, SDK packages left external
+├── mcp.config.json            # the portable config, verbatim — secret REFERENCES only
+├── generated-manifest.json    # TIP §39 artifact manifest + the operations the bundle needs
+├── package.json
+├── .env.example
+├── .gitignore
+├── README.md
+└── Dockerfile                 # only if generation.emitDockerfile
+```
+
+No `src/`, no `tsconfig.json`: there is nothing left to compile once `bundle.ts` has run. This is
+narrower than v1.0's speculative layout below, because there is no "thin" mode using the runtime as
+a normal dependency — package.json:
+
+```json
+{ "dependencies": {
+    "@modelcontextprotocol/core": "2.0.0",
+    "@modelcontextprotocol/server": "2.0.0",
+    "@modelcontextprotocol/node": "2.0.0",
+    "zod": "^4.4.3"
+} }
+```
+
+**v1.0's original sketch, retained for the thin-mode design intent (not yet built — §29.1):**
 
 ```text
 generated-api-mcp/
@@ -1223,18 +1289,16 @@ generated-api-mcp/
 └── LICENSE            # emitted only if the user chooses one — see OQ-07
 ```
 
-Thin package:
-
 ```json
 { "dependencies": { "@your-org/mcp-runtime": "^x.y.z" } }
 ```
 
-An alternative self-contained export can vendor runtime code. Offer both later: thin package and
-self-contained source (`GenerationConfig.mode`).
-
 *(1.1: v1.0 left `LICENSE?` unresolved. Resolution: emit nothing unless the user supplies
 `GenerationConfig.license`. Rationale — inserting a license into someone else's package is a legal
-assertion the platform is not entitled to make. Recorded as OQ-07 / §93 C3.)*
+assertion the platform is not entitled to make. Recorded as OQ-07 / §93 C3. As built: the
+`package.json` `license` field is set from the SPDX identifier the user supplies; a full-text
+`LICENSE` file body is not generated — we have no reliable source of license text without another
+dependency, and fabricating legal text is worse than omitting it.)*
 
 ---
 
@@ -2327,10 +2391,10 @@ Decomposed into tasks at the start of each phase. Effort bands from §63.
 
 | ID | Epic | Phase | Depends on | Cx | Days | Satisfies |
 |---|---|---|---|---|---:|---|
-| P2-W15-E01 | Generator: manifest emission, deterministic output, artifact manifest (§39) | P2 | P1-W08-T01 | L | 5–8 | FR-GEN-001…005, FR-VER-002 |
-| P2-W15-E02 | Package template: `package.json`, tsconfig, `.env.example`, `.gitignore`, README (§73) | P2 | P2-W15-E01 | M | 3–5 | FR-PKG-001…007 |
-| P2-W15-E03 | Dockerfile emission: multi-stage, non-root, runtime secret injection | P2 | P2-W15-E02 | S | 1–2 | FR-DKR-001…004 |
-| P2-W25-E01 | Generated-package E2E: clean checkout → install → build → stdio + HTTP (§48.7) | P2 | P2-W15-E02 | L | 6–10 | §68 |
+| P2-W15-E01 | **Done — self-contained mode only.** Generator: manifest emission, deterministic output, artifact manifest (§39). See §29.2 for why thin mode is deferred. | P2 | P1-W08-T01 | L | 5–8 | FR-GEN-001…005, FR-VER-002 |
+| P2-W15-E02 | **Done.** Package template: `package.json`, `.env.example`, `.gitignore`, README (§73) — no `tsconfig.json`/`src/`, since self-contained mode ships a bundled `dist/cli.mjs` and nothing else to compile | P2 | P2-W15-E01 | M | 3–5 | FR-PKG-001…007 |
+| P2-W15-E03 | **Done.** Dockerfile emission: multi-stage, non-root, runtime secret injection | P2 | P2-W15-E02 | S | 1–2 | FR-DKR-001…004 |
+| P2-W25-E01 | **Done — via `npm install` in complete isolation, not a monorepo-relative build.** Generated-package E2E: install → run stdio; HTTP transport exercised at the library level (mcp-protocol tests) but not yet through a *generated* package specifically. | P2 | P2-W15-E02 | L | 6–10 | §68 |
 | P2-W19-E01 | Wizard shell + import/validation steps, state machine, Monaco | P2 | P2-W15-E01 | M | 4–6 | FR-IMP-002/003, FR-VAL-002 |
 | P2-W19-E02 | Operation inventory + selection with bulk filters | P2 | P2-W19-E01 | M | 4–6 | FR-SEL-001…004 |
 | P2-W19-E03 | Tool designer: names, descriptions, groups | P2 | P2-W19-E02 | L | 6–10 | FR-NAME-001…004, FR-DESC-001/002/004 |

@@ -1,0 +1,37 @@
+{
+  "name": "@mcpgen/generator",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Emits a self-contained, runnable MCP server package from a McpProjectConfig + its referenced operations (TIP \u00a729/\u00a730).",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@mcpgen/binding-engine": "workspace:*",
+    "@mcpgen/config-schema": "workspace:*",
+    "@mcpgen/domain": "workspace:*",
+    "@mcpgen/mcp-protocol": "workspace:*",
+    "@mcpgen/mcp-runtime": "workspace:*",
+    "@mcpgen/redaction": "workspace:*",
+    "@mcpgen/upstream-auth": "workspace:*",
+    "esbuild": "0.28.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "@mcpgen/openapi-adapter": "workspace:*"
+  }
+}

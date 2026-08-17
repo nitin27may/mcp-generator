@@ -1,0 +1,77 @@
+import process from 'node:process';
+import type { BindingResolutionContext } from '@mcpgen/binding-engine';
+import { serveToolsOverHttp, serveToolsOverStdio } from '@mcpgen/mcp-protocol';
+import { buildToolRegistry, validateStartupRequirements } from '@mcpgen/mcp-runtime';
+import { createLogger } from '@mcpgen/redaction';
+import { EnvironmentSecretProvider } from '@mcpgen/upstream-auth';
+import { loadProject } from '../load-project.js';
+
+export interface ServeOptions {
+  readonly transport: 'stdio' | 'http';
+  readonly host?: string;
+  readonly port?: number;
+}
+
+/** BR-009: identical discipline to apps/cli's serve command — every failure path returns before any transport starts; all diagnostics go to stderr. */
+export async function runServe(configPath: string, manifestPath: string, options: ServeOptions): Promise<number> {
+  const logger = createLogger();
+  const project = loadProject(configPath, manifestPath);
+  const loadErrors = project.diagnostics.filter((d) => d.severity === 'error');
+  for (const diagnostic of project.diagnostics) {
+    (diagnostic.severity === 'error' ? logger.error : logger.warn)(diagnostic.message, { code: diagnostic.code });
+  }
+  if (!project.value || loadErrors.length > 0) return 1;
+
+  const { config, operations } = project.value;
+  const secretProvider = new EnvironmentSecretProvider({ logger });
+  const ctx: BindingResolutionContext = { toolInput: {}, getEnv: (name) => process.env[name], resolveSecret: (name) => secretProvider.get(name) };
+
+  const startup = await validateStartupRequirements(config, ctx);
+  const startupErrors = startup.diagnostics.filter((d) => d.severity === 'error');
+  if (startupErrors.length > 0 || !startup.baseUrl) {
+    for (const diagnostic of startup.diagnostics) logger.error(diagnostic.message, { code: diagnostic.code });
+    return 1;
+  }
+
+  const { tools, diagnostics: registryDiagnostics } = buildToolRegistry(config, operations, {
+    baseUrl: startup.baseUrl,
+    getEnv: (name) => process.env[name],
+    resolveSecret: (name) => secretProvider.get(name),
+  });
+  if (registryDiagnostics.some((d) => d.severity === 'error')) {
+    for (const diagnostic of registryDiagnostics) logger.error(diagnostic.message, { code: diagnostic.code });
+    return 1;
+  }
+
+  const serverInfo = { name: config.project.name, version: config.generation.version };
+  const onError = (error: Error) => logger.error('transport error', { message: error.message });
+
+  if (options.transport === 'stdio') {
+    const handle = serveToolsOverStdio(tools, serverInfo, { onError });
+    logger.info('serving', { tools: tools.length, transport: 'stdio' });
+    return waitForShutdown(logger, () => handle.close());
+  }
+
+  const handle = await serveToolsOverHttp(tools, serverInfo, {
+    onError,
+    ...(options.host ? { host: options.host } : {}),
+    ...(options.port !== undefined ? { port: options.port } : {}),
+  });
+  logger.info('serving', { tools: tools.length, transport: 'http', url: handle.url });
+  return waitForShutdown(logger, () => handle.close());
+}
+
+function waitForShutdown(logger: ReturnType<typeof createLogger>, close: () => Promise<void>): Promise<number> {
+  return new Promise<number>((resolve) => {
+    let shuttingDown = false;
+    const shutdown = (reason: string) => {
+      if (shuttingDown) return;
+      shuttingDown = true;
+      logger.info('shutting down', { reason });
+      void close().then(() => resolve(0));
+    };
+    process.once('SIGINT', () => shutdown('SIGINT'));
+    process.once('SIGTERM', () => shutdown('SIGTERM'));
+    process.stdin.once('end', () => shutdown('stdin-eof'));
+  });
+}
