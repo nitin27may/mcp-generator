@@ -29,6 +29,7 @@ export {
   ToolRiskSchema,
   RetryConfigSchema,
   SourceOperationRefSchema,
+  TOOL_NAME_PATTERN,
   type ToolConfig,
   type ToolRisk,
   type RetryConfig,

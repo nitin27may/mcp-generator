@@ -220,4 +220,51 @@ describe('project lifecycle — import -> create project -> get project (no mock
     });
     expect(response.status).toBe(404);
   });
+
+  it('returns operation summaries and per-operation detail via ?include=operations,operationDetail&operationId=', async () => {
+    const specText = readFileSync(CUSTOMER_SPEC_PATH, 'utf8');
+    const importResponse = await postImport(jsonRequest('http://localhost/api/import', { kind: 'paste', text: specText }));
+    const importBody = (await importResponse.json()) as ApiOk<{ importId: string }>;
+    const createResponse = await postProjects(jsonRequest('http://localhost/api/projects', { importId: importBody.data.importId }));
+    const createBody = (await createResponse.json()) as ApiOk<ProjectSnapshot>;
+    const projectId = createBody.data.id;
+
+    const operationsResponse = await getProject(new Request(`http://localhost/api/projects/${projectId}?include=operations`), {
+      params: Promise.resolve({ id: projectId }),
+    });
+    expect(operationsResponse.status).toBe(200);
+    const operationsBody = (await operationsResponse.json()) as ApiOk<ProjectSnapshot>;
+    expect(operationsBody.data.operations).toHaveLength(3);
+    expect(operationsBody.data.operationDetail).toBeUndefined();
+    const firstOperationId = operationsBody.data.operations![0]!.id;
+
+    const detailResponse = await getProject(
+      new Request(`http://localhost/api/projects/${projectId}?include=operationDetail&operationId=${firstOperationId}`),
+      { params: Promise.resolve({ id: projectId }) },
+    );
+    expect(detailResponse.status).toBe(200);
+    const detailBody = (await detailResponse.json()) as ApiOk<ProjectSnapshot>;
+    expect(detailBody.data.operationDetail?.id).toBe(firstOperationId);
+    expect(detailBody.data.operations).toBeUndefined();
+  });
+
+  it('400s when operationDetail is requested without operationId', async () => {
+    const id = '00000000-0000-4000-8000-000000000000';
+    const response = await getProject(new Request(`http://localhost/api/projects/${id}?include=operationDetail`), { params: Promise.resolve({ id }) });
+    expect(response.status).toBe(400);
+  });
+
+  it('404s when operationDetail is requested for an operationId that does not exist on the project', async () => {
+    const specText = readFileSync(CUSTOMER_SPEC_PATH, 'utf8');
+    const importResponse = await postImport(jsonRequest('http://localhost/api/import', { kind: 'paste', text: specText }));
+    const importBody = (await importResponse.json()) as ApiOk<{ importId: string }>;
+    const createResponse = await postProjects(jsonRequest('http://localhost/api/projects', { importId: importBody.data.importId }));
+    const createBody = (await createResponse.json()) as ApiOk<ProjectSnapshot>;
+    const projectId = createBody.data.id;
+
+    const response = await getProject(new Request(`http://localhost/api/projects/${projectId}?include=operationDetail&operationId=not-a-real-operation`), {
+      params: Promise.resolve({ id: projectId }),
+    });
+    expect(response.status).toBe(404);
+  });
 });

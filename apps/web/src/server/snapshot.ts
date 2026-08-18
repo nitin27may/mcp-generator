@@ -1,7 +1,7 @@
 import type { BindingResolutionContext } from '@mcpgen/binding-engine';
 import type { McpProjectConfig, ValueBinding } from '@mcpgen/config-schema';
 import type { CanonicalApi, CanonicalOperation } from '@mcpgen/domain';
-import { computeGates, type GateInput, type ProjectAnalysis, type ProjectSnapshot } from '@mcpgen/control-contracts';
+import { computeGates, type GateInput, type OperationDetail, type OperationSummary, type ProjectAnalysis, type ProjectSnapshot } from '@mcpgen/control-contracts';
 import { validateStartupRequirements } from '@mcpgen/mcp-runtime';
 import type { ProjectRecord, SourceVersionMeta } from './types';
 
@@ -53,14 +53,13 @@ async function computeGateInput(config: McpProjectConfig, canonicalApi: Canonica
  * `ProjectRecord` + on-disk config/canonical -> the wire `ProjectSnapshot`.
  * Gates are always computed from full server-side knowledge, independent of
  * whatever the caller's `include=` query ends up serializing (TIP §51/§53).
- * `analysis`/`operations`/`operationDetail` land in later increments.
  */
 export async function buildProjectSnapshot(
   record: ProjectRecord,
   config: McpProjectConfig,
   canonicalApi: CanonicalApi,
   sourceMeta: SourceVersionMeta,
-  extras: { analysis?: ProjectAnalysis | undefined } = {},
+  extras: { analysis?: ProjectAnalysis | undefined; operations?: readonly OperationSummary[] | undefined; operationDetail?: OperationDetail | undefined } = {},
 ): Promise<ProjectSnapshot> {
   const gates = computeGates(await computeGateInput(config, canonicalApi));
 
@@ -87,5 +86,7 @@ export async function buildProjectSnapshot(
     importDiagnostics: canonicalApi.diagnostics,
     gates,
     ...(extras.analysis !== undefined ? { analysis: extras.analysis } : {}),
+    ...(extras.operations !== undefined ? { operations: extras.operations } : {}),
+    ...(extras.operationDetail !== undefined ? { operationDetail: extras.operationDetail } : {}),
   };
 }

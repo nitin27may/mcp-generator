@@ -1,11 +1,20 @@
+import { classifyApi } from '@mcpgen/risk-engine';
 import { fail, ok } from '@/server/http';
+import { buildOperationDetail } from '@/server/operation-detail';
+import { buildOperationSummaries } from '@/server/operations';
 import { InvalidIdError } from '@/server/paths';
 import { readProjectAnalysis, readProjectCanonicalApi, readProjectConfig, readProjectRecord, readProjectSourceMeta } from '@/server/project-store';
 import { buildProjectSnapshot } from '@/server/snapshot';
 
 export async function GET(request: Request, ctx: RouteContext<'/api/projects/[id]'>): Promise<Response> {
   const { id } = await ctx.params;
-  const include = new Set(new URL(request.url).searchParams.get('include')?.split(',') ?? []);
+  const url = new URL(request.url);
+  const include = new Set(url.searchParams.get('include')?.split(',') ?? []);
+  const operationId = url.searchParams.get('operationId');
+
+  if (include.has('operationDetail') && operationId === null) {
+    return fail([{ code: 'CFG-001', message: '`operationId` is required when `include` contains "operationDetail"', category: 'VALIDATION' }], 400);
+  }
 
   let record;
   try {
@@ -26,6 +35,15 @@ export async function GET(request: Request, ctx: RouteContext<'/api/projects/[id
     return fail([{ code: 'IMP-008', message: `Project "${id}" is missing required files on disk`, category: 'IMPORT' }], 500);
   }
 
-  const snapshot = await buildProjectSnapshot(record, config, canonicalApi, sourceMeta, { analysis });
+  const operations = include.has('operations') ? buildOperationSummaries(canonicalApi, classifyApi(canonicalApi), analysis?.readiness) : undefined;
+
+  let operationDetail;
+  if (include.has('operationDetail') && operationId !== null) {
+    const operation = canonicalApi.operations.find((op) => op.id === operationId);
+    if (!operation) return fail([{ code: 'IMP-008', message: `No operation "${operationId}" on this project`, category: 'IMPORT' }], 404);
+    operationDetail = buildOperationDetail(operation, canonicalApi, config);
+  }
+
+  const snapshot = await buildProjectSnapshot(record, config, canonicalApi, sourceMeta, { analysis, operations, operationDetail });
   return ok(snapshot);
 }

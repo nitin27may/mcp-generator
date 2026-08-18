@@ -9,8 +9,11 @@ export type ToolRisk = z.infer<typeof ToolRiskSchema>;
  * Conservative P0 placeholder pending the SDK's own naming constraints being
  * formalized behind the adapter (P1). Matches common MCP tool-naming
  * convention; not yet cited to a specific spec clause — see FR-NAME-003.
+ * Exported so the wizard's live tool-name validation (Tool Designer) checks
+ * against the exact same pattern the schema enforces server-side, rather
+ * than a second copy that could drift.
  */
-const TOOL_NAME = /^[a-zA-Z0-9_-]{1,128}$/;
+export const TOOL_NAME_PATTERN = /^[a-zA-Z0-9_-]{1,128}$/;
 
 /**
  * TIP §21: retry eligibility defaults from HTTP method (GET/HEAD on; PUT/
@@ -42,7 +45,7 @@ export const ToolConfigSchema = z
   .object({
     enabled: z.boolean(),
     sourceOperation: SourceOperationRefSchema,
-    name: z.string().regex(TOOL_NAME, 'must match ^[a-zA-Z0-9_-]{1,128}$'),
+    name: z.string().regex(TOOL_NAME_PATTERN, 'must match ^[a-zA-Z0-9_-]{1,128}$'),
     description: z.string().min(1),
     bindings: z.record(z.string(), ValueBindingSchema),
     risk: ToolRiskSchema,

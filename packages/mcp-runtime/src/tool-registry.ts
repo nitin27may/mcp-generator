@@ -160,7 +160,7 @@ export function buildToolRegistry(
  * schema-normalizer's sanitized, budget-checked schemas directly; this is
  * the minimum needed to prove the P0 slice.
  */
-function buildInputSchema(operation: CanonicalOperation, toolConfig: ToolConfig): Record<string, unknown> {
+export function buildInputSchema(operation: CanonicalOperation, toolConfig: ToolConfig): Record<string, unknown> {
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
 
