@@ -113,6 +113,27 @@ export async function readProjectSourceRaw(id: string, version: number): Promise
   }
 }
 
+export type UpdateConfigResult = { ok: true; record: ProjectRecord } | { ok: false; serverRevision: number };
+
+/**
+ * Best-effort optimistic concurrency (read-check-write, not a file lock) —
+ * the realistic conflict without accounts is two browser tabs on the same
+ * project, not a distributed multi-writer race, so this is adequate for the
+ * ephemeral single-process store (D2). A true mismatch never overwrites
+ * `config.json`.
+ */
+export async function updateProjectConfig(id: string, expectedRevision: number, config: McpProjectConfig): Promise<UpdateConfigResult> {
+  const dir = projectDir(id);
+  const record = await readJson<ProjectRecord>(join(dir, 'project.json'));
+  if (!record) throw new Error(`project "${id}" not found`); // caller already checked existence
+  if (record.configRevision !== expectedRevision) return { ok: false, serverRevision: record.configRevision };
+
+  const updated: ProjectRecord = { ...record, configRevision: record.configRevision + 1, updatedAt: new Date().toISOString() };
+  await writeJsonAtomic(join(dir, 'config.json'), config);
+  await writeJsonAtomic(join(dir, 'project.json'), updated);
+  return { ok: true, record: updated };
+}
+
 export function readProjectAnalysis(id: string, version: number): Promise<ProjectAnalysis | undefined> {
   return readJson<ProjectAnalysis>(join(projectDir(id), 'analysis', `v${version}.json`));
 }

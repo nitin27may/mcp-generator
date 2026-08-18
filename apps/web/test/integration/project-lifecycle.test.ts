@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import type { ApiFail, ApiOk, ProjectAnalysis, ProjectSnapshot } from '@mcpgen/control-contracts';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { POST as postAnalyze } from '../../src/app/api/projects/[id]/analyze/route.js';
+import { PUT as putConfig } from '../../src/app/api/projects/[id]/config/route.js';
 import { POST as postImport } from '../../src/app/api/import/route.js';
 import { GET as getProject } from '../../src/app/api/projects/[id]/route.js';
 import { POST as postProjects } from '../../src/app/api/projects/route.js';
@@ -26,6 +27,10 @@ afterEach(async () => {
 
 function jsonRequest(url: string, body: unknown): Request {
   return new Request(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+}
+
+function jsonPutRequest(url: string, body: unknown): Request {
+  return new Request(url, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
 }
 
 /**
@@ -134,6 +139,85 @@ describe('project lifecycle — import -> create project -> get project (no mock
   it('404s when analyzing an unknown project id', async () => {
     const id = '00000000-0000-4000-8000-000000000000';
     const response = await postAnalyze(jsonRequest(`http://localhost/api/projects/${id}/analyze`, {}), { params: Promise.resolve({ id }) });
+    expect(response.status).toBe(404);
+  });
+
+  it('round-trips a config edit through PUT /config, bumping configRevision', async () => {
+    const specText = readFileSync(CUSTOMER_SPEC_PATH, 'utf8');
+    const importResponse = await postImport(jsonRequest('http://localhost/api/import', { kind: 'paste', text: specText }));
+    const importBody = (await importResponse.json()) as ApiOk<{ importId: string }>;
+    const createResponse = await postProjects(jsonRequest('http://localhost/api/projects', { importId: importBody.data.importId }));
+    const createBody = (await createResponse.json()) as ApiOk<ProjectSnapshot>;
+    const projectId = createBody.data.id;
+
+    const editedConfig = { ...createBody.data.config, project: { name: 'Renamed via PUT' } };
+    const putResponse = await putConfig(
+      jsonPutRequest(`http://localhost/api/projects/${projectId}/config`, { expectedRevision: createBody.data.configRevision, config: editedConfig }),
+      { params: Promise.resolve({ id: projectId }) },
+    );
+    expect(putResponse.status).toBe(200);
+    const putBody = (await putResponse.json()) as ApiOk<ProjectSnapshot>;
+    expect(putBody.data.config.project.name).toBe('Renamed via PUT');
+    expect(putBody.data.configRevision).toBe(createBody.data.configRevision + 1);
+
+    const refetched = await getProject(new Request(`http://localhost/api/projects/${projectId}`), { params: Promise.resolve({ id: projectId }) });
+    const refetchedBody = (await refetched.json()) as ApiOk<ProjectSnapshot>;
+    expect(refetchedBody.data.config.project.name).toBe('Renamed via PUT');
+  });
+
+  it('409s with the current serverRevision when expectedRevision is stale (two-tab conflict)', async () => {
+    const specText = readFileSync(CUSTOMER_SPEC_PATH, 'utf8');
+    const importResponse = await postImport(jsonRequest('http://localhost/api/import', { kind: 'paste', text: specText }));
+    const importBody = (await importResponse.json()) as ApiOk<{ importId: string }>;
+    const createResponse = await postProjects(jsonRequest('http://localhost/api/projects', { importId: importBody.data.importId }));
+    const createBody = (await createResponse.json()) as ApiOk<ProjectSnapshot>;
+    const projectId = createBody.data.id;
+
+    // Tab A saves first, advancing the server to revision 2.
+    const tabAConfig = { ...createBody.data.config, project: { name: 'From tab A' } };
+    await putConfig(jsonPutRequest(`http://localhost/api/projects/${projectId}/config`, { expectedRevision: 1, config: tabAConfig }), {
+      params: Promise.resolve({ id: projectId }),
+    });
+
+    // Tab B still thinks it's revision 1 — the server must refuse, not silently clobber tab A's save.
+    const tabBConfig = { ...createBody.data.config, project: { name: 'From tab B' } };
+    const tabBResponse = await putConfig(jsonPutRequest(`http://localhost/api/projects/${projectId}/config`, { expectedRevision: 1, config: tabBConfig }), {
+      params: Promise.resolve({ id: projectId }),
+    });
+    expect(tabBResponse.status).toBe(409);
+    const tabBBody = (await tabBResponse.json()) as ApiFail & { serverRevision: number };
+    expect(tabBBody.serverRevision).toBe(2);
+    expect(tabBBody.errors[0]?.code).toBe('CFG-002');
+
+    const stillTabA = await getProject(new Request(`http://localhost/api/projects/${projectId}`), { params: Promise.resolve({ id: projectId }) });
+    const stillTabABody = (await stillTabA.json()) as ApiOk<ProjectSnapshot>;
+    expect(stillTabABody.data.config.project.name).toBe('From tab A'); // tab B's write never landed
+  });
+
+  it('422s with a sourcePointer-carrying ProductError when the config fails schema validation', async () => {
+    const specText = readFileSync(CUSTOMER_SPEC_PATH, 'utf8');
+    const importResponse = await postImport(jsonRequest('http://localhost/api/import', { kind: 'paste', text: specText }));
+    const importBody = (await importResponse.json()) as ApiOk<{ importId: string }>;
+    const createResponse = await postProjects(jsonRequest('http://localhost/api/projects', { importId: importBody.data.importId }));
+    const createBody = (await createResponse.json()) as ApiOk<ProjectSnapshot>;
+    const projectId = createBody.data.id;
+
+    const invalidConfig = { ...createBody.data.config, api: { baseUrl: { source: 'environment', name: 'not valid — lowercase and spaces' } } };
+    const response = await putConfig(
+      jsonPutRequest(`http://localhost/api/projects/${projectId}/config`, { expectedRevision: createBody.data.configRevision, config: invalidConfig }),
+      { params: Promise.resolve({ id: projectId }) },
+    );
+    expect(response.status).toBe(422);
+    const body = (await response.json()) as ApiFail;
+    expect(body.errors.length).toBeGreaterThan(0);
+    expect(body.errors[0]?.sourcePointer).toBe('#/api/baseUrl/name');
+  });
+
+  it('404s when saving config for an unknown project id', async () => {
+    const id = '00000000-0000-4000-8000-000000000000';
+    const response = await putConfig(jsonPutRequest(`http://localhost/api/projects/${id}/config`, { expectedRevision: 1, config: {} }), {
+      params: Promise.resolve({ id }),
+    });
     expect(response.status).toBe(404);
   });
 });

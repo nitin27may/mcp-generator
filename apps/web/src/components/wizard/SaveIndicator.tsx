@@ -1,12 +1,13 @@
-import { Loader2, Check, AlertTriangle } from 'lucide-react';
+import { Loader2, Check, AlertTriangle, GitMerge } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+import type { SaveStatus } from '@/wizard/state';
+export type { SaveStatus };
 
 const STATUS_META: Record<Exclude<SaveStatus, 'idle'>, { label: string; Icon: typeof Loader2 }> = {
   saving: { label: 'Saving…', Icon: Loader2 },
   saved: { label: 'Saved', Icon: Check },
   error: { label: 'Save failed', Icon: AlertTriangle },
+  conflict: { label: 'Conflict', Icon: GitMerge },
 };
 
 /** `aria-live="polite"` so save-state changes are announced without stealing focus. */

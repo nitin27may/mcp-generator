@@ -31,12 +31,82 @@ function snapshot(overrides: Partial<ProjectSnapshot> = {}): ProjectSnapshot {
 }
 
 describe('wizardReducer', () => {
-  it('PROJECT_LOADED sets projectId/snapshot and clears errors', () => {
-    const dirty: WizardState = { ...initialWizardState, errors: [{ code: 'X', message: 'x', category: 'IMPORT' }] };
+  it('PROJECT_LOADED sets projectId/snapshot/configDraft and clears errors and dirty', () => {
+    const dirty: WizardState = { ...initialWizardState, dirty: true, errors: [{ code: 'X', message: 'x', category: 'IMPORT' }] };
     const next = wizardReducer(dirty, { type: 'PROJECT_LOADED', snapshot: snapshot() });
     expect(next.projectId).toBe('11111111-1111-4111-8111-111111111111');
     expect(next.snapshot).not.toBeNull();
+    expect(next.configDraft).toEqual(snapshot().config);
+    expect(next.dirty).toBe(false);
     expect(next.errors).toEqual([]);
+  });
+
+  it('CONFIG_DRAFT_CHANGED replaces the draft and marks dirty', () => {
+    const loaded = wizardReducer(initialWizardState, { type: 'PROJECT_LOADED', snapshot: snapshot() });
+    const newConfig = { ...loaded.configDraft!, project: { name: 'Renamed' } };
+    const next = wizardReducer(loaded, { type: 'CONFIG_DRAFT_CHANGED', config: newConfig });
+    expect(next.configDraft).toBe(newConfig);
+    expect(next.dirty).toBe(true);
+  });
+
+  it('SAVE_STARTED sets saveStatus to saving without touching the draft', () => {
+    const loaded = wizardReducer(initialWizardState, { type: 'PROJECT_LOADED', snapshot: snapshot() });
+    const next = wizardReducer(loaded, { type: 'SAVE_STARTED' });
+    expect(next.saveStatus).toBe('saving');
+    expect(next.configDraft).toBe(loaded.configDraft);
+  });
+
+  it('SAVE_SUCCEEDED replaces snapshot/configDraft, clears dirty, and marks saved', () => {
+    const dirty: WizardState = { ...wizardReducer(initialWizardState, { type: 'PROJECT_LOADED', snapshot: snapshot() }), dirty: true, saveStatus: 'saving' };
+    const savedSnapshot = snapshot({ configRevision: 2 });
+    const next = wizardReducer(dirty, { type: 'SAVE_SUCCEEDED', snapshot: savedSnapshot });
+    expect(next.snapshot?.configRevision).toBe(2);
+    expect(next.dirty).toBe(false);
+    expect(next.saveStatus).toBe('saved');
+  });
+
+  it('SAVE_CONFLICTED records the server revision without discarding the local draft', () => {
+    const loaded: WizardState = { ...wizardReducer(initialWizardState, { type: 'PROJECT_LOADED', snapshot: snapshot() }), dirty: true };
+    const next = wizardReducer(loaded, { type: 'SAVE_CONFLICTED', serverRevision: 5 });
+    expect(next.saveStatus).toBe('conflict');
+    expect(next.conflictServerRevision).toBe(5);
+    expect(next.configDraft).toBe(loaded.configDraft);
+  });
+
+  it('SAVE_FAILED sets saveStatus to error and populates errors', () => {
+    const loaded = wizardReducer(initialWizardState, { type: 'PROJECT_LOADED', snapshot: snapshot() });
+    const errors = [{ code: 'CFG-001', message: 'bad', category: 'VALIDATION' as const }];
+    const next = wizardReducer(loaded, { type: 'SAVE_FAILED', errors });
+    expect(next.saveStatus).toBe('error');
+    expect(next.errors).toEqual(errors);
+  });
+
+  it('CONFLICT_RELOADED adopts the server snapshot and clears the conflict', () => {
+    const conflicted: WizardState = { ...wizardReducer(initialWizardState, { type: 'PROJECT_LOADED', snapshot: snapshot() }), saveStatus: 'conflict', conflictServerRevision: 3, dirty: true };
+    const serverSnapshot = snapshot({ configRevision: 3 });
+    const next = wizardReducer(conflicted, { type: 'CONFLICT_RELOADED', snapshot: serverSnapshot });
+    expect(next.snapshot?.configRevision).toBe(3);
+    expect(next.dirty).toBe(false);
+    expect(next.saveStatus).toBe('idle');
+    expect(next.conflictServerRevision).toBeNull();
+  });
+
+  it('CONFLICT_OVERWRITE_ACCEPTED adopts the server revision but keeps the local draft', () => {
+    const loaded = wizardReducer(initialWizardState, { type: 'PROJECT_LOADED', snapshot: snapshot() });
+    const newConfig = { ...loaded.configDraft!, project: { name: 'My Edit' } };
+    const edited = wizardReducer(loaded, { type: 'CONFIG_DRAFT_CHANGED', config: newConfig });
+    const conflicted = wizardReducer(edited, { type: 'SAVE_CONFLICTED', serverRevision: 7 });
+    const next = wizardReducer(conflicted, { type: 'CONFLICT_OVERWRITE_ACCEPTED' });
+    expect(next.snapshot?.configRevision).toBe(7);
+    expect(next.configDraft).toBe(newConfig); // local edits preserved
+    expect(next.saveStatus).toBe('idle');
+    expect(next.dirty).toBe(true);
+  });
+
+  it('CONFLICT_OVERWRITE_ACCEPTED is a no-op when there is no active conflict', () => {
+    const loaded = wizardReducer(initialWizardState, { type: 'PROJECT_LOADED', snapshot: snapshot() });
+    const next = wizardReducer(loaded, { type: 'CONFLICT_OVERWRITE_ACCEPTED' });
+    expect(next).toBe(loaded);
   });
 
   it('ERRORS_SET replaces the error list', () => {

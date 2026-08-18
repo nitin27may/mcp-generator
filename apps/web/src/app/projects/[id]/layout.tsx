@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { WizardProvider } from '@/wizard/WizardProvider';
+import { AutosaveController } from '@/components/wizard/AutosaveController';
 import { InvalidIdError } from '@/server/paths';
 import { readProjectCanonicalApi, readProjectConfig, readProjectRecord, readProjectSourceMeta } from '@/server/project-store';
 import { buildProjectSnapshot } from '@/server/snapshot';
@@ -31,5 +32,10 @@ export default async function ProjectLayout({ children, params }: { children: Re
 
   const snapshot = await buildProjectSnapshot(record, config, canonicalApi, sourceMeta);
 
-  return <WizardProvider initialSnapshot={snapshot}>{children}</WizardProvider>;
+  return (
+    <WizardProvider initialSnapshot={snapshot}>
+      <AutosaveController />
+      {children}
+    </WizardProvider>
+  );
 }

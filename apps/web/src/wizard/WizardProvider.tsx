@@ -17,7 +17,9 @@ export const WizardDispatchContext = createContext<Dispatch<WizardAction> | unde
 export function WizardProvider({ children, initialSnapshot }: { children: ReactNode; initialSnapshot?: ProjectSnapshot }) {
   const [state, dispatch] = useReducer(
     wizardReducer,
-    initialSnapshot ? { ...initialWizardState, projectId: initialSnapshot.id, snapshot: initialSnapshot } : initialWizardState,
+    initialSnapshot
+      ? { ...initialWizardState, projectId: initialSnapshot.id, snapshot: initialSnapshot, configDraft: initialSnapshot.config }
+      : initialWizardState,
   );
 
   return (

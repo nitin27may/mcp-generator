@@ -21,3 +21,4 @@ export {
   type ImportResult,
 } from './import.js';
 export { AnalyzeRequestSchema, type AnalyzeRequest } from './analyze.js';
+export { UpdateConfigRequestSchema, type UpdateConfigRequest } from './config.js';
