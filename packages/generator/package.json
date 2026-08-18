@@ -16,7 +16,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node scripts/build-runtime-asset.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "rm -rf dist .turbo"
   },
@@ -27,11 +27,11 @@
     "@mcpgen/mcp-protocol": "workspace:*",
     "@mcpgen/mcp-runtime": "workspace:*",
     "@mcpgen/redaction": "workspace:*",
-    "@mcpgen/upstream-auth": "workspace:*",
-    "esbuild": "0.28.2"
+    "@mcpgen/upstream-auth": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",
-    "@mcpgen/openapi-adapter": "workspace:*"
+    "@mcpgen/openapi-adapter": "workspace:*",
+    "esbuild": "0.28.2"
   }
 }

@@ -302,9 +302,6 @@ importers:
       '@mcpgen/upstream-auth':
         specifier: workspace:*
         version: link:../upstream-auth
-      esbuild:
-        specifier: 0.28.2
-        version: 0.28.2
     devDependencies:
       '@mcpgen/openapi-adapter':
         specifier: workspace:*
@@ -312,6 +309,9 @@ importers:
       '@types/node':
         specifier: ^22.19.0
         version: 22.20.1
+      esbuild:
+        specifier: 0.28.2
+        version: 0.28.2
 
   packages/mcp-protocol:
     dependencies:

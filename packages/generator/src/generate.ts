@@ -16,6 +16,11 @@ export interface GenerateProjectInput {
   readonly sourceFingerprint?: string;
 }
 
+export interface GenerateProjectOptions {
+  /** Passed through to `bundleRuntime` — see its own doc comment for when a caller must set this explicitly. */
+  readonly runtimeAssetPath?: string;
+}
+
 export interface GenerateProjectResult {
   readonly diagnostics: Diagnostic[];
   readonly outputDir?: string;
@@ -28,7 +33,7 @@ export interface GenerateProjectResult {
  * Deterministic except `generatedAt` (TIP §39): the same config and
  * operations produce byte-identical output otherwise.
  */
-export async function generateProject(input: GenerateProjectInput, outputDir: string): Promise<GenerateProjectResult> {
+export async function generateProject(input: GenerateProjectInput, outputDir: string, options: GenerateProjectOptions = {}): Promise<GenerateProjectResult> {
   const { config } = input;
 
   const referencedOperations: CanonicalOperation[] = [];
@@ -64,7 +69,7 @@ export async function generateProject(input: GenerateProjectInput, outputDir: st
   }
 
   await mkdir(join(outputDir, 'dist'), { recursive: true });
-  await bundleRuntime(join(outputDir, 'dist', 'cli.mjs'));
+  await bundleRuntime(join(outputDir, 'dist', 'cli.mjs'), options.runtimeAssetPath);
 
   return { diagnostics: [], outputDir };
 }
