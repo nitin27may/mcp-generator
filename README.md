@@ -148,7 +148,9 @@ docker compose up
 ```
 
 Builds and runs the web wizard in a container — same app, same flow, nothing lighter or different
-about it. Open `http://localhost:3000` and use it exactly as in step 3.
+about it: import a spec, walk every step, generate, and download the `.zip`, all through
+`http://localhost:3000`, backed by a named volume so projects survive a restart. If port 3000 is
+already taken on your machine, override it: `WEB_PORT=3300 docker compose up`.
 
 ### 6. What you get from Generate
 

@@ -1,0 +1,13 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    volumes:
+      - mcpgen-workspace:/data
+    restart: unless-stopped
+
+volumes:
+  mcpgen-workspace:
