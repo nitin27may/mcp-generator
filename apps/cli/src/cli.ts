@@ -5,63 +5,85 @@ import { runValidate } from './commands/validate.js';
 import { runPrintTools } from './commands/print-tools.js';
 import { runPrintConfig } from './commands/print-config.js';
 import { runGenerate } from './commands/generate.js';
+import { applyEnvFiles } from './env-file.js';
+import { CLI_VERSION } from './version.js';
+import { EXIT_FAILURE, EXIT_OK, EXIT_USAGE, parseArgv, renderHelp, type ParsedFlags } from './args.js';
 
-interface ParsedArgs {
-  readonly command: string;
-  readonly configPath: string;
-  readonly specPath: string;
-  readonly transport: 'stdio' | 'http';
-  readonly host?: string;
-  readonly port?: number;
-  readonly outDir: string;
+function str(flags: ParsedFlags, key: string): string {
+  const value = flags[key];
+  if (typeof value !== 'string') throw new Error(`internal error: flag "${key}" has no default and was not required`);
+  return value;
 }
 
-function parseArgs(argv: readonly string[]): ParsedArgs {
-  const command = argv[0] ?? 'serve';
-  let configPath = './mcp.config.json';
-  let specPath = './openapi.json';
-  let transport: 'stdio' | 'http' = 'stdio'; // TIP §31: stdio is the default transport
-  let host: string | undefined;
-  let port: number | undefined;
-  let outDir = './dist-mcp';
+function optionalStr(flags: ParsedFlags, key: string): string | undefined {
+  const value = flags[key];
+  return typeof value === 'string' ? value : undefined;
+}
 
-  for (let i = 1; i < argv.length; i++) {
-    if (argv[i] === '--config') configPath = argv[++i] ?? configPath;
-    else if (argv[i] === '--spec') specPath = argv[++i] ?? specPath;
-    else if (argv[i] === '--transport') {
-      const value = argv[++i];
-      if (value === 'stdio' || value === 'http') transport = value;
-    } else if (argv[i] === '--host') host = argv[++i];
-    else if (argv[i] === '--port') {
-      const value = argv[++i];
-      if (value !== undefined) port = Number(value);
-    } else if (argv[i] === '--out') outDir = argv[++i] ?? outDir;
+function optionalInt(flags: ParsedFlags, key: string): number | undefined {
+  const value = flags[key];
+  return typeof value === 'string' ? Number(value) : undefined;
+}
+
+function stringArray(flags: ParsedFlags, key: string): readonly string[] {
+  const value = flags[key];
+  if (value === undefined) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+/** Applied before touching any secret/environment binding — a real environment variable always wins over one loaded this way (env-file.ts). Failure here is a usage error, not an operation failure: the config/spec were never even read. */
+async function loadEnvFiles(flags: ParsedFlags): Promise<number | undefined> {
+  const error = applyEnvFiles(stringArray(flags, 'dotenv'));
+  if (!error) return undefined;
+  process.stderr.write(`Failed to read env file "${error.path}": ${error.message}\n`);
+  return EXIT_USAGE;
+}
+
+async function dispatch(command: string, flags: ParsedFlags): Promise<number> {
+  switch (command) {
+    case 'serve': {
+      const envFileFailure = await loadEnvFiles(flags);
+      if (envFileFailure !== undefined) return envFileFailure;
+      const host = optionalStr(flags, 'host');
+      const port = optionalInt(flags, 'port');
+      return runServe(str(flags, 'config'), str(flags, 'spec'), {
+        transport: str(flags, 'transport') as 'stdio' | 'http',
+        ...(host !== undefined ? { host } : {}),
+        ...(port !== undefined ? { port } : {}),
+      });
+    }
+    case 'validate': {
+      const envFileFailure = await loadEnvFiles(flags);
+      if (envFileFailure !== undefined) return envFileFailure;
+      return runValidate(str(flags, 'config'), str(flags, 'spec'));
+    }
+    case 'print-tools':
+      return runPrintTools(str(flags, 'config'), str(flags, 'spec'));
+    case 'print-config':
+      return runPrintConfig(str(flags, 'config'));
+    case 'generate':
+      return runGenerate(str(flags, 'config'), str(flags, 'spec'), str(flags, 'out'));
+    default:
+      // Unreachable: parseArgv only ever returns a 'command' outcome for a name found in COMMANDS.
+      return EXIT_USAGE;
   }
-
-  return { command, configPath, specPath, transport, outDir, ...(host ? { host } : {}), ...(port !== undefined ? { port } : {}) };
 }
 
 async function main(): Promise<number> {
-  const args = parseArgs(process.argv.slice(2));
+  const outcome = parseArgv(process.argv.slice(2));
 
-  switch (args.command) {
-    case 'serve':
-      return runServe(args.configPath, args.specPath, {
-        transport: args.transport,
-        ...(args.host ? { host: args.host } : {}),
-        ...(args.port !== undefined ? { port: args.port } : {}),
-      });
-    case 'validate':
-      return runValidate(args.configPath, args.specPath);
-    case 'print-tools':
-      return runPrintTools(args.configPath, args.specPath);
-    case 'print-config':
-      return runPrintConfig(args.configPath);
-    case 'generate':
-      return runGenerate(args.configPath, args.specPath, args.outDir);
-    default:
-      process.stderr.write(`Unknown command "${args.command}". Expected: serve | validate | print-tools | print-config | generate\n`);
-      return 1;
+  switch (outcome.kind) {
+    case 'help':
+      process.stdout.write(`${renderHelp(outcome.command)}\n`);
+      return EXIT_OK;
+    case 'version':
+      process.stdout.write(`${CLI_VERSION}\n`);
+      return EXIT_OK;
+    case 'error':
+      process.stderr.write(`${outcome.message}\n`);
+      return EXIT_USAGE;
+    case 'command':
+      return dispatch(outcome.command.name, outcome.flags);
   }
 }
 
@@ -70,6 +92,6 @@ main()
     process.exitCode = exitCode;
   })
   .catch((error: unknown) => {
-    process.stderr.write(`Fatal: ${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
-    process.exitCode = 1;
+    process.stderr.write(`Fatal: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}\n`);
+    process.exitCode = EXIT_FAILURE;
   });

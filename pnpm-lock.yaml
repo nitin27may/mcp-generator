@@ -256,6 +256,9 @@ importers:
       '@mcpgen/risk-engine':
         specifier: workspace:*
         version: link:../risk-engine
+      '@mcpgen/upstream-auth':
+        specifier: workspace:*
+        version: link:../upstream-auth
       zod:
         specifier: 4.4.3
         version: 4.4.3

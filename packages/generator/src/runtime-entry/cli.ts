@@ -9,6 +9,7 @@ import { runPrintConfig } from './commands/print-config.js';
 import { runPrintTools } from './commands/print-tools.js';
 import { runServe } from './commands/serve.js';
 import { runValidate } from './commands/validate.js';
+import { applyEnvFiles } from './env-file.js';
 
 // After bundling this becomes dist/cli.mjs; mcp.config.json and
 // generated-manifest.json ship as siblings of dist/, one level up.
@@ -21,6 +22,7 @@ interface ParsedArgs {
   readonly transport: 'stdio' | 'http';
   readonly host?: string;
   readonly port?: number;
+  readonly envFiles: readonly string[];
 }
 
 function parseArgs(argv: readonly string[]): ParsedArgs {
@@ -28,6 +30,7 @@ function parseArgs(argv: readonly string[]): ParsedArgs {
   let transport: 'stdio' | 'http' = 'stdio';
   let host: string | undefined;
   let port: number | undefined;
+  const envFiles: string[] = [];
 
   for (let i = 1; i < argv.length; i++) {
     if (argv[i] === '--transport') {
@@ -37,24 +40,39 @@ function parseArgs(argv: readonly string[]): ParsedArgs {
     else if (argv[i] === '--port') {
       const value = argv[++i];
       if (value !== undefined) port = Number(value);
+    } else if (argv[i] === '--dotenv') {
+      const value = argv[++i];
+      if (value !== undefined) envFiles.push(value);
     }
   }
 
-  return { command, transport, ...(host ? { host } : {}), ...(port !== undefined ? { port } : {}) };
+  return { command, transport, envFiles, ...(host ? { host } : {}), ...(port !== undefined ? { port } : {}) };
 }
 
 async function main(): Promise<number> {
   const args = parseArgs(process.argv.slice(2));
 
   switch (args.command) {
-    case 'serve':
+    case 'serve': {
+      const envFileError = applyEnvFiles(args.envFiles);
+      if (envFileError) {
+        process.stderr.write(`Failed to read env file "${envFileError.path}": ${envFileError.message}\n`);
+        return 1;
+      }
       return runServe(DEFAULT_CONFIG_PATH, DEFAULT_MANIFEST_PATH, {
         transport: args.transport,
         ...(args.host ? { host: args.host } : {}),
         ...(args.port !== undefined ? { port: args.port } : {}),
       });
-    case 'validate':
+    }
+    case 'validate': {
+      const envFileError = applyEnvFiles(args.envFiles);
+      if (envFileError) {
+        process.stderr.write(`Failed to read env file "${envFileError.path}": ${envFileError.message}\n`);
+        return 1;
+      }
       return runValidate(DEFAULT_CONFIG_PATH, DEFAULT_MANIFEST_PATH);
+    }
     case 'print-tools':
       return runPrintTools(DEFAULT_CONFIG_PATH, DEFAULT_MANIFEST_PATH);
     case 'print-config':

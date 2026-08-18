@@ -92,9 +92,18 @@ an unresolved base-URL environment variable and a missing upstream credential. T
 the fixture references real deploy-time secrets on purpose, and catching exactly that is what
 `validate` is for.)
 
-Commands: `serve | validate | print-tools | print-config | generate`. Flags: `--config`, `--spec`,
-`--transport stdio|http` (`serve` only, defaults to `stdio`), `--host`/`--port` (`http` only),
-`--out` (`generate` only, defaults to `./dist-mcp`).
+Commands: `serve | validate | print-tools | print-config | generate`. Every command takes
+`--config`; every command but `print-config` also takes `--spec`. `serve` also takes
+`--transport stdio|http` (default `stdio`), `--host`/
+`--port` (`http` only — `--port 0` picks any available port), and `--dotenv <path>` (repeatable;
+loads variables from a file without ever overriding one already set in the real environment — the
+kind of environment an MCP client injects when it launches this server). `validate` also accepts
+`--dotenv`. `generate` also takes `--out` (default `./dist-mcp`). `--help`/`-h` and `mcpgen help
+<command>` print the full flag reference for any command; `--version`/`-v` prints the CLI version.
+
+Exit codes are consistent across every command: **0** success, **1** the operation ran but failed
+(diagnostics were emitted — a missing secret, a validation error), **2** a usage error (an unknown
+command or flag, an invalid flag value) — nothing was even attempted.
 
 If `npm link` doesn't work out of the box, see
 [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md#linking-the-cli-locally).

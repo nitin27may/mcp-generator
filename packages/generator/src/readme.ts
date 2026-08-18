@@ -1,25 +1,15 @@
-import type { McpProjectConfig, ValueBinding } from '@mcpgen/config-schema';
-import { authBindingsOf } from '@mcpgen/upstream-auth';
+import type { McpProjectConfig } from '@mcpgen/config-schema';
+import { collectConfigEnvBindings } from '@mcpgen/upstream-auth';
 import type { GenerationManifest } from './manifest.js';
-
-function envNames(bindings: Readonly<Record<string, ValueBinding>>, sensitive: boolean): string[] {
-  return Object.values(bindings)
-    .filter((b): b is Extract<ValueBinding, { source: 'environment' | 'secret' }> => b.source === (sensitive ? 'secret' : 'environment'))
-    .map((b) => b.name);
-}
 
 /** TIP §73 — all 12 required sections. */
 export function buildReadme(config: McpProjectConfig, manifest: GenerationManifest): string {
   const { generation } = config;
   const enabledTools = Object.values(config.tools).filter((t) => t.enabled);
 
-  const allBindings: Record<string, ValueBinding>[] = [
-    { baseUrl: config.api.baseUrl },
-    ...(config.upstreamAuthentication ? [authBindingsOf(config.upstreamAuthentication)] : []),
-    ...enabledTools.map((t) => t.bindings),
-  ];
-  const required = new Set(allBindings.flatMap((b) => envNames(b, false)));
-  const secrets = new Set(allBindings.flatMap((b) => envNames(b, true)));
+  const envEntries = collectConfigEnvBindings(config);
+  const required = new Set(envEntries.filter((e) => !e.sensitive).map((e) => e.name));
+  const secrets = new Set(envEntries.filter((e) => e.sensitive).map((e) => e.name));
 
   const toolList = enabledTools.map((t) => `- **${t.name}** (${t.risk}) — ${t.description}`).join('\n');
   const envList = [...required].sort().map((n) => `- \`${n}\``).join('\n') || '_none_';
@@ -60,8 +50,12 @@ ${secretList}
 
 \`\`\`bash
 cp .env.example .env   # fill in the values above
-npx ${generation.packageName}
+npx ${generation.packageName} --dotenv .env
 \`\`\`
+
+\`--dotenv\` only fills in a variable that isn't already set in the real environment — an MCP
+client that launches this server with its own \`env\` block always wins, so it's safe to keep in a
+launch command a client controls.
 ${httpExample}${dockerSection}
 ## Client configuration example
 

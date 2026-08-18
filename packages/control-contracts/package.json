@@ -18,6 +18,7 @@
     "@mcpgen/config-schema": "workspace:*",
     "@mcpgen/readiness-engine": "workspace:*",
     "@mcpgen/risk-engine": "workspace:*",
+    "@mcpgen/upstream-auth": "workspace:*",
     "zod": "4.4.3"
   },
   "devDependencies": {

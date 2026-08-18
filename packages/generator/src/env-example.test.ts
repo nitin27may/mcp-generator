@@ -32,6 +32,15 @@ describe('buildEnvExample', () => {
     expect(buildEnvExample(withToolEnv)).toContain('API_VERSION=');
   });
 
+  it('excludes a disabled tool\'s environment bindings — a variable the server will never read is noise, not a promise', () => {
+    const withDisabledToolEnv = config({
+      tools: {
+        get_customer: tool({ enabled: false, bindings: { apiVersion: { source: 'environment', name: 'DISABLED_TOOL_VAR', required: false } } }),
+      },
+    });
+    expect(buildEnvExample(withDisabledToolEnv)).not.toContain('DISABLED_TOOL_VAR');
+  });
+
   it('does not duplicate a variable referenced by more than one binding', () => {
     const out = buildEnvExample(config());
     const occurrences = out.split('CUSTOMER_API_URL=').length - 1;

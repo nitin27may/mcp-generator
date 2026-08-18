@@ -3,7 +3,7 @@ import type { BindingResolutionContext } from '@mcpgen/binding-engine';
 import { serveToolsOverHttp, serveToolsOverStdio } from '@mcpgen/mcp-protocol';
 import { buildToolRegistry, validateStartupRequirements } from '@mcpgen/mcp-runtime';
 import { createLogger } from '@mcpgen/redaction';
-import { EnvironmentSecretProvider } from '@mcpgen/upstream-auth';
+import { EnvironmentSecretProvider, OAuthTokenProvider } from '@mcpgen/upstream-auth';
 import { loadProject } from '../load-project.js';
 
 export interface ServeOptions {
@@ -24,6 +24,10 @@ export async function runServe(configPath: string, manifestPath: string, options
 
   const { config, operations } = project.value;
   const secretProvider = new EnvironmentSecretProvider({ logger });
+  // One instance for the process lifetime, matching apps/cli's own serve command — its token
+  // cache only helps across calls if it survives between them. Its earlier absence here meant
+  // every OAuth2 tool call in a generated server re-acquired a token from scratch.
+  const oauthTokenProvider = new OAuthTokenProvider();
   const ctx: BindingResolutionContext = { toolInput: {}, getEnv: (name) => process.env[name], resolveSecret: (name) => secretProvider.get(name) };
 
   const startup = await validateStartupRequirements(config, ctx);
@@ -37,6 +41,7 @@ export async function runServe(configPath: string, manifestPath: string, options
     baseUrl: startup.baseUrl,
     getEnv: (name) => process.env[name],
     resolveSecret: (name) => secretProvider.get(name),
+    oauthTokenProvider,
   });
   if (registryDiagnostics.some((d) => d.severity === 'error')) {
     for (const diagnostic of registryDiagnostics) logger.error(diagnostic.message, { code: diagnostic.code });
