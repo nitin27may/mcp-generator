@@ -14,6 +14,10 @@ const EnvSchema = z.object({
    * `metadataBase`, so `/`'s Open Graph and Twitter card images resolve to
    * absolute URLs when the landing page is shared — relative image paths in
    * metadata are silently rebased onto `localhost` otherwise.
+   *
+   * Read at *build* time for `/` and `/docs`, which are statically prerendered:
+   * setting it only on a running container leaves the already-rendered card URLs
+   * pointing at the default. `apps/web/Dockerfile` takes it as a build arg.
    */
   MCPGEN_PUBLIC_URL: z.url().default('http://localhost:3000'),
   /**

@@ -3,6 +3,10 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        # Build-time, not runtime: the public pages are statically prerendered, so
+        # their Open Graph card URLs are fixed when the image is built.
+        MCPGEN_PUBLIC_URL: "${MCPGEN_PUBLIC_URL:-http://localhost:3000}"
     ports:
       - "${WEB_PORT:-3000}:3000"
     volumes:

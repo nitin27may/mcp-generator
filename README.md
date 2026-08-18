@@ -112,8 +112,9 @@ pages are responsive; the wizard itself is desktop-only by design (import → re
 Projects are stored under an ephemeral, disk-backed workspace (`MCPGEN_WORKSPACE_ROOT`, default
 `$TMPDIR/mcpgen-workspace`) — no accounts, no database. The full environment variable list (project
 TTLs, upload/build size caps, the private-egress opt-in used for local playground testing, and
-`MCPGEN_PUBLIC_URL` — set that one if you deploy this somewhere public, so shared links to `/`
-resolve their card image correctly) is in
+`MCPGEN_PUBLIC_URL` — set that one *at build time* if you deploy this somewhere public, so shared
+links to `/` resolve their card image correctly; the public pages are statically prerendered, so
+setting it only on a running container is too late) is in
 [`apps/web/src/server/env.ts`](apps/web/src/server/env.ts).
 
 ### 4. Install the CLI from source

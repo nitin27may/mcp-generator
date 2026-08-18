@@ -38,6 +38,12 @@ COPY tooling tooling
 # files to disk — an intermittent race (reproduced both here and locally), not a dependency-graph
 # bug (`turbo run build --dry=json` confirms the graph itself is correct). Serializing here costs
 # a few extra seconds on an image build that isn't on any interactive path.
+# `/` and `/docs` are statically prerendered, so their metadata — including the
+# absolute Open Graph image URL derived from MCPGEN_PUBLIC_URL — is baked in here,
+# at build time. Setting this variable only on the running container has no effect
+# on already-rendered pages, which is why it is a build arg and not just an ENV.
+ARG MCPGEN_PUBLIC_URL
+ENV MCPGEN_PUBLIC_URL=${MCPGEN_PUBLIC_URL:-http://localhost:3000}
 RUN pnpm exec turbo run build --filter=@mcpgen/web... --concurrency=1
 
 FROM base AS runner
