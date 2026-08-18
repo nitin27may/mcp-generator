@@ -267,4 +267,49 @@ describe('project lifecycle — import -> create project -> get project (no mock
     });
     expect(response.status).toBe(404);
   });
+
+  it('removing a required binding flips gates.bindings.complete to false; restoring it flips back to true', async () => {
+    const specText = readFileSync(CUSTOMER_SPEC_PATH, 'utf8');
+    const importResponse = await postImport(jsonRequest('http://localhost/api/import', { kind: 'paste', text: specText }));
+    const importBody = (await importResponse.json()) as ApiOk<{ importId: string }>;
+    const createResponse = await postProjects(jsonRequest('http://localhost/api/projects', { importId: importBody.data.importId }));
+    const createBody = (await createResponse.json()) as ApiOk<ProjectSnapshot>;
+    const projectId = createBody.data.id;
+
+    const getCustomerKey = Object.entries(createBody.data.config.tools).find(([, t]) => t.sourceOperation.operationId === 'getCustomer')![0];
+    const originalBindings = createBody.data.config.tools[getCustomerKey]!.bindings;
+    expect(originalBindings['customerId']).toBeDefined(); // seeded as tool-input by default
+
+    const enabledConfig = { ...createBody.data.config, tools: { ...createBody.data.config.tools, [getCustomerKey]: { ...createBody.data.config.tools[getCustomerKey]!, enabled: true } } };
+    const enableResponse = await putConfig(
+      jsonPutRequest(`http://localhost/api/projects/${projectId}/config`, { expectedRevision: createBody.data.configRevision, config: enabledConfig }),
+      { params: Promise.resolve({ id: projectId }) },
+    );
+    const enableBody = (await enableResponse.json()) as ApiOk<ProjectSnapshot>;
+    expect(enableBody.data.gates.bindings.complete).toBe(true); // every required param still bound
+
+    const { customerId: _removed, ...bindingsWithoutRequired } = originalBindings;
+    const unboundConfig = {
+      ...enableBody.data.config,
+      tools: { ...enableBody.data.config.tools, [getCustomerKey]: { ...enableBody.data.config.tools[getCustomerKey]!, bindings: bindingsWithoutRequired } },
+    };
+    const unboundResponse = await putConfig(
+      jsonPutRequest(`http://localhost/api/projects/${projectId}/config`, { expectedRevision: enableBody.data.configRevision, config: unboundConfig }),
+      { params: Promise.resolve({ id: projectId }) },
+    );
+    expect(unboundResponse.status).toBe(200); // removing a binding is itself schema-valid — BND-001 is a gate concern, not a parse failure
+    const unboundBody = (await unboundResponse.json()) as ApiOk<ProjectSnapshot>;
+    expect(unboundBody.data.gates.bindings.complete).toBe(false);
+
+    const restoredConfig = {
+      ...unboundBody.data.config,
+      tools: { ...unboundBody.data.config.tools, [getCustomerKey]: { ...unboundBody.data.config.tools[getCustomerKey]!, bindings: originalBindings } },
+    };
+    const restoredResponse = await putConfig(
+      jsonPutRequest(`http://localhost/api/projects/${projectId}/config`, { expectedRevision: unboundBody.data.configRevision, config: restoredConfig }),
+      { params: Promise.resolve({ id: projectId }) },
+    );
+    const restoredBody = (await restoredResponse.json()) as ApiOk<ProjectSnapshot>;
+    expect(restoredBody.data.gates.bindings.complete).toBe(true);
+  });
 });

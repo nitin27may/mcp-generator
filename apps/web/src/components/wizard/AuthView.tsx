@@ -1,6 +1,6 @@
 'use client';
 
-import type { ApiKeyAuth, UpstreamAuthentication, ValueBinding } from '@mcpgen/config-schema';
+import type { ApiKeyAuth, UpstreamAuthentication } from '@mcpgen/config-schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,17 +22,6 @@ const AUTH_TYPE_LABELS: Record<AuthTypeOrNone, string> = {
   basic: en.authTypeBasic,
   oauth2ClientCredentials: en.authTypeOAuth2,
 };
-
-/**
- * `ApiKeyAuth.value`/`BasicAuth.username`/`OAuth2ClientCredentialsAuth.clientId` are typed as the
- * full `ValueBinding` (including `tool-input`) at the schema level, but this wizard never offers
- * `tool-input` for a global auth field (see `ValueBindingField`'s doc comment) and the seeder never
- * produces one either — so a `tool-input` value here only happens via an out-of-band hand-edit to
- * `config.json`. Falls back to an empty secret binding rather than crashing on that edge case.
- */
-function toBindable(value: ValueBinding): BindableValue {
-  return value.source === 'tool-input' ? { source: 'secret', name: '' } : value;
-}
 
 function defaultForType(type: AuthTypeOrNone): UpstreamAuthentication | undefined {
   switch (type) {
@@ -110,7 +99,7 @@ export function AuthView({ projectId }: { projectId: string }) {
               </div>
               <ValueBindingField
                 label={en.authApiKeyValueLabel}
-                value={toBindable(auth.value)}
+                value={auth.value}
                 onChange={(next: BindableValue) => updateAuth({ ...auth, value: next })}
                 allowedKinds={['secret', 'environment', 'static']}
                 idPrefix="auth-apikey-value"
@@ -121,7 +110,7 @@ export function AuthView({ projectId }: { projectId: string }) {
           {auth?.type === 'bearer' && (
             <ValueBindingField
               label={en.authBearerTokenLabel}
-              value={toBindable(auth.token)}
+              value={auth.token}
               onChange={(next: BindableValue) => updateAuth({ ...auth, token: next })}
               allowedKinds={['secret', 'environment', 'static']}
               idPrefix="auth-bearer-token"
@@ -132,7 +121,7 @@ export function AuthView({ projectId }: { projectId: string }) {
             <>
               <ValueBindingField
                 label={en.authBasicUsernameLabel}
-                value={toBindable(auth.username)}
+                value={auth.username}
                 onChange={(next: BindableValue) => updateAuth({ ...auth, username: next })}
                 allowedKinds={['environment', 'static', 'secret']}
                 idPrefix="auth-basic-username"
@@ -160,7 +149,7 @@ export function AuthView({ projectId }: { projectId: string }) {
               </div>
               <ValueBindingField
                 label={en.authOAuth2ClientIdLabel}
-                value={toBindable(auth.clientId)}
+                value={auth.clientId}
                 onChange={(next: BindableValue) => updateAuth({ ...auth, clientId: next })}
                 allowedKinds={['environment', 'secret', 'static']}
                 idPrefix="auth-oauth2-clientid"
