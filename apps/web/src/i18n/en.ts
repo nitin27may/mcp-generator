@@ -185,4 +185,20 @@ export const en = {
   envSummaryUsedByCount: (count: number) => `${count} tool${count === 1 ? '' : 's'}`,
   envSummaryUsedByBaseUrl: 'base URL',
   envSummaryUsedByAuth: 'authentication',
+
+  policyTitle: 'Safety',
+  policySubtitle: 'Review the risk classification and retry behavior for every enabled tool. Confirmation-before-execution is not yet configurable here.',
+  policyNoEnabledTools: 'No tools are enabled yet — go back to Tools and enable at least one operation.',
+  policyColumnTool: 'Tool',
+  policyColumnRisk: 'Risk',
+  policyColumnRetry: 'Retry on transient failure',
+  policySuggestedRisk: (label: string) => `Suggested: ${label}`,
+  policyNoConfirmationNote: 'A confirmation-before-execution requirement is not yet configurable in this build — every enabled tool runs immediately when called, regardless of risk.',
+  policyRetryFloorNote: 'Tools currently classified Destructive or Privileged never retry, no matter what you choose here — changing the risk classification itself, not this toggle, is what lifts the floor (BR-006).',
+  policyContinue: 'Continue to test',
+
+  retryDefault: 'Use default (GET/HEAD only)',
+  retryAlways: 'Always retry',
+  retryNever: 'Never retry',
+  retryForcedOff: 'Forced off — risk floor',
 };

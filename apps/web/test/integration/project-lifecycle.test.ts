@@ -312,4 +312,27 @@ describe('project lifecycle — import -> create project -> get project (no mock
     const restoredBody = (await restoredResponse.json()) as ApiOk<ProjectSnapshot>;
     expect(restoredBody.data.gates.bindings.complete).toBe(true);
   });
+
+  it('round-trips a risk override to DESTRUCTIVE with retry.enabled: true — structurally legal even though the runtime refuses to honor it (BR-006)', async () => {
+    const specText = readFileSync(CUSTOMER_SPEC_PATH, 'utf8');
+    const importResponse = await postImport(jsonRequest('http://localhost/api/import', { kind: 'paste', text: specText }));
+    const importBody = (await importResponse.json()) as ApiOk<{ importId: string }>;
+    const createResponse = await postProjects(jsonRequest('http://localhost/api/projects', { importId: importBody.data.importId }));
+    const createBody = (await createResponse.json()) as ApiOk<ProjectSnapshot>;
+    const projectId = createBody.data.id;
+
+    const getCustomerKey = Object.entries(createBody.data.config.tools).find(([, t]) => t.sourceOperation.operationId === 'getCustomer')![0];
+    const tools = {
+      ...createBody.data.config.tools,
+      [getCustomerKey]: { ...createBody.data.config.tools[getCustomerKey]!, enabled: true, risk: 'DESTRUCTIVE' as const, retry: { enabled: true } },
+    };
+    const config = { ...createBody.data.config, tools };
+
+    const response = await putConfig(jsonPutRequest(`http://localhost/api/projects/${projectId}/config`, { expectedRevision: createBody.data.configRevision, config }), {
+      params: Promise.resolve({ id: projectId }),
+    });
+    expect(response.status).toBe(200); // config-schema doesn't enforce the BR-006 floor — that's a runtime concern (upstream-http's isRetryEligible), not a config-validity concern
+    const body = (await response.json()) as ApiOk<ProjectSnapshot>;
+    expect(body.data.config.tools[getCustomerKey]).toMatchObject({ risk: 'DESTRUCTIVE', retry: { enabled: true } });
+  });
 });
