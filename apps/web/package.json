@@ -19,6 +19,7 @@
     "@mcpgen/domain": "workspace:*",
     "@mcpgen/mcp-runtime": "workspace:*",
     "@mcpgen/openapi-adapter": "workspace:*",
+    "@mcpgen/readiness-engine": "workspace:*",
     "@mcpgen/risk-engine": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
     "@tailwindcss/postcss": "4.3.3",

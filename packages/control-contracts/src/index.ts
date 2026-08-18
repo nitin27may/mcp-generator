@@ -20,3 +20,4 @@ export {
   type CreateProjectRequest,
   type ImportResult,
 } from './import.js';
+export { AnalyzeRequestSchema, type AnalyzeRequest } from './analyze.js';

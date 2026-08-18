@@ -2,6 +2,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type { McpProjectConfig } from '@mcpgen/config-schema';
+import type { ProjectAnalysis } from '@mcpgen/control-contracts';
 import type { CanonicalApi } from '@mcpgen/domain';
 import { getEnv } from './env';
 import { projectDir, stagingDir, stagingRoot, workspaceRoot } from './paths';
@@ -110,6 +111,14 @@ export async function readProjectSourceRaw(id: string, version: number): Promise
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
     throw error;
   }
+}
+
+export function readProjectAnalysis(id: string, version: number): Promise<ProjectAnalysis | undefined> {
+  return readJson<ProjectAnalysis>(join(projectDir(id), 'analysis', `v${version}.json`));
+}
+
+export function writeProjectAnalysis(id: string, version: number, analysis: ProjectAnalysis): Promise<void> {
+  return writeJsonAtomic(join(projectDir(id), 'analysis', `v${version}.json`), analysis);
 }
 
 async function isExpired(dir: string, ttlHours: number, now: number): Promise<boolean> {

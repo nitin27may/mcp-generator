@@ -102,6 +102,9 @@ importers:
       '@mcpgen/openapi-adapter':
         specifier: workspace:*
         version: link:../../packages/openapi-adapter
+      '@mcpgen/readiness-engine':
+        specifier: workspace:*
+        version: link:../../packages/readiness-engine
       '@mcpgen/risk-engine':
         specifier: workspace:*
         version: link:../../packages/risk-engine

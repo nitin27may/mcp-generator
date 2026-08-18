@@ -3,8 +3,9 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { ApiFail, ApiOk, ProjectSnapshot } from '@mcpgen/control-contracts';
+import type { ApiFail, ApiOk, ProjectAnalysis, ProjectSnapshot } from '@mcpgen/control-contracts';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { POST as postAnalyze } from '../../src/app/api/projects/[id]/analyze/route.js';
 import { POST as postImport } from '../../src/app/api/import/route.js';
 import { GET as getProject } from '../../src/app/api/projects/[id]/route.js';
 import { POST as postProjects } from '../../src/app/api/projects/route.js';
@@ -88,5 +89,51 @@ describe('project lifecycle — import -> create project -> get project (no mock
       params: Promise.resolve({ id }),
     });
     expect(response.status).toBe(400);
+  });
+
+  it('analyzes readiness for a real project, caches on disk, and skips recompute unless forced', async () => {
+    const specText = readFileSync(CUSTOMER_SPEC_PATH, 'utf8');
+    const importResponse = await postImport(jsonRequest('http://localhost/api/import', { kind: 'paste', text: specText }));
+    const importBody = (await importResponse.json()) as ApiOk<{ importId: string }>;
+    const createResponse = await postProjects(jsonRequest('http://localhost/api/projects', { importId: importBody.data.importId }));
+    const createBody = (await createResponse.json()) as ApiOk<ProjectSnapshot>;
+    const projectId = createBody.data.id;
+
+    const firstAnalyze = await postAnalyze(jsonRequest(`http://localhost/api/projects/${projectId}/analyze`, {}), {
+      params: Promise.resolve({ id: projectId }),
+    });
+    expect(firstAnalyze.status).toBe(200);
+    const firstBody = (await firstAnalyze.json()) as ApiOk<ProjectAnalysis>;
+    expect(firstBody.data.readiness.categoryScores).toHaveLength(8);
+    expect(firstBody.data.risk).toBeDefined();
+
+    const cached = await postAnalyze(jsonRequest(`http://localhost/api/projects/${projectId}/analyze`, {}), {
+      params: Promise.resolve({ id: projectId }),
+    });
+    const cachedBody = (await cached.json()) as ApiOk<ProjectAnalysis>;
+    expect(cachedBody.data.analyzedAt).toBe(firstBody.data.analyzedAt); // skipped recompute — fingerprint matched
+
+    await new Promise((resolve) => setTimeout(resolve, 5)); // guarantee a distinct `analyzedAt` millisecond for the forced recompute below
+    const forced = await postAnalyze(jsonRequest(`http://localhost/api/projects/${projectId}/analyze`, { force: true }), {
+      params: Promise.resolve({ id: projectId }),
+    });
+    const forcedBody = (await forced.json()) as ApiOk<ProjectAnalysis>;
+    expect(forcedBody.data.analyzedAt).not.toBe(firstBody.data.analyzedAt);
+
+    const withAnalysis = await getProject(new Request(`http://localhost/api/projects/${projectId}?include=analysis`), {
+      params: Promise.resolve({ id: projectId }),
+    });
+    const withAnalysisBody = (await withAnalysis.json()) as ApiOk<ProjectSnapshot>;
+    expect(withAnalysisBody.data.analysis?.readiness.overallScore).toBe(firstBody.data.readiness.overallScore);
+
+    const withoutInclude = await getProject(new Request(`http://localhost/api/projects/${projectId}`), { params: Promise.resolve({ id: projectId }) });
+    const withoutIncludeBody = (await withoutInclude.json()) as ApiOk<ProjectSnapshot>;
+    expect(withoutIncludeBody.data.analysis).toBeUndefined();
+  });
+
+  it('404s when analyzing an unknown project id', async () => {
+    const id = '00000000-0000-4000-8000-000000000000';
+    const response = await postAnalyze(jsonRequest(`http://localhost/api/projects/${id}/analyze`, {}), { params: Promise.resolve({ id }) });
+    expect(response.status).toBe(404);
   });
 });
