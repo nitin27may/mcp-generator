@@ -59,7 +59,12 @@ export function PlaygroundView({ projectId }: { projectId: string }) {
         </CardContent>
       </Card>
 
-      <StepFooter backHref={`/projects/${projectId}/policy`} continueHref={`/projects/${projectId}/generate`} continueLabel={en.playgroundContinue} />
+      <StepFooter
+        backHref={`/projects/${projectId}/policy`}
+        continueHref={`/projects/${projectId}/generate`}
+        continueLabel={en.playgroundContinue}
+        skipHref={`/projects/${projectId}/generate`}
+      />
     </div>
   );
 }

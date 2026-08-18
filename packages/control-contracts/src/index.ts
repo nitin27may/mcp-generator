@@ -1,6 +1,6 @@
 export { diagnosticToProductError, type ProductError } from './product-error.js';
 export type { ApiOk, ApiFail } from './envelope.js';
-export { WIZARD_STEPS, type WizardStepId, type WizardStepMeta } from './steps.js';
+export { WIZARD_STEPS, isStepOptional, type WizardStepId, type WizardStepMeta, type OptionalityInput } from './steps.js';
 export type {
   StepGate,
   StepGateState,

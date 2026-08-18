@@ -7,6 +7,10 @@ export const en = {
   appName: 'mcpgen',
   appTagline: 'Import an OpenAPI spec, configure it, generate a governed MCP server.',
 
+  stepSkip: 'Skip for now',
+  stepOptional: 'Optional',
+  stepOptionalHint: 'This step is optional — you can skip it and come back later.',
+
   importTitle: 'Import an OpenAPI/Swagger document',
   importSubtitle: 'Paste, upload, or fetch from a URL. JSON or YAML, Swagger 2.0 through OpenAPI 3.1.',
   importTabPaste: 'Paste',

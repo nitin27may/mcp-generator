@@ -1,5 +1,6 @@
 'use client';
 
+import { isStepOptional } from '@mcpgen/control-contracts';
 import type { ApiKeyAuth, UpstreamAuthentication } from '@mcpgen/config-schema';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -193,7 +194,12 @@ export function AuthView({ projectId }: { projectId: string }) {
         </CardContent>
       </Card>
 
-      <StepFooter backHref={`/projects/${projectId}/api`} continueHref={`/projects/${projectId}/tools`} continueLabel={en.authContinue} />
+      <StepFooter
+        backHref={`/projects/${projectId}/api`}
+        continueHref={`/projects/${projectId}/tools`}
+        continueLabel={en.authContinue}
+        {...(isStepOptional('auth', { hasUpstreamAuth: auth !== undefined }) ? { skipHref: `/projects/${projectId}/tools` } : {})}
+      />
     </div>
   );
 }

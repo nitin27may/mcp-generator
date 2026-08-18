@@ -99,7 +99,12 @@ export function PolicyView({ projectId }: { projectId: string }) {
         </CardContent>
       </Card>
 
-      <StepFooter backHref={`/projects/${projectId}/bindings`} continueHref={`/projects/${projectId}/playground`} continueLabel={en.policyContinue} />
+      <StepFooter
+        backHref={`/projects/${projectId}/bindings`}
+        continueHref={`/projects/${projectId}/playground`}
+        continueLabel={en.policyContinue}
+        skipHref={`/projects/${projectId}/playground`}
+      />
     </div>
   );
 }

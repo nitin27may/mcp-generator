@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { Check } from 'lucide-react';
-import { WIZARD_STEPS, type WizardStepId } from '@mcpgen/control-contracts';
+import { WIZARD_STEPS, isStepOptional, type WizardStepId } from '@mcpgen/control-contracts';
 import { useWizardState } from '@/wizard/useWizard';
 import { cn } from '@/lib/utils';
+import { en } from '@/i18n/en';
 
 /**
  * Unreachable steps stay in the DOM (rendered `aria-disabled`, not removed)
@@ -13,7 +14,11 @@ import { cn } from '@/lib/utils';
  * expensive routes, not here (TIP §51).
  */
 export function StepNav({ currentStepId, projectId }: { currentStepId: WizardStepId; projectId: string }) {
-  const { snapshot } = useWizardState();
+  const { snapshot, configDraft } = useWizardState();
+
+  // The draft is what the user is actually editing; the snapshot's config is
+  // the last saved state and the only thing available before the draft loads.
+  const hasUpstreamAuth = (configDraft ?? snapshot?.config)?.upstreamAuthentication !== undefined;
 
   return (
     <nav aria-label="Wizard steps">
@@ -23,6 +28,7 @@ export function StepNav({ currentStepId, projectId }: { currentStepId: WizardSte
           const reachable = gate?.reachable ?? step.id === 'validation';
           const isCurrent = step.id === currentStepId;
           const isComplete = gate?.complete === true;
+          const optional = isStepOptional(step.id, { hasUpstreamAuth });
           const href = `/projects/${projectId}/${step.id}`;
 
           return (
@@ -43,7 +49,16 @@ export function StepNav({ currentStepId, projectId }: { currentStepId: WizardSte
                   ) : (
                     <span aria-hidden="true" className="w-3.5 shrink-0 text-center text-xs tabular-nums">{step.order + 1}</span>
                   )}
-                  {step.label}
+                  <span className="flex-1">{step.label}</span>
+                  {optional && (
+                    // Follows the row's own color, deliberately: `text-muted-foreground`
+                    // (#737373) on the current step's `bg-primary/10` tint (#e8efff) is
+                    // 4.11:1, under WCAG AA's 4.5:1 — caught by axe, same class of bug as
+                    // TIP §93 C31's destructive-variant finding.
+                    <span className={cn('shrink-0 text-xs font-normal', isCurrent ? 'text-primary' : 'text-muted-foreground')}>
+                      {en.stepOptional}
+                    </span>
+                  )}
                   {isComplete && <span className="sr-only"> (complete)</span>}
                 </Link>
               ) : (
