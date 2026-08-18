@@ -193,14 +193,22 @@ Editor for raw JSON/YAML, TanStack Query for server state, and a lightweight red
 for wizard state. Wizard state is explicitly a state machine, not ad-hoc `useState` — eleven steps
 with inheritance and validation gates is not a form.
 
-### 3.3 API / Control Plane
+### 3.3 API / Control Plane — corrected, single Next.js app (no separate Fastify service)
 
-**Fastify 5.12.0** for long-running import/analyze/playground work. Next.js still serves product
-pages, authentication, and thin APIs.
+**v1.1 specified a separate Fastify 5.12.0 Control API** alongside Next.js, reasoning that
+remote-`$ref` resolution can be slow, playground calls need strict egress controls, and future
+background jobs are easier with a dedicated service. None of those actually require a second
+*service* — they're properties of the code being called (`createSafeFetch`, already SSRF-hardened
+in `openapi-adapter`), not of which HTTP framework hosts the route, and Next.js Route Handlers run
+under a full Node.js runtime capable of `node:fs`/`node:dns`/`node:net` — everything `generateProject`
+and the safe-fetch layer need. "Future background jobs" was speculative; nothing in the backend needs
+a queue or worker today.
 
-Why not everything in Next.js route handlers: remote-reference resolution can be expensive;
-playground calls need strict egress controls; future workers/jobs are easier with a dedicated
-service.
+**Corrected (web UI plan, `apps/web`):** one Next.js app. Server Components and Route Handlers call a
+`src/server/*` business-logic layer directly (same process, no network hop) for anything the backend
+needs to do; the browser calls same-origin `app/api/*/route.ts` handlers. One deployment unit, one
+container, no internal-service URL, no CORS. Revisit a separate service only if a concrete need for
+independent scaling or genuine background-job processing shows up — not before.
 
 ### 3.4 MCP Runtime — pinned
 
@@ -1741,7 +1749,10 @@ trust boundary too early.
 
 ## 51. Web UX Architecture
 
-Server-driven project data, resilient wizard state. Routes:
+**Status: build in progress (`apps/web`, WBS `P2-W19-E01…E05`).** Route ↔ wizard-step mapping resolved
+during planning: BRD §15.1's 11 content-steps map onto these 10 routes with step 6 "Tool Selection"
+and step 7 "Tool Design" sharing one `/tools` route. Server-driven project data, resilient wizard
+state. Routes:
 
 ```text
 /projects/new/import
@@ -1775,9 +1786,22 @@ egress; persistence.
 Benefits: privacy, lower cost, faster onboarding. Challenges: parser/browser compatibility, large
 files, local external references. Complexity L but strategically attractive.
 
+**Decision (web UI plan): deferred, not built in this pass.** `openapi-adapter` is the only package
+permitted to import `@scalar/*` (ADR-0003) and its safe-fetch layer uses `node:dns`/`node:net` — it
+cannot run in a browser unmodified, and the boundary rule forbids a second parser elsewhere to dodge
+that. `readiness-engine`/`risk-engine` are pure and browser-capable, but both consume `CanonicalApi`,
+which only the adapter produces — so browser-side analysis buys nothing until browser-side parsing
+exists. Revisit once there's a real multi-tenant hosted deployment where "the spec never leaves the
+browser" is a genuine privacy differentiator, not before.
+
 ---
 
 ## 53. API Design for Control Plane
+
+**Implemented as `apps/web/src/app/api/*/route.ts` (Next.js Route Handlers, §3.3), not a separate
+Fastify service.** One additive route beyond this original list:
+`GET /api/projects/:id/generate/:buildId/download` (streams the zip; kept separate from the `generate`
+POST so blockers render before a download is offered — the POST returns JSON).
 
 ```text
 POST /api/import
@@ -1788,6 +1812,7 @@ PUT  /api/projects/:id/config
 POST /api/projects/:id/playground/dry-run
 POST /api/projects/:id/playground/execute
 POST /api/projects/:id/generate
+GET  /api/projects/:id/generate/:buildId/download   # additive
 POST /api/projects/:id/source-versions
 GET  /api/projects/:id/diff/:version
 ```
@@ -3104,3 +3129,4 @@ Contradictions and gaps found in v1.0 during the 1.1 pass, and their resolutions
 | **C18** | v1.0/v1.1 planned a standalone `reference-resolver` package (`§4`, `P1-W18-T01/T02`) for safe remote `$ref` fetching. | ADR-0003 confines every `@scalar/*` import to `openapi-adapter`, and the safe-fetch layer needs `@scalar/json-magic`'s `bundle()`/`fetchUrls()` plugin seam (the only realistic way to inject a custom, SSRF-safe fetcher without hand-rolling a `$ref`-graph walker) — so it landed as `openapi-adapter/src/remote-fetch/`, not a new package. §4's repo tree and the W18 package-mapping row (§83.1) updated; boundaries.mjs needed no change since the rule already scoped by package name, not by feature area. |
 | **C19** | `FetchPolicy.maxReferenceDepth` (§9.1) was assumed to map directly onto `bundle()`'s `depth` config option. | It doesn't mean the same thing: `depth` caps the bundler's raw JSON node-traversal depth, not the number of chained `$ref`-to-`$ref` hops the field name implies. Verified empirically — a value of 8 (matching the field's apparent intent) silently stopped `bundle()` from resolving a completely ordinary, non-malicious external `$ref` nested ~9 levels deep under `paths./x.get.responses.200.content...schema.properties`, which is unremarkable structure for a real OpenAPI document. Default raised to 100; `maxReferences` (a real count cap, enforced by us, not `bundle()`) is what actually protects against reference-chain abuse. |
 | **C20** | Not a documentation gap so much as a bug caught by the existing golden snapshot test: `fingerprintOf(document)` was called *after* `upgrade()` and the new `bundle()`-based remote-ref resolution, both of which mutate their input object in place when no change is needed (verified empirically for both). | For an already-3.1, ref-free document this silently added a stray `x-ext-urls: {}` key by the time the fingerprint was computed, changing the hash of a document that, from the caller's perspective, never changed at all. Fixed by capturing `rawFingerprint` at the top of `parseOpenApi()`, before any transformation runs. |
+| **C21** | v1.1 specified a separate Fastify Control API alongside Next.js (§3.3, §51, §53), reasoning that remote-`$ref` cost, playground egress control, and future background jobs each needed a dedicated service. | None of those actually require a second *service* — they're properties of the code being called (already-SSRF-hardened `createSafeFetch`), not of which framework hosts the route, and Next.js Route Handlers run under a full Node.js runtime capable of everything Fastify would do here. "Future background jobs" was speculative; nothing in the backend needs a queue today. Corrected during web-UI planning to a single Next.js app (`apps/web`) — Route Handlers + Server Components call a `src/server/*` business-logic layer directly, no internal-service URL, no CORS. §3.3/§51/§53 updated; `packages/control-contracts` still exists as a shared-schema package but is now consumed by one app, not two. Empirically verified in Increment 1: Next.js 16.3.1 + its own `typescript@^7` devDependency builds/typechecks/lints cleanly alongside the root's pinned TypeScript 6.0.3 (pnpm's isolated `node_modules` plus a non-type-aware root ESLint config means the two never conflict) — the risk originally flagged for this combination didn't materialize. |

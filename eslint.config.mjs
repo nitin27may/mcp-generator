@@ -1,4 +1,7 @@
 import js from '@eslint/js';
+import nextPlugin from '@next/eslint-plugin-next';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -28,6 +31,7 @@ export default tseslint.config(
       '**/.turbo/**',
       '**/coverage/**',
       '**/*.snap',
+      '**/.next/**',
     ],
   },
 
@@ -87,6 +91,35 @@ export default tseslint.config(
     files: ['tooling/**/*.mjs', '*.mjs', '*.config.*'],
     rules: {
       'no-console': 'off',
+    },
+  },
+
+  // apps/web: browser code, not a stdio protocol package — no-console/no-restricted-syntax
+  // above still apply harmlessly (this isn't a runtime package, and the ADR-0009 connect()
+  // selector never matches React code), this block only adds what apps/web additionally needs.
+  {
+    files: ['apps/web/**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': reactHooks, '@next/next': nextPlugin, 'jsx-a11y': jsxA11y },
+    languageOptions: {
+      globals: { ...globals.browser },
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      ...nextPlugin.configs.recommended.rules,
+      ...jsxA11y.configs.recommended.rules,
+      // The Next plugin defaults to looking for pages/src/pages relative to the ESLint root
+      // (the monorepo root here, not apps/web) — point it at the real app directory.
+      '@next/next/no-html-link-for-pages': ['error', 'apps/web/src/app'],
+    },
+  },
+
+  // Vendored shadcn/ui primitives: third-party source we copy in, not code we author to our own
+  // strictness bar. Only `any` is relaxed here — the tsconfig itself stays strict everywhere.
+  {
+    files: ['apps/web/src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 );

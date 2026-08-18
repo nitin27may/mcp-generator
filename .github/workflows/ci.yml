@@ -47,6 +47,11 @@ jobs:
       - name: Unit and golden tests
         run: pnpm run test
 
+      # Empty until the web UI plan's Increment 2 lands apps/web/test/integration/**.
+      # --passWithNoTests is a placeholder, same convention as the security/e2e jobs below.
+      - name: Integration tests
+        run: pnpm exec vitest run --project integration --passWithNoTests
+
   security:
     name: security suite
     runs-on: ubuntu-latest

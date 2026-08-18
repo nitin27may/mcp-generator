@@ -1,0 +1,25 @@
+{
+  "name": "@mcpgen/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The hosted wizard UI: import an OpenAPI/Swagger spec, configure it, generate a governed MCP server package. Same @mcpgen/* engine the open-source CLI (apps/cli) uses — no duplicated logic.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf .next .turbo"
+  },
+  "dependencies": {
+    "next": "16.3.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "typescript": "7.0.2"
+  }
+}

@@ -10,6 +10,8 @@ export default defineConfig({
             'packages/*/src/**/*.test.ts',
             'packages/*/test/unit/**/*.test.ts',
             'tooling/*/test/unit/**/*.test.ts',
+            'apps/*/src/**/*.test.ts',
+            'apps/*/test/unit/**/*.test.ts',
           ],
           environment: 'node',
         },
@@ -33,8 +35,24 @@ export default defineConfig({
       {
         test: {
           name: 'security',
-          include: ['packages/*/test/security/**/*.test.ts'],
+          include: ['packages/*/test/security/**/*.test.ts', 'apps/*/test/security/**/*.test.ts'],
           environment: 'node',
+        },
+      },
+      {
+        test: {
+          name: 'integration',
+          include: ['apps/*/test/integration/**/*.test.ts'],
+          environment: 'node',
+          testTimeout: 30_000,
+          hookTimeout: 30_000,
+        },
+      },
+      {
+        test: {
+          name: 'component',
+          include: ['apps/web/src/**/*.component.test.tsx'],
+          environment: 'jsdom',
         },
       },
     ],
