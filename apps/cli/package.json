@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The open-source mcpgen CLI: serve, validate, print-tools, print-config, generate. Not the runtime baked into a *generated* package's own dist/cli.mjs (see @mcpgen/generator's bundleRuntime) — this is the tool that produces that package.",
   "main": "./dist/cli.js",
+  "bin": { "mcpgen": "./dist/cli.js" },
   "files": ["dist"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
