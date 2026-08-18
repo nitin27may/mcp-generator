@@ -17,11 +17,14 @@ export const EXIT_USAGE = 2;
 export type FlagType =
   | { readonly kind: 'string' }
   | { readonly kind: 'int'; readonly min: number; readonly max: number }
-  | { readonly kind: 'enum'; readonly values: readonly string[] };
+  | { readonly kind: 'enum'; readonly values: readonly string[] }
+  | { readonly kind: 'boolean' };
 
 export interface FlagSpec {
   readonly flag: string; // '--config'
-  readonly placeholder: string; // 'path', shown in help as `--config <path>`
+  // 'path', shown in help as `--config <path>`. Ignored for a 'boolean' flag — those render as
+  // a bare `--force`, since they take no value.
+  readonly placeholder: string;
   readonly description: string;
   readonly type: FlagType;
   readonly default?: string;
@@ -85,6 +88,22 @@ export const COMMANDS: readonly CommandSpec[] = [
       { flag: '--out', placeholder: 'dir', description: 'Output directory for the generated package', type: { kind: 'string' }, default: './dist-mcp' },
     ],
   },
+  {
+    name: 'init',
+    summary: 'Derive a draft mcp.config.json from an OpenAPI/Swagger document — non-interactive, no JSON hand-authoring',
+    flags: [
+      SPEC_FLAG,
+      { flag: '--out', placeholder: 'path', description: 'Where to write the config', type: { kind: 'string' }, default: './mcp.config.json' },
+      { flag: '--name', placeholder: 'name', description: 'Project name (default: the document\'s title)', type: { kind: 'string' } },
+      { flag: '--package-name', placeholder: 'npm-name', description: 'Generated package name (default: derived from the project name)', type: { kind: 'string' } },
+      { flag: '--bin-name', placeholder: 'name', description: 'Generated binary name (default: derived from the project name)', type: { kind: 'string' } },
+      { flag: '--transport', placeholder: 'stdio|http', description: 'Transport the generated server will support', type: { kind: 'enum', values: ['stdio', 'http'] }, default: 'stdio' },
+      { flag: '--enable-read-only', placeholder: '', description: 'Enable every operation classified READ_ONLY', type: { kind: 'boolean' } },
+      { flag: '--enable', placeholder: 'tool-name', description: 'Enable one tool by its exact generated name, regardless of risk (repeatable, no globs)', type: { kind: 'string' }, repeatable: true },
+      { flag: '--force', placeholder: '', description: 'Overwrite an existing file at --out', type: { kind: 'boolean' } },
+      { flag: '--json', placeholder: '', description: 'Print the summary as JSON instead of human-readable text', type: { kind: 'boolean' } },
+    ],
+  },
 ];
 
 // Every stored value is a string (even for 'int'-typed flags — readers convert on demand via
@@ -122,6 +141,10 @@ function validateValue(spec: FlagSpec, raw: string): string | { error: string } 
       }
       return raw;
     }
+    case 'boolean':
+      // Unreachable: parseArgv never calls validateValue for a boolean flag — its presence alone
+      // is the value, handled before this function is invoked.
+      return raw;
   }
 }
 
@@ -166,6 +189,13 @@ export function parseArgv(argv: readonly string[]): ParseOutcome {
     const spec = command.flags.find((f) => f.flag === token);
     if (!spec) return { kind: 'error', message: `Unknown flag "${token}" for command "${command.name}". Run "mcpgen help ${command.name}" to see valid flags.` };
 
+    // A boolean flag takes no value — its mere presence is the value. Everything else consumes
+    // the next token.
+    if (spec.type.kind === 'boolean') {
+      flags[keyOf(spec.flag)] = 'true';
+      continue;
+    }
+
     const raw = argv[++i];
     if (raw === undefined) return { kind: 'error', message: `Flag ${spec.flag} requires a value.` };
 
@@ -209,7 +239,7 @@ export function renderHelp(command?: CommandSpec): string {
   }
 
   const flagLines = command.flags.map((f) => {
-    const left = `  ${f.flag} <${f.placeholder}>`;
+    const left = f.type.kind === 'boolean' ? `  ${f.flag}` : `  ${f.flag} <${f.placeholder}>`;
     const suffix = f.default !== undefined ? ` (default: ${f.default})` : f.repeatable ? ' (repeatable)' : '';
     return `${left.padEnd(28)}${f.description}${suffix}`;
   });

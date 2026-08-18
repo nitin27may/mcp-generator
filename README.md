@@ -80,26 +80,31 @@ cd apps/cli
 npm link          # exposes a global `mcpgen` command backed by this build
 cd ../..
 
-mcpgen print-tools --config fixtures/openapi-3.1/customer.mcp.config.json \
-                    --spec   fixtures/openapi-3.1/customer.json
-mcpgen generate     --config fixtures/openapi-3.1/customer.mcp.config.json \
-                    --spec   fixtures/openapi-3.1/customer.json \
-                    --out    ./dist-mcp
+mcpgen init     --spec fixtures/openapi-3.1/customer.json --enable-read-only
+mcpgen validate --config mcp.config.json --spec fixtures/openapi-3.1/customer.json
+mcpgen generate --config mcp.config.json --spec fixtures/openapi-3.1/customer.json --out ./dist-mcp
 ```
 
-(`mcpgen validate` against this same fixture will report two diagnostics — `BND-005`/`AUT-001`,
-an unresolved base-URL environment variable and a missing upstream credential. That's expected:
-the fixture references real deploy-time secrets on purpose, and catching exactly that is what
-`validate` is for.)
+`init` derives a complete config from the spec — env var names, an auth block seeded from the
+spec's own security scheme where one can be, every operation as a disabled tool — and prints
+exactly which environment variables the result needs. Nothing is auto-enabled beyond what
+`--enable-read-only`/`--enable <name>` asks for (BR-006: destructive and privileged operations are
+never turned on for you). `validate` here will report two diagnostics — `BND-005`/`AUT-001`, an
+unresolved base-URL environment variable and a missing upstream credential — because no real
+deploy-time secret is set in this shell. That's expected: catching exactly that before `serve`
+starts is what `validate` is for.
 
-Commands: `serve | validate | print-tools | print-config | generate`. Every command takes
-`--config`; every command but `print-config` also takes `--spec`. `serve` also takes
+Commands: `init | serve | validate | print-tools | print-config | generate`. Every command but
+`init` takes `--config`; every command but `print-config` also takes `--spec`. `serve` also takes
 `--transport stdio|http` (default `stdio`), `--host`/
 `--port` (`http` only — `--port 0` picks any available port), and `--dotenv <path>` (repeatable;
 loads variables from a file without ever overriding one already set in the real environment — the
 kind of environment an MCP client injects when it launches this server). `validate` also accepts
-`--dotenv`. `generate` also takes `--out` (default `./dist-mcp`). `--help`/`-h` and `mcpgen help
-<command>` print the full flag reference for any command; `--version`/`-v` prints the CLI version.
+`--dotenv`. `generate` also takes `--out` (default `./dist-mcp`). `init` also takes `--out`
+(default `./mcp.config.json`), `--name`/`--package-name`/`--bin-name`, `--transport`,
+`--enable-read-only`, `--enable <tool-name>` (repeatable, exact names only — no globs), `--force`,
+and `--json`. `--help`/`-h` and `mcpgen help <command>` print the full flag reference for any
+command; `--version`/`-v` prints the CLI version.
 
 Exit codes are consistent across every command: **0** success, **1** the operation ran but failed
 (diagnostics were emitted — a missing secret, a validation error), **2** a usage error (an unknown
@@ -107,6 +112,26 @@ command or flag, an invalid flag value) — nothing was even attempted.
 
 If `npm link` doesn't work out of the box, see
 [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md#linking-the-cli-locally).
+
+#### Authentication: env vars, resolved at run time — never configured at generation time
+
+`init` derives environment variable names from the spec's own security scheme; the table below is
+which ones exist for each type, and which of them are secrets:
+
+| Scheme | Env vars `init` derives | Which are secrets |
+|---|---|---|
+| API key | `<SLUG>_API_KEY` | the key itself |
+| Bearer token | `<SLUG>_TOKEN` | the token |
+| Basic auth | `<SLUG>_USERNAME`, `<SLUG>_PASSWORD` | password only |
+| OAuth2 client credentials | `<SLUG>_CLIENT_ID`, `<SLUG>_CLIENT_SECRET` | client secret only |
+
+None of these are ever written into `mcp.config.json` as literal values — the config carries only
+the variable *name* (ADR-0006). The credential itself is supplied however you launch the server:
+export it in your shell, put it in a file and pass `--dotenv`, or — the normal case once you've
+registered the server with an MCP client — let the client inject it via the `env` block of its own
+launch config (see [What you get from Generate](#6-what-you-get-from-generate) below for the
+client-configuration snippet). Generation-time and run-time are deliberately separate: you never
+type a credential while curating the tool surface, only when you actually run the server.
 
 ### 5. Run with Docker Compose
 

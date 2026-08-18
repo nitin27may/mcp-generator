@@ -64,6 +64,31 @@ describe('parseArgv — usage errors (exit 2)', () => {
   });
 });
 
+describe('parseArgv — boolean flags (init)', () => {
+  it('records a bare boolean flag as present, without consuming the next token as its value', () => {
+    const outcome = parseArgv(['init', '--spec', './openapi.json', '--enable-read-only', '--force']);
+    expect(outcome).toEqual({
+      kind: 'command',
+      command: COMMANDS.find((c) => c.name === 'init'),
+      flags: { spec: './openapi.json', out: './mcp.config.json', transport: 'stdio', 'enable-read-only': 'true', force: 'true' },
+    });
+  });
+
+  it('a boolean flag absent from argv is simply absent from the parsed flags, not defaulted to false', () => {
+    const outcome = parseArgv(['init']);
+    expect(outcome.kind).toBe('command');
+    expect((outcome as { flags: Record<string, unknown> }).flags['force']).toBeUndefined();
+  });
+
+  it('collects repeatable --enable values in order, alongside a boolean flag', () => {
+    const outcome = parseArgv(['init', '--enable', 'getCustomer', '--enable-read-only', '--enable', 'listCustomers']);
+    expect(outcome.kind).toBe('command');
+    const flags = (outcome as { flags: Record<string, unknown> }).flags;
+    expect(flags['enable']).toEqual(['getCustomer', 'listCustomers']);
+    expect(flags['enable-read-only']).toBe('true');
+  });
+});
+
 describe('parseArgv — help and version', () => {
   it('recognizes --help and -h as general help with no command', () => {
     expect(parseArgv(['--help'])).toEqual({ kind: 'help' });

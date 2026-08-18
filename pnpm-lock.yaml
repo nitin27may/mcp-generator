@@ -53,6 +53,9 @@ importers:
       '@mcpgen/config-schema':
         specifier: workspace:*
         version: link:../../packages/config-schema
+      '@mcpgen/config-seed':
+        specifier: workspace:*
+        version: link:../../packages/config-seed
       '@mcpgen/domain':
         specifier: workspace:*
         version: link:../../packages/domain
@@ -71,6 +74,9 @@ importers:
       '@mcpgen/redaction':
         specifier: workspace:*
         version: link:../../packages/redaction
+      '@mcpgen/risk-engine':
+        specifier: workspace:*
+        version: link:../../packages/risk-engine
       '@mcpgen/upstream-auth':
         specifier: workspace:*
         version: link:../../packages/upstream-auth

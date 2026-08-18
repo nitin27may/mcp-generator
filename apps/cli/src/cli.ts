@@ -5,6 +5,7 @@ import { runValidate } from './commands/validate.js';
 import { runPrintTools } from './commands/print-tools.js';
 import { runPrintConfig } from './commands/print-config.js';
 import { runGenerate } from './commands/generate.js';
+import { runInit } from './commands/init.js';
 import { applyEnvFiles } from './env-file.js';
 import { CLI_VERSION } from './version.js';
 import { EXIT_FAILURE, EXIT_OK, EXIT_USAGE, parseArgv, renderHelp, type ParsedFlags } from './args.js';
@@ -29,6 +30,11 @@ function stringArray(flags: ParsedFlags, key: string): readonly string[] {
   const value = flags[key];
   if (value === undefined) return [];
   return Array.isArray(value) ? value : [value];
+}
+
+/** Boolean flags are stored as the literal string 'true' when present (args.ts) — absence means false. */
+function flag(flags: ParsedFlags, key: string): boolean {
+  return flags[key] === 'true';
 }
 
 /** Applied before touching any secret/environment binding — a real environment variable always wins over one loaded this way (env-file.ts). Failure here is a usage error, not an operation failure: the config/spec were never even read. */
@@ -63,6 +69,21 @@ async function dispatch(command: string, flags: ParsedFlags): Promise<number> {
       return runPrintConfig(str(flags, 'config'));
     case 'generate':
       return runGenerate(str(flags, 'config'), str(flags, 'spec'), str(flags, 'out'));
+    case 'init': {
+      const name = optionalStr(flags, 'name');
+      const packageName = optionalStr(flags, 'package-name');
+      const binName = optionalStr(flags, 'bin-name');
+      return runInit(str(flags, 'spec'), str(flags, 'out'), {
+        transport: str(flags, 'transport') as 'stdio' | 'http',
+        enableReadOnly: flag(flags, 'enable-read-only'),
+        enableNames: stringArray(flags, 'enable'),
+        force: flag(flags, 'force'),
+        json: flag(flags, 'json'),
+        ...(name !== undefined ? { name } : {}),
+        ...(packageName !== undefined ? { packageName } : {}),
+        ...(binName !== undefined ? { binName } : {}),
+      });
+    }
     default:
       // Unreachable: parseArgv only ever returns a 'command' outcome for a name found in COMMANDS.
       return EXIT_USAGE;

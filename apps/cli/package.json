@@ -15,12 +15,14 @@
   "dependencies": {
     "@mcpgen/binding-engine": "workspace:*",
     "@mcpgen/config-schema": "workspace:*",
+    "@mcpgen/config-seed": "workspace:*",
     "@mcpgen/domain": "workspace:*",
     "@mcpgen/generator": "workspace:*",
     "@mcpgen/mcp-protocol": "workspace:*",
     "@mcpgen/mcp-runtime": "workspace:*",
     "@mcpgen/openapi-adapter": "workspace:*",
     "@mcpgen/redaction": "workspace:*",
+    "@mcpgen/risk-engine": "workspace:*",
     "@mcpgen/upstream-auth": "workspace:*"
   },
   "devDependencies": {

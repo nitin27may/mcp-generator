@@ -5,12 +5,14 @@
   "references": [
     { "path": "../../packages/domain" },
     { "path": "../../packages/config-schema" },
+    { "path": "../../packages/config-seed" },
     { "path": "../../packages/generator" },
     { "path": "../../packages/binding-engine" },
     { "path": "../../packages/upstream-auth" },
     { "path": "../../packages/mcp-protocol" },
     { "path": "../../packages/mcp-runtime" },
     { "path": "../../packages/openapi-adapter" },
-    { "path": "../../packages/redaction" }
+    { "path": "../../packages/redaction" },
+    { "path": "../../packages/risk-engine" }
   ]
 }
