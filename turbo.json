@@ -4,6 +4,12 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      // Turbo runs tasks with a filtered environment, so an undeclared variable is
+      // silently dropped before `next build` ever sees it — and because it also is
+      // not part of the task's cache key, a stale output would be reused across
+      // different values. MCPGEN_PUBLIC_URL is read at build time by `/` and
+      // `/docs`'s statically prerendered metadata, so it has to be declared here.
+      "env": ["MCPGEN_PUBLIC_URL"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "typecheck": {
