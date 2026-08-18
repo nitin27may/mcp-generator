@@ -103,6 +103,15 @@ export function readProjectSourceMeta(id: string, version: number): Promise<Sour
   return readJson<SourceVersionMeta>(join(projectDir(id), 'source', `v${version}`, 'meta.json'));
 }
 
+export async function readProjectSourceRaw(id: string, version: number): Promise<string | undefined> {
+  try {
+    return await readFile(join(projectDir(id), 'source', `v${version}`, 'spec.raw'), 'utf8');
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    throw error;
+  }
+}
+
 async function isExpired(dir: string, ttlHours: number, now: number): Promise<boolean> {
   try {
     const info = await stat(dir);

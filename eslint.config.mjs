@@ -115,11 +115,15 @@ export default tseslint.config(
   },
 
   // Vendored shadcn/ui primitives: third-party source we copy in, not code we author to our own
-  // strictness bar. Only `any` is relaxed here — the tsconfig itself stays strict everywhere.
+  // strictness bar. `no-explicit-any` and `label-has-associated-control` are relaxed here because
+  // these are generic wrapper components (e.g. Label spreads `...props`, including `htmlFor`, onto
+  // a plain <label> — the rule can't see that statically) — real usage sites are NOT exempted, only
+  // the wrapper definitions. The tsconfig itself stays strict everywhere.
   {
     files: ['apps/web/src/components/ui/**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      'jsx-a11y/label-has-associated-control': 'off',
     },
   },
 );
