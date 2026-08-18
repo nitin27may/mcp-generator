@@ -218,4 +218,22 @@ export const en = {
   playgroundHeadersHeading: 'Headers',
   playgroundBodyHeading: 'Body',
   playgroundNoResultYet: 'Run a preview to see the request it would build.',
+
+  playgroundSecretsHeading: 'Secrets (this session only)',
+  playgroundSecretsBody: 'Held in memory for this call only — never stored, never sent anywhere except this one execution.',
+  playgroundExecuteSubmit: 'Execute for real',
+  playgroundExecuteRunning: 'Executing…',
+  playgroundTraceHeading: 'Execution trace',
+
+  traceResultSuccess: 'Success',
+  traceResultUpstreamError: 'Upstream error',
+  traceResultValidationError: 'Validation error',
+  traceDuration: (ms: number) => `${ms}ms`,
+  traceResponseHeading: 'Response',
+
+  riskDialogTitle: 'Confirm execution',
+  riskDialogBody: (toolName: string) =>
+    `"${toolName}" is classified Destructive or Privileged. Executing it for real will make an actual upstream call and may change data. This cannot be undone from here.`,
+  riskDialogCancel: 'Cancel',
+  riskDialogConfirm: 'Execute anyway',
 };

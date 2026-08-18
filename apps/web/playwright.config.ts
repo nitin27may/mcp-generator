@@ -22,7 +22,12 @@ export default defineConfig({
     command: 'pnpm exec next dev --port 4200',
     url: 'http://localhost:4200/api/health',
     reuseExistingServer: !process.env['CI'],
-    env: { MCPGEN_WORKSPACE_ROOT: process.env['MCPGEN_WORKSPACE_ROOT'] ?? '/tmp/mcpgen-playwright-workspace' },
+    env: {
+      MCPGEN_WORKSPACE_ROOT: process.env['MCPGEN_WORKSPACE_ROOT'] ?? '/tmp/mcpgen-playwright-workspace',
+      // The live-execute spec's upstream is a loopback fixture API — this is a controlled test
+      // environment, not a real deployment, so opting into private egress here is safe.
+      MCPGEN_ALLOW_PRIVATE_EGRESS: 'true',
+    },
     timeout: 60_000,
   },
 });

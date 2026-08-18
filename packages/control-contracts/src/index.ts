@@ -25,3 +25,4 @@ export { UpdateConfigRequestSchema, type UpdateConfigRequest } from './config.js
 export { computeBindingDiagnostics } from './binding-diagnostics.js';
 export { buildEnvVarSummary, type EnvVarSummaryEntry } from './env-summary.js';
 export { DryRunRequestSchema, type DryRunRequest, type DryRunRequestPreview, type DryRunResult } from './playground.js';
+export { ExecuteRequestSchema, type ExecuteRequest, type ExecutionTrace, type RedactedHttpRequest } from './execute.js';

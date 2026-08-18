@@ -7,6 +7,17 @@ const EnvSchema = z.object({
   MCPGEN_PROJECT_TTL_HOURS: z.coerce.number().positive().default(168),
   MCPGEN_STAGING_TTL_HOURS: z.coerce.number().positive().default(1),
   MCPGEN_MAX_UPLOAD_BYTES: z.coerce.number().positive().default(10_485_760),
+  /**
+   * Security-relevant — off by default. Opts the playground's live-execute
+   * egress into private/loopback targets, for local development against a
+   * fixture API. Deliberately not `z.coerce.boolean()` — that coerces via
+   * JS truthiness of the raw string, so the literal string `"false"` would
+   * coerce to `true` (a non-empty string). Only the literal `"true"`/`"1"` enable it.
+   */
+  MCPGEN_ALLOW_PRIVATE_EGRESS: z
+    .string()
+    .optional()
+    .transform((value) => value === 'true' || value === '1'),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
@@ -27,5 +38,6 @@ export function getEnv(): Env {
     MCPGEN_PROJECT_TTL_HOURS: process.env.MCPGEN_PROJECT_TTL_HOURS,
     MCPGEN_STAGING_TTL_HOURS: process.env.MCPGEN_STAGING_TTL_HOURS,
     MCPGEN_MAX_UPLOAD_BYTES: process.env.MCPGEN_MAX_UPLOAD_BYTES,
+    MCPGEN_ALLOW_PRIVATE_EGRESS: process.env.MCPGEN_ALLOW_PRIVATE_EGRESS,
   });
 }

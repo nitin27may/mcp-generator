@@ -40,7 +40,7 @@ export function PlaygroundView({ projectId }: { projectId: string }) {
                 </SelectContent>
               </Select>
 
-              {selectedTool && <PlaygroundToolPanel key={selectedTool.name} projectId={projectId} toolConfig={selectedTool} />}
+              {selectedTool && <PlaygroundToolPanel key={selectedTool.name} projectId={projectId} config={configDraft} toolConfig={selectedTool} />}
             </>
           )}
         </CardContent>

@@ -114,6 +114,9 @@ importers:
       '@mcpgen/schema-normalizer':
         specifier: workspace:*
         version: link:../../packages/schema-normalizer
+      '@mcpgen/upstream-auth':
+        specifier: workspace:*
+        version: link:../../packages/upstream-auth
       '@monaco-editor/react':
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.56.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -157,6 +160,9 @@ importers:
         specifier: 4.4.3
         version: 4.4.3
     devDependencies:
+      '@mcpgen/test-fixtures':
+        specifier: workspace:*
+        version: link:../../packages/test-fixtures
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
