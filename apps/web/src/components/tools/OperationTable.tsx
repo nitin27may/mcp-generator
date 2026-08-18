@@ -112,6 +112,7 @@ export function OperationTable({
                   checked={row.tool.enabled}
                   aria-label={`${en.toolsColumnEnabled}: ${row.summary.method} ${row.summary.path}`}
                   onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => event.stopPropagation()}
                   onChange={() => onToggleEnabled(row.summary.id)}
                 />
               </td>

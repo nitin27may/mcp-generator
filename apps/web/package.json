@@ -43,6 +43,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@mcpgen/test-fixtures": "workspace:*",
     "@playwright/test": "^1.62.1",
     "@types/node": "^22.19.0",

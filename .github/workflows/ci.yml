@@ -102,3 +102,24 @@ jobs:
       # ADR-0009 era assertion: server/discover must report 2026-07-28.
       - name: stdio + HTTP protocol E2E
         run: pnpm exec vitest run --project e2e --passWithNoTests
+
+  web-e2e:
+    name: web wizard E2E + accessibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - name: Enable corepack
+        run: corepack enable
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @mcpgen/web exec playwright install --with-deps chromium
+
+      # Real browser, real Next.js dev server (see apps/web/playwright.config.ts). Covers
+      # the full wizard happy path, axe (zero serious/critical) across all 10 routes, and
+      # keyboard-only traversal of the two custom widgets (TIP §93 C26–C30, Increment 12).
+      - name: Playwright (wizard, accessibility, keyboard)
+        run: pnpm --filter @mcpgen/web exec playwright test
