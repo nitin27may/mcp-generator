@@ -10,6 +10,13 @@ const EnvSchema = z.object({
   MCPGEN_BUILD_TTL_MINUTES: z.coerce.number().positive().default(15),
   MCPGEN_MAX_BUILD_BYTES: z.coerce.number().positive().default(33_554_432),
   /**
+   * Absolute origin this deployment is reachable at. Only used as Next's
+   * `metadataBase`, so `/`'s Open Graph and Twitter card images resolve to
+   * absolute URLs when the landing page is shared — relative image paths in
+   * metadata are silently rebased onto `localhost` otherwise.
+   */
+  MCPGEN_PUBLIC_URL: z.url().default('http://localhost:3000'),
+  /**
    * Security-relevant — off by default. Opts the playground's live-execute
    * egress into private/loopback targets, for local development against a
    * fixture API. Deliberately not `z.coerce.boolean()` — that coerces via
@@ -42,6 +49,7 @@ export function getEnv(): Env {
     MCPGEN_MAX_UPLOAD_BYTES: process.env.MCPGEN_MAX_UPLOAD_BYTES,
     MCPGEN_BUILD_TTL_MINUTES: process.env.MCPGEN_BUILD_TTL_MINUTES,
     MCPGEN_MAX_BUILD_BYTES: process.env.MCPGEN_MAX_BUILD_BYTES,
+    MCPGEN_PUBLIC_URL: process.env.MCPGEN_PUBLIC_URL,
     MCPGEN_ALLOW_PRIVATE_EGRESS: process.env.MCPGEN_ALLOW_PRIVATE_EGRESS,
   });
 }

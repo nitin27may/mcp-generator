@@ -3,14 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "The hosted wizard UI: import an OpenAPI/Swagger spec, configure it, generate a governed MCP server package. Same @mcpgen/* engine the open-source CLI (apps/cli) uses — no duplicated logic.",
+  "description": "The hosted wizard UI: import an OpenAPI/Swagger spec, configure it, generate a governed MCP server package. Same @mcpgen/* engine the open-source CLI (apps/cli) uses \u2014 no duplicated logic.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:e2e": "playwright test",
-    "clean": "rm -rf .next .turbo"
+    "clean": "rm -rf .next .turbo",
+    "capture:hero": "node scripts/capture-hero.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

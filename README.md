@@ -105,11 +105,15 @@ pnpm build
 pnpm --filter @mcpgen/web dev
 ```
 
-Open `http://localhost:3000`. The wizard is desktop-only by design (import → readiness → configure
-→ generate); everything it needs is documented in-app at `/docs` once you land there. Projects are
-stored under an ephemeral, disk-backed workspace (`MCPGEN_WORKSPACE_ROOT`, default
+Open `http://localhost:3000`. You land on a product page explaining what this is; `/docs` covers
+both ways to use it (wizard and CLI) and `/projects/new/import` starts a project. Those two public
+pages are responsive; the wizard itself is desktop-only by design (import → readiness → configure
+→ generate), because curating a tool surface means reading operation tables beside their schemas.
+Projects are stored under an ephemeral, disk-backed workspace (`MCPGEN_WORKSPACE_ROOT`, default
 `$TMPDIR/mcpgen-workspace`) — no accounts, no database. The full environment variable list (project
-TTLs, upload/build size caps, the private-egress opt-in used for local playground testing) is in
+TTLs, upload/build size caps, the private-egress opt-in used for local playground testing, and
+`MCPGEN_PUBLIC_URL` — set that one if you deploy this somewhere public, so shared links to `/`
+resolve their card image correctly) is in
 [`apps/web/src/server/env.ts`](apps/web/src/server/env.ts).
 
 ### 4. Install the CLI from source

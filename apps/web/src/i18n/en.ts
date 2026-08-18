@@ -242,6 +242,101 @@ export const en = {
   riskDialogCancel: 'Cancel',
   riskDialogConfirm: 'Execute anyway',
 
+  // ——— Public pages (`/` and `/docs`). These two are the only routes a stranger
+  // can land on cold, so they carry product copy rather than wizard chrome.
+  landingMetaTitle: 'mcpgen — an agent readiness and governance layer for APIs',
+  landingMetaDescription:
+    'Import an OpenAPI spec, score how ready it is for agents, curate a safe tool surface, and generate a governed MCP server. The durable artifact is the configuration, not generated source.',
+  landingEyebrow: 'Open source · MIT · MCP 2026-07-28',
+  landingHeadline: 'Your API is not an agent tool surface yet.',
+  landingSubheadline:
+    'mcpgen ingests an OpenAPI or Swagger document, scores whether the API is actually fit for an agent to use, lets a human curate a safe tool surface, and emits a portable MCP definition that a shared runtime executes over stdio or Streamable HTTP.',
+  landingPrimaryCta: 'Open the web wizard',
+  landingSecondaryCta: 'Use the CLI instead',
+  landingHeroImageAlt:
+    'The mcpgen wizard on its Agent Readiness step, showing an overall readiness score of 100 and a per-category breakdown across discoverability, semantic clarity, schema usability, tool set quality, safety, authentication readiness, runtime completeness, and response quality.',
+  landingHeroCaption: 'The Agent Readiness step, scored from the spec alone — no AI, no network calls, no guesswork.',
+
+  landingWhyHeading: 'Endpoint-to-tool conversion is the easy part',
+  landingWhyBody:
+    'Pointing an agent at every endpoint in a spec produces a weak production surface: too many tools, ambiguous names, thin descriptions, unguarded writes and deletes, secrets pasted into configuration, and no visibility into what agents can actually invoke. The question worth answering is not "how do I convert this API to MCP?" but "which parts of our API ecosystem should agents be allowed to use, and how should they safely use them?"',
+
+  landingFeaturesHeading: 'What it does that a converter does not',
+  landingFeatureReadinessTitle: 'Agent readiness scoring',
+  landingFeatureReadinessBody:
+    'Thirty deterministic rules across eight weighted categories, run before any model is involved. Every finding points at the exact place in your document that caused it.',
+  landingFeatureRiskTitle: 'Risk classification',
+  landingFeatureRiskBody:
+    'Every operation is classified read-only, write, destructive, or privileged. Destructive operations are never auto-enabled — a human turns each one on, deliberately.',
+  landingFeatureSecretsTitle: 'Secrets are references, never literals',
+  landingFeatureSecretsBody:
+    'The configuration carries binding names, not credentials. Values resolve at runtime from the environment or a secret store, so the artifact is safe to commit and share.',
+  landingFeatureManifestTitle: 'A portable governance manifest',
+  landingFeatureManifestBody:
+    'The durable output is mcp.config.json, not generated source you have to maintain. One shared runtime executes it over stdio or Streamable HTTP, locally or in a container.',
+
+  landingHowHeading: 'How it works',
+  landingHowSubheading: 'Four of the ten steps do the real work. The wizard marks the ones you can safely skip.',
+  landingHowImportBody: 'Paste, upload, or fetch a document. Swagger 2.0 through OpenAPI 3.2, JSON or YAML.',
+  landingHowReadinessBody: 'See what an agent would struggle with before you ship it, category by category.',
+  landingHowToolsBody: 'Choose which operations become tools, and how they name and describe themselves.',
+  landingHowGenerateBody: 'Download a redistributable package, or keep the config and run it with the shared runtime.',
+
+  landingClosingHeading: 'Two ways to use it. One engine.',
+  landingClosingBody:
+    'The wizard and the CLI call exactly the same engine and produce exactly the same kind of output. Use whichever fits — a guided pass for a new API, a scripted one for CI.',
+
+  landingFaqHeading: 'Questions worth asking first',
+  landingFaqConverterQ: 'How is this different from an OpenAPI-to-MCP converter?',
+  landingFaqConverterA:
+    'A converter answers "can this endpoint be called by an agent". mcpgen answers "should it be, and under what constraints" — readiness scoring, risk classification, curated tool design, a secret-binding model, and a governance manifest that outlives any one generated package.',
+  landingFaqSourceQ: 'Do I have to maintain generated code?',
+  landingFaqSourceA:
+    'No. The generated package is a convenience; the configuration is the product. Regenerating is cheap because nothing you care about lives in the output.',
+  landingFaqDataQ: 'Where does my spec go?',
+  landingFaqDataA:
+    'Into an ephemeral, disk-backed workspace on whatever machine is running the app — no accounts, no database, and projects expire on a TTL. Run it locally or in your own container and nothing leaves your network.',
+  landingFaqMobileQ: 'Does the wizard work on a phone?',
+  landingFaqMobileA:
+    'No — the wizard is deliberately desktop-only, because curating a tool surface means reading tables of operations side by side with their schemas. This page is not; you can read it anywhere and open the wizard later.',
+
+  footerTagline: 'An agent readiness and governance layer for APIs.',
+  footerDocs: 'Documentation',
+  footerGithub: 'GitHub',
+  footerLicense: 'MIT License',
+  footerTechnicalPlan: 'Technical plan',
+  footerRepoUrl: 'https://github.com/nitin27may/mcp-generator',
+
+  docsMetaTitle: 'Documentation — mcpgen',
+  docsMetaDescription: 'Two ways to use mcpgen: the guided web wizard, or the scriptable CLI. Both call the same engine and produce the same portable MCP definition.',
+  docsHeadline: 'Two ways to use mcpgen',
+  docsSubheadline:
+    'The web wizard is guided and requires no JSON hand-authoring. The CLI is scriptable and runs the same engine. Both produce a portable mcp.config.json and, optionally, a redistributable server package.',
+
+  docsWizardHeading: 'The web wizard',
+  docsWizardBody:
+    'Ten steps, but only Validation and Tools can actually block you. Safety and Test are always safe to skip, and Authentication is too when your document declares no security scheme — the wizard marks each one on screen rather than making you guess.',
+  docsStepOptionalWhenUnauthenticated: 'Optional when your spec declares no security scheme',
+  docsWizardImageAlt:
+    'The wizard Tools step, listing three operations with their generated tool names and risk classifications: two read-only GETs and one write POST.',
+  docsWizardImageCaption: 'The Tools step — every operation classified by risk before you enable it.',
+  docsWizardCta: 'Start a project',
+
+  docsCliHeading: 'The CLI',
+  docsCliBody:
+    'Not published to the npm registry yet, but fully usable from a clone. Build it once, link it, and it is on your PATH.',
+  docsCliInstallCaption: 'Install from source',
+  docsCliUseCaption: 'Generate a server, then run it',
+
+  docsGeneratedHeading: 'The generated package documents itself',
+  docsGeneratedBody:
+    'You do not need this page to run what you downloaded. Every generated package ships its own README covering the environment variables it expects, which of them are secrets, how to run it locally with npx, how to run it in Docker, an MCP client configuration snippet you can paste directly into a client, and a troubleshooting section keyed to the diagnostics the runtime actually emits.',
+
+  docsEnvHeading: 'Configuring the app itself',
+  docsEnvBody:
+    'Projects live in an ephemeral, disk-backed workspace — no accounts, no database. The workspace root, project and build TTLs, upload and build size caps, and the private-egress opt-in used for local playground testing are all environment variables, documented in the source.',
+  docsEnvLinkLabel: 'apps/web/src/server/env.ts',
+
   generateTitle: 'Generate',
   generateSubtitle: 'Build a redistributable MCP server package from this configuration.',
   generateSubmit: 'Generate package',

@@ -111,6 +111,14 @@ export default tseslint.config(
       // The Next plugin defaults to looking for pages/src/pages relative to the ESLint root
       // (the monorepo root here, not apps/web) — point it at the real app directory.
       '@next/next/no-html-link-for-pages': ['error', 'apps/web/src/app'],
+      // axe's `scrollable-region-focusable` requires a horizontally scrolling
+      // container to be focusable, or a keyboard user cannot scroll it at all —
+      // and the a11y suite fails the build over it. This rule's default allowlist
+      // predates that and only permits `tabpanel`, so the two lint each other's
+      // fixes. `region` is added because the axe check is the one grounded in real
+      // assistive-technology behavior; anything focusable under it still needs an
+      // accessible name, which `region` requires.
+      'jsx-a11y/no-noninteractive-tabindex': ['error', { tags: [], roles: ['tabpanel', 'region'] }],
     },
   },
 
