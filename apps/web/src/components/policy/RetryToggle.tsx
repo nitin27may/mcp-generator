@@ -20,6 +20,12 @@ function retryConfigOf(choice: RetryChoice): RetryConfig | undefined {
   }
 }
 
+const RETRY_LABELS: Record<RetryChoice, string> = {
+  default: en.retryDefault,
+  always: en.retryAlways,
+  never: en.retryNever,
+};
+
 /**
  * BR-006 / ADR-0008: `DESTRUCTIVE`/`PRIVILEGED` risk is a hard floor the
  * runtime's `isRetryEligible` enforces regardless of `ToolConfig.retry` —
@@ -46,7 +52,7 @@ export function RetryToggle({
   return (
     <Select value={choiceOf(value)} onValueChange={(choice) => choice !== null && onChange(retryConfigOf(choice as RetryChoice))}>
       <SelectTrigger id={`${idPrefix}-retry`} aria-label={en.policyColumnRetry}>
-        <SelectValue />
+        <SelectValue>{(choice: RetryChoice) => RETRY_LABELS[choice]}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="default">{en.retryDefault}</SelectItem>

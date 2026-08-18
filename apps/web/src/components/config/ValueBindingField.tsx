@@ -66,7 +66,7 @@ export function ValueBindingField({
         {allowedKinds.length > 1 && (
           <Select value={value.source} onValueChange={handleKindChange}>
             <SelectTrigger aria-label={en.bindingKindLabel}>
-              <SelectValue />
+              <SelectValue>{(kind: BindableKind) => KIND_LABELS[kind]}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {allowedKinds.map((kind) => (

@@ -80,6 +80,7 @@ export default function ImportPage() {
                 <Textarea
                   id="import-paste"
                   rows={12}
+                  className="field-sizing-fixed h-80 resize-y overflow-y-auto font-mono text-xs"
                   placeholder={en.importPastePlaceholder}
                   value={pasteText}
                   onChange={(event) => setPasteText(event.target.value)}

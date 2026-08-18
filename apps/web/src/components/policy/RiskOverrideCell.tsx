@@ -28,7 +28,7 @@ export function RiskOverrideCell({
     <div className="flex flex-col gap-1">
       <Select value={value} onValueChange={(next) => next !== null && onChange(next as ToolRisk)}>
         <SelectTrigger id={`${idPrefix}-risk`} aria-label={en.policyColumnRisk}>
-          <SelectValue />
+          <SelectValue>{(risk: ToolRisk) => RISK_LABELS[risk]}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {RISK_OPTIONS.map((risk) => (

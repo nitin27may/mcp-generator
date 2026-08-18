@@ -17,6 +17,12 @@ const RISK_OPTION_LABELS: Record<RiskFilter, string> = {
   UNKNOWN: en.riskUnknown,
 };
 
+const ENABLED_FILTER_LABELS: Record<EnabledFilter, string> = {
+  all: en.toolsFilterEnabledAll,
+  enabled: en.toolsFilterEnabledOnly,
+  disabled: en.toolsFilterDisabledOnly,
+};
+
 export function ToolFilters({
   search,
   onSearchChange,
@@ -48,7 +54,7 @@ export function ToolFilters({
 
       <Select value={riskFilter} onValueChange={(value) => value !== null && onRiskFilterChange(value as RiskFilter)}>
         <SelectTrigger aria-label={en.toolsFilterRiskLabel}>
-          <SelectValue />
+          <SelectValue>{(option: RiskFilter) => RISK_OPTION_LABELS[option]}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {RISK_OPTIONS.map((option) => (
@@ -61,7 +67,7 @@ export function ToolFilters({
 
       <Select value={enabledFilter} onValueChange={(value) => value !== null && onEnabledFilterChange(value as EnabledFilter)}>
         <SelectTrigger aria-label={en.toolsFilterEnabledLabel}>
-          <SelectValue />
+          <SelectValue>{(value: EnabledFilter) => ENABLED_FILTER_LABELS[value]}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">{en.toolsFilterEnabledAll}</SelectItem>

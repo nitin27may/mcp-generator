@@ -27,7 +27,7 @@ export function ValidationView({
     <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
-          <CardTitle>{en.validationTitle}</CardTitle>
+          <CardTitle>{en.validationFindingsHeading}</CardTitle>
         </CardHeader>
         <CardContent>
           <DiagnosticList

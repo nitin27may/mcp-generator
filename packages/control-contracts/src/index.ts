@@ -24,3 +24,4 @@ export { AnalyzeRequestSchema, type AnalyzeRequest } from './analyze.js';
 export { UpdateConfigRequestSchema, type UpdateConfigRequest } from './config.js';
 export { computeBindingDiagnostics } from './binding-diagnostics.js';
 export { buildEnvVarSummary, type EnvVarSummaryEntry } from './env-summary.js';
+export { DryRunRequestSchema, type DryRunRequest, type DryRunRequestPreview, type DryRunResult } from './playground.js';

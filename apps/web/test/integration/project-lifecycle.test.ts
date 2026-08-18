@@ -7,6 +7,7 @@ import type { ApiFail, ApiOk, ProjectAnalysis, ProjectSnapshot } from '@mcpgen/c
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { POST as postAnalyze } from '../../src/app/api/projects/[id]/analyze/route.js';
 import { PUT as putConfig } from '../../src/app/api/projects/[id]/config/route.js';
+import { POST as postDryRun } from '../../src/app/api/projects/[id]/playground/dry-run/route.js';
 import { POST as postImport } from '../../src/app/api/import/route.js';
 import { GET as getProject } from '../../src/app/api/projects/[id]/route.js';
 import { POST as postProjects } from '../../src/app/api/projects/route.js';
@@ -334,5 +335,48 @@ describe('project lifecycle — import -> create project -> get project (no mock
     expect(response.status).toBe(200); // config-schema doesn't enforce the BR-006 floor — that's a runtime concern (upstream-http's isRetryEligible), not a config-validity concern
     const body = (await response.json()) as ApiOk<ProjectSnapshot>;
     expect(body.data.config.tools[getCustomerKey]).toMatchObject({ risk: 'DESTRUCTIVE', retry: { enabled: true } });
+  });
+
+  it('dry-runs a real enabled tool end to end and returns a request preview', async () => {
+    const specText = readFileSync(CUSTOMER_SPEC_PATH, 'utf8');
+    const importResponse = await postImport(jsonRequest('http://localhost/api/import', { kind: 'paste', text: specText }));
+    const importBody = (await importResponse.json()) as ApiOk<{ importId: string }>;
+    const createResponse = await postProjects(jsonRequest('http://localhost/api/projects', { importId: importBody.data.importId }));
+    const createBody = (await createResponse.json()) as ApiOk<ProjectSnapshot>;
+    const projectId = createBody.data.id;
+
+    const getCustomerKey = Object.entries(createBody.data.config.tools).find(([, t]) => t.sourceOperation.operationId === 'getCustomer')![0];
+    const tools = { ...createBody.data.config.tools, [getCustomerKey]: { ...createBody.data.config.tools[getCustomerKey]!, enabled: true } };
+    const config = { ...createBody.data.config, tools };
+    await putConfig(jsonPutRequest(`http://localhost/api/projects/${projectId}/config`, { expectedRevision: createBody.data.configRevision, config }), {
+      params: Promise.resolve({ id: projectId }),
+    });
+
+    const toolName = config.tools[getCustomerKey]!.name;
+    const response = await postDryRun(
+      jsonRequest(`http://localhost/api/projects/${projectId}/playground/dry-run`, { toolName, input: { customer_id: 'cust_42' }, env: {} }),
+      { params: Promise.resolve({ id: projectId }) },
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as ApiOk<{ request: { method: string; path: string }; unresolvedVariables: string[] }>;
+    expect(body.data.request.method).toBe('GET');
+    expect(body.data.request.path).toBe('/customers/cust_42');
+  });
+
+  it('404s a dry-run against a tool name that is not enabled', async () => {
+    const specText = readFileSync(CUSTOMER_SPEC_PATH, 'utf8');
+    const importResponse = await postImport(jsonRequest('http://localhost/api/import', { kind: 'paste', text: specText }));
+    const importBody = (await importResponse.json()) as ApiOk<{ importId: string }>;
+    const createResponse = await postProjects(jsonRequest('http://localhost/api/projects', { importId: importBody.data.importId }));
+    const createBody = (await createResponse.json()) as ApiOk<ProjectSnapshot>;
+    const projectId = createBody.data.id;
+
+    const response = await postDryRun(
+      jsonRequest(`http://localhost/api/projects/${projectId}/playground/dry-run`, { toolName: 'not_a_real_tool', input: {}, env: {} }),
+      { params: Promise.resolve({ id: projectId }) },
+    );
+    expect(response.status).toBe(404);
+    const body = (await response.json()) as ApiFail;
+    expect(body.errors[0]?.code).toBe('MCP-001');
   });
 });

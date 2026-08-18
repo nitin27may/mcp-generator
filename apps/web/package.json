@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:e2e": "playwright test",
     "clean": "rm -rf .next .turbo"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "@mcpgen/mcp-runtime": "workspace:*",
     "@mcpgen/openapi-adapter": "workspace:*",
     "@mcpgen/readiness-engine": "workspace:*",
+    "@mcpgen/redaction": "workspace:*",
     "@mcpgen/risk-engine": "workspace:*",
     "@mcpgen/schema-normalizer": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
@@ -38,6 +40,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.19.0",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",

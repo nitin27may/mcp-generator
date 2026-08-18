@@ -17,6 +17,11 @@ coverage/
 .nyc_output/
 *.lcov
 
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+
 # Environment and secrets — never commit these
 .env
 .env.*

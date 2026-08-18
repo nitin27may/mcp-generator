@@ -118,12 +118,16 @@ export default tseslint.config(
   // strictness bar. `no-explicit-any` and `label-has-associated-control` are relaxed here because
   // these are generic wrapper components (e.g. Label spreads `...props`, including `htmlFor`, onto
   // a plain <label> — the rule can't see that statically) — real usage sites are NOT exempted, only
-  // the wrapper definitions. The tsconfig itself stays strict everywhere.
+  // the wrapper definitions. `heading-has-content` is relaxed for the same reason: `CardTitle`
+  // spreads `...props` (including `children`) onto a real `<h2>` — the static analyzer can't see
+  // that the heading will have content, but every real call site passes one. The tsconfig itself
+  // stays strict everywhere.
   {
     files: ['apps/web/src/components/ui/**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       'jsx-a11y/label-has-associated-control': 'off',
+      'jsx-a11y/heading-has-content': 'off',
     },
   },
 );

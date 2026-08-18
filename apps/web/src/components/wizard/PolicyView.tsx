@@ -1,12 +1,13 @@
 'use client';
 
 import type { RetryConfig, ToolRisk } from '@mcpgen/config-schema';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RiskOverrideCell } from '@/components/policy/RiskOverrideCell';
 import { RetryToggle } from '@/components/policy/RetryToggle';
 import { SaveIndicator } from '@/components/wizard/SaveIndicator';
 import { ConflictBanner } from '@/components/wizard/ConflictBanner';
+import { SaveErrorBanner } from '@/components/wizard/SaveErrorBanner';
 import { StepFooter } from '@/components/wizard/StepFooter';
 import { useProjectQuery } from '@/api-client/queries';
 import { useWizardDispatch, useWizardState } from '@/wizard/useWizard';
@@ -43,13 +44,12 @@ export function PolicyView({ projectId }: { projectId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <ConflictBanner projectId={projectId} />
+      <SaveErrorBanner />
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{en.policyTitle}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-end">
           <SaveIndicator status={saveStatus} />
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">{en.policySubtitle}</p>
           <Alert>
             <AlertDescription>{en.policyNoConfirmationNote}</AlertDescription>
           </Alert>

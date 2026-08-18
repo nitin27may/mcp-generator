@@ -28,6 +28,7 @@ export const en = {
 
   validationTitle: 'Validation',
   validationSubtitle: 'Findings from the imported document.',
+  validationFindingsHeading: 'Findings',
   validationNoDiagnostics: 'No validation findings — the document imported cleanly.',
   validationSourceHeading: 'Source document',
   validationContinue: 'Continue to readiness',
@@ -129,6 +130,7 @@ export const en = {
   toolsColumnRisk: 'Risk',
   toolsColumnFindings: 'Findings',
   toolsNoResults: 'No operations match the current filters.',
+  toolsLoading: 'Loading operations…',
   toolsCount: (shown: number, total: number) => `${shown} of ${total} operations`,
   toolsContinue: 'Continue to parameter binding',
 
@@ -201,4 +203,19 @@ export const en = {
   retryAlways: 'Always retry',
   retryNever: 'Never retry',
   retryForcedOff: 'Forced off — risk floor',
+
+  playgroundTitle: 'Test',
+  playgroundSubtitle: 'Preview the request a tool call would make. Dry runs never send anything upstream; live execution is a separate, explicit step.',
+  playgroundNoEnabledTools: 'No tools are enabled yet — go back to Tools and enable at least one operation.',
+  playgroundToolSelectLabel: 'Tool',
+  playgroundNoInputs: 'This tool takes no inputs.',
+  playgroundInputsHeading: 'Inputs',
+  playgroundDryRunSubmit: 'Preview request',
+  playgroundDryRunRunning: 'Building preview…',
+  playgroundRequestHeading: 'Request preview',
+  playgroundUnresolvedHeading: 'Not resolved in this preview',
+  playgroundUnresolvedBody: 'These environment variables or secrets have no value in this ephemeral workspace, so a placeholder was substituted. They will resolve normally once real values are configured at deploy time.',
+  playgroundHeadersHeading: 'Headers',
+  playgroundBodyHeading: 'Body',
+  playgroundNoResultYet: 'Run a preview to see the request it would build.',
 };

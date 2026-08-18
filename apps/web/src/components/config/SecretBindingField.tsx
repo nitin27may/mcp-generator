@@ -4,6 +4,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { en } from '@/i18n/en';
 
+const PROVIDER_LABELS: Record<NonNullable<SecretBinding['provider']>, string> = {
+  environment: en.bindingSecretProviderEnvironment,
+  'vault-reference': en.bindingSecretProviderVault,
+};
+
 /**
  * Deliberately narrower than a generic binding field — it can only ever
  * produce `{source: 'secret', name, provider?}`. There is structurally no
@@ -34,7 +39,7 @@ export function SecretBindingField({
         />
         <Select value={value.provider ?? 'environment'} onValueChange={(provider) => onChange({ ...value, provider: provider as SecretBinding['provider'] })}>
           <SelectTrigger aria-label={en.bindingSecretProviderLabel}>
-            <SelectValue />
+            <SelectValue>{(provider: NonNullable<SecretBinding['provider']>) => PROVIDER_LABELS[provider]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="environment">{en.bindingSecretProviderEnvironment}</SelectItem>

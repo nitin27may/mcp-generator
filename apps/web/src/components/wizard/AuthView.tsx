@@ -1,7 +1,7 @@
 'use client';
 
 import type { ApiKeyAuth, UpstreamAuthentication } from '@mcpgen/config-schema';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,6 +9,7 @@ import { ValueBindingField, type BindableValue } from '@/components/config/Value
 import { SecretBindingField } from '@/components/config/SecretBindingField';
 import { SaveIndicator } from '@/components/wizard/SaveIndicator';
 import { ConflictBanner } from '@/components/wizard/ConflictBanner';
+import { SaveErrorBanner } from '@/components/wizard/SaveErrorBanner';
 import { StepFooter } from '@/components/wizard/StepFooter';
 import { useWizardDispatch, useWizardState } from '@/wizard/useWizard';
 import { en } from '@/i18n/en';
@@ -21,6 +22,11 @@ const AUTH_TYPE_LABELS: Record<AuthTypeOrNone, string> = {
   bearer: en.authTypeBearer,
   basic: en.authTypeBasic,
   oauth2ClientCredentials: en.authTypeOAuth2,
+};
+
+const API_KEY_LOCATION_LABELS: Record<ApiKeyAuth['in'], string> = {
+  header: en.authApiKeyLocationHeader,
+  query: en.authApiKeyLocationQuery,
 };
 
 function defaultForType(type: AuthTypeOrNone): UpstreamAuthentication | undefined {
@@ -55,19 +61,18 @@ export function AuthView({ projectId }: { projectId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <ConflictBanner projectId={projectId} />
+      <SaveErrorBanner />
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{en.authTitle}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-end">
           <SaveIndicator status={saveStatus} />
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">{en.authSubtitle}</p>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="auth-type">{en.authTypeLabel}</Label>
             <Select value={auth?.type ?? 'none'} onValueChange={(type) => updateAuth(defaultForType(type as AuthTypeOrNone))}>
               <SelectTrigger id="auth-type">
-                <SelectValue />
+                <SelectValue>{(type: AuthTypeOrNone) => AUTH_TYPE_LABELS[type]}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {(Object.keys(AUTH_TYPE_LABELS) as AuthTypeOrNone[]).map((type) => (
@@ -85,7 +90,7 @@ export function AuthView({ projectId }: { projectId: string }) {
                 <Label htmlFor="auth-apikey-in">{en.authApiKeyLocationLabel}</Label>
                 <Select value={auth.in} onValueChange={(loc) => updateAuth({ ...auth, in: loc as ApiKeyAuth['in'] })}>
                   <SelectTrigger id="auth-apikey-in">
-                    <SelectValue />
+                    <SelectValue>{(loc: ApiKeyAuth['in']) => API_KEY_LOCATION_LABELS[loc]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="header">{en.authApiKeyLocationHeader}</SelectItem>

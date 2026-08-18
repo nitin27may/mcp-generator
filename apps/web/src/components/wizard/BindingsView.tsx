@@ -10,6 +10,7 @@ import { EnvVarSummary } from '@/components/bindings/EnvVarSummary';
 import { ProductErrorPanel } from '@/components/diagnostics/ProductErrorPanel';
 import { SaveIndicator } from '@/components/wizard/SaveIndicator';
 import { ConflictBanner } from '@/components/wizard/ConflictBanner';
+import { SaveErrorBanner } from '@/components/wizard/SaveErrorBanner';
 import { StepFooter } from '@/components/wizard/StepFooter';
 import { useProjectQuery } from '@/api-client/queries';
 import { useWizardDispatch, useWizardState } from '@/wizard/useWizard';
@@ -21,6 +22,7 @@ export function BindingsView({ projectId }: { projectId: string }) {
 
   const enabledTools = configDraft ? Object.entries(configDraft.tools).filter(([, tool]) => tool.enabled) : [];
   const [selectedOperationId, setSelectedOperationId] = useState<string | null>(enabledTools[0]?.[0] ?? null);
+  const toolSelectLabels = new Map(enabledTools.map(([operationId, tool]) => [operationId, `${tool.name} — ${tool.sourceOperation.method} ${tool.sourceOperation.path}`]));
 
   const detailQuery = useProjectQuery(projectId, ['operationDetail'], selectedOperationId ?? undefined);
 
@@ -41,13 +43,12 @@ export function BindingsView({ projectId }: { projectId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <ConflictBanner projectId={projectId} />
+      <SaveErrorBanner />
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{en.bindingsTitle}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-end">
           <SaveIndicator status={saveStatus} />
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">{en.bindingsSubtitle}</p>
 
           {enabledTools.length === 0 ? (
             <p className="text-sm text-muted-foreground">{en.bindingsNoEnabledTools}</p>
@@ -55,12 +56,12 @@ export function BindingsView({ projectId }: { projectId: string }) {
             <>
               <Select value={selectedOperationId ?? undefined} onValueChange={(id) => id !== null && setSelectedOperationId(id)}>
                 <SelectTrigger aria-label={en.bindingsToolSelectLabel}>
-                  <SelectValue />
+                  <SelectValue>{(id: string) => toolSelectLabels.get(id)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {enabledTools.map(([operationId, tool]) => (
+                  {enabledTools.map(([operationId]) => (
                     <SelectItem key={operationId} value={operationId}>
-                      {tool.name} — {tool.sourceOperation.method} {tool.sourceOperation.path}
+                      {toolSelectLabels.get(operationId)}
                     </SelectItem>
                   ))}
                 </SelectContent>

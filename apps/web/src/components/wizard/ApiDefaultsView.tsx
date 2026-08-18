@@ -1,10 +1,11 @@
 'use client';
 
 import type { EnvironmentBinding, StaticBinding } from '@mcpgen/config-schema';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ValueBindingField, type BindableValue } from '@/components/config/ValueBindingField';
 import { SaveIndicator } from '@/components/wizard/SaveIndicator';
 import { ConflictBanner } from '@/components/wizard/ConflictBanner';
+import { SaveErrorBanner } from '@/components/wizard/SaveErrorBanner';
 import { StepFooter } from '@/components/wizard/StepFooter';
 import { useWizardDispatch, useWizardState } from '@/wizard/useWizard';
 import { en } from '@/i18n/en';
@@ -28,13 +29,12 @@ export function ApiDefaultsView({ projectId }: { projectId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <ConflictBanner projectId={projectId} />
+      <SaveErrorBanner />
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{en.apiDefaultsTitle}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-end">
           <SaveIndicator status={saveStatus} />
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">{en.apiDefaultsSubtitle}</p>
           <ValueBindingField
             label={en.apiDefaultsBaseUrlLabel}
             value={configDraft.api.baseUrl}
