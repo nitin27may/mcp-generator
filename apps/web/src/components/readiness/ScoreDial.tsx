@@ -5,7 +5,7 @@ const RADIUS = 52;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 function bandFor(score: number): { label: string; className: string } {
-  if (score >= 80) return { label: 'Strong', className: 'text-primary' };
+  if (score >= 80) return { label: 'Strong', className: 'text-success' };
   if (score >= 50) return { label: 'Needs work', className: 'text-amber-600 dark:text-amber-500' };
   return { label: 'Not ready', className: 'text-destructive' };
 }

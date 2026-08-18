@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Check } from 'lucide-react';
 import { WIZARD_STEPS, type WizardStepId } from '@mcpgen/control-contracts';
 import { useWizardState } from '@/wizard/useWizard';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,7 @@ export function StepNav({ currentStepId, projectId }: { currentStepId: WizardSte
           const gate = snapshot?.gates[step.id];
           const reachable = gate?.reachable ?? step.id === 'validation';
           const isCurrent = step.id === currentStepId;
+          const isComplete = gate?.complete === true;
           const href = `/projects/${projectId}/${step.id}`;
 
           return (
@@ -31,13 +33,18 @@ export function StepNav({ currentStepId, projectId }: { currentStepId: WizardSte
                   aria-current={isCurrent ? 'step' : undefined}
                   className={cn(
                     'flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-muted',
-                    isCurrent && 'bg-muted font-medium text-foreground',
-                    !isCurrent && 'text-muted-foreground',
+                    isCurrent && 'bg-primary/10 font-medium text-primary',
+                    !isCurrent && isComplete && 'text-foreground',
+                    !isCurrent && !isComplete && 'text-muted-foreground',
                   )}
                 >
-                  <span aria-hidden="true" className="text-xs tabular-nums">{step.order + 1}</span>
+                  {isComplete && !isCurrent ? (
+                    <Check aria-hidden="true" className="size-3.5 shrink-0 text-success" />
+                  ) : (
+                    <span aria-hidden="true" className="w-3.5 shrink-0 text-center text-xs tabular-nums">{step.order + 1}</span>
+                  )}
                   {step.label}
-                  {gate?.complete === true && <span className="sr-only"> (complete)</span>}
+                  {isComplete && <span className="sr-only"> (complete)</span>}
                 </Link>
               ) : (
                 <span

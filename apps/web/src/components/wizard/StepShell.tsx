@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import type { WizardStepId } from '@mcpgen/control-contracts';
+import { useWizardState } from '@/wizard/useWizard';
 import { StepNav } from './StepNav';
 
 export function StepShell({
@@ -19,6 +20,7 @@ export function StepShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const { snapshot } = useWizardState();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const isFirstRender = useRef(true);
 
@@ -37,6 +39,7 @@ export function StepShell({
   return (
     <div className="mx-auto grid max-w-5xl grid-cols-[220px_1fr] gap-8 px-6 py-8">
       <aside>
+        {snapshot && <p className="mb-3 truncate px-2.5 text-xs font-medium text-muted-foreground" title={snapshot.name}>{snapshot.name}</p>}
         <StepNav projectId={projectId} currentStepId={currentStepId} />
       </aside>
       <main id="main-content" className="flex flex-col gap-4">

@@ -99,7 +99,7 @@ export function AuthView({ projectId }: { projectId: string }) {
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="auth-apikey-name">{en.authApiKeyNameLabel}</Label>
+                <Label htmlFor="auth-apikey-name" required>{en.authApiKeyNameLabel}</Label>
                 <Input id="auth-apikey-name" value={auth.name} onChange={(event) => updateAuth({ ...auth, name: event.target.value })} />
               </div>
               <ValueBindingField
@@ -108,6 +108,7 @@ export function AuthView({ projectId }: { projectId: string }) {
                 onChange={(next: BindableValue) => updateAuth({ ...auth, value: next })}
                 allowedKinds={['secret', 'environment', 'static']}
                 idPrefix="auth-apikey-value"
+                required
               />
             </>
           )}
@@ -119,6 +120,7 @@ export function AuthView({ projectId }: { projectId: string }) {
               onChange={(next: BindableValue) => updateAuth({ ...auth, token: next })}
               allowedKinds={['secret', 'environment', 'static']}
               idPrefix="auth-bearer-token"
+              required
             />
           )}
 
@@ -130,12 +132,14 @@ export function AuthView({ projectId }: { projectId: string }) {
                 onChange={(next: BindableValue) => updateAuth({ ...auth, username: next })}
                 allowedKinds={['environment', 'static', 'secret']}
                 idPrefix="auth-basic-username"
+                required
               />
               <SecretBindingField
                 label={en.authBasicPasswordLabel}
                 value={auth.password}
                 onChange={(next) => updateAuth({ ...auth, password: next })}
                 idPrefix="auth-basic-password"
+                required
               />
             </>
           )}
@@ -143,7 +147,7 @@ export function AuthView({ projectId }: { projectId: string }) {
           {auth?.type === 'oauth2ClientCredentials' && (
             <>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="auth-oauth2-tokenurl">{en.authOAuth2TokenUrlLabel}</Label>
+                <Label htmlFor="auth-oauth2-tokenurl" required>{en.authOAuth2TokenUrlLabel}</Label>
                 <Input
                   id="auth-oauth2-tokenurl"
                   value={auth.tokenUrl}
@@ -158,15 +162,17 @@ export function AuthView({ projectId }: { projectId: string }) {
                 onChange={(next: BindableValue) => updateAuth({ ...auth, clientId: next })}
                 allowedKinds={['environment', 'secret', 'static']}
                 idPrefix="auth-oauth2-clientid"
+                required
               />
               <SecretBindingField
                 label={en.authOAuth2ClientSecretLabel}
                 value={auth.clientSecret}
                 onChange={(next) => updateAuth({ ...auth, clientSecret: next })}
                 idPrefix="auth-oauth2-clientsecret"
+                required
               />
               <div className="flex flex-col gap-2">
-                <Label htmlFor="auth-oauth2-scopes">{en.authOAuth2ScopesLabel}</Label>
+                <Label htmlFor="auth-oauth2-scopes" optional>{en.authOAuth2ScopesLabel}</Label>
                 <Input
                   id="auth-oauth2-scopes"
                   value={(auth.scopes ?? []).join(', ')}

@@ -66,7 +66,7 @@ export function ToolDesignerPanel({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="tool-name">{en.toolDesignerNameLabel}</Label>
+          <Label htmlFor="tool-name" required>{en.toolDesignerNameLabel}</Label>
           <Input
             id="tool-name"
             value={tool.name}
@@ -78,7 +78,7 @@ export function ToolDesignerPanel({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="tool-description">{en.toolDesignerDescriptionLabel}</Label>
+          <Label htmlFor="tool-description" optional>{en.toolDesignerDescriptionLabel}</Label>
           <Textarea id="tool-description" rows={3} value={tool.description} onChange={(event) => onChange({ ...tool, description: event.target.value })} />
         </div>
 

@@ -44,6 +44,7 @@ export function ValueBindingField({
   allowedKinds,
   idPrefix,
   hideLabel = false,
+  required = false,
 }: {
   label: string;
   value: BindableValue;
@@ -51,6 +52,7 @@ export function ValueBindingField({
   allowedKinds: readonly BindableKind[];
   idPrefix: string;
   hideLabel?: boolean;
+  required?: boolean;
 }) {
   function handleKindChange(kind: string | null) {
     if (kind === null || kind === value.source) return;
@@ -59,7 +61,7 @@ export function ValueBindingField({
 
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={`${idPrefix}-field`} className={hideLabel ? 'sr-only' : undefined}>
+      <Label htmlFor={`${idPrefix}-field`} className={hideLabel ? 'sr-only' : undefined} required={required}>
         {label}
       </Label>
       <div className="flex gap-2">

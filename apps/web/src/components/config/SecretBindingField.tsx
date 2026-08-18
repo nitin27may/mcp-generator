@@ -21,15 +21,17 @@ export function SecretBindingField({
   value,
   onChange,
   idPrefix,
+  required = false,
 }: {
   label: string;
   value: SecretBinding;
   onChange: (next: SecretBinding) => void;
   idPrefix: string;
+  required?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={`${idPrefix}-name`}>{label}</Label>
+      <Label htmlFor={`${idPrefix}-name`} required={required}>{label}</Label>
       <div className="flex gap-2">
         <Input
           id={`${idPrefix}-name`}

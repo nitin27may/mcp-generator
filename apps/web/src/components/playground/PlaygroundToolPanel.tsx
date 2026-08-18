@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { McpProjectConfig, ToolConfig } from '@mcpgen/config-schema';
+import type { OperationDetail } from '@mcpgen/control-contracts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,7 +41,17 @@ const RISK_REQUIRES_ACKNOWLEDGEMENT: ReadonlySet<ToolConfig['risk']> = new Set([
  * `setState` on every prop change is a React anti-pattern the lint config
  * catches; `key` is the idiomatic fix).
  */
-export function PlaygroundToolPanel({ projectId, config, toolConfig }: { projectId: string; config: McpProjectConfig; toolConfig: ToolConfig }) {
+export function PlaygroundToolPanel({
+  projectId,
+  config,
+  toolConfig,
+  operationDetail,
+}: {
+  projectId: string;
+  config: McpProjectConfig;
+  toolConfig: ToolConfig;
+  operationDetail: OperationDetail | undefined;
+}) {
   const [rawValues, setRawValues] = useState<Record<string, string>>({});
   const [secretValues, setSecretValues] = useState<Record<string, string>>({});
   const [riskDialogOpen, setRiskDialogOpen] = useState(false);
@@ -70,7 +81,12 @@ export function PlaygroundToolPanel({ projectId, config, toolConfig }: { project
     <div className="grid grid-cols-2 gap-4">
       <div className="flex flex-col gap-3">
         <h3 className="text-sm font-medium">{en.playgroundInputsHeading}</h3>
-        <ToolInputForm toolConfig={toolConfig} values={rawValues} onChange={(name, value) => setRawValues((prev) => ({ ...prev, [name]: value }))} />
+        <ToolInputForm
+          toolConfig={toolConfig}
+          operationDetail={operationDetail}
+          values={rawValues}
+          onChange={(name, value) => setRawValues((prev) => ({ ...prev, [name]: value }))}
+        />
 
         {secretNames.length > 0 && (
           <div className="flex flex-col gap-2 rounded-md border border-dashed p-2">

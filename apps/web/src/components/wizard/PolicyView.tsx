@@ -1,6 +1,7 @@
 'use client';
 
 import type { RetryConfig, ToolRisk } from '@mcpgen/config-schema';
+import { Info } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RiskOverrideCell } from '@/components/policy/RiskOverrideCell';
@@ -50,10 +51,12 @@ export function PolicyView({ projectId }: { projectId: string }) {
           <SaveIndicator status={saveStatus} />
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <Alert>
+          <Alert variant="warning">
+            <Info aria-hidden="true" />
             <AlertDescription>{en.policyNoConfirmationNote}</AlertDescription>
           </Alert>
-          <Alert>
+          <Alert variant="warning">
+            <Info aria-hidden="true" />
             <AlertDescription>{en.policyRetryFloorNote}</AlertDescription>
           </Alert>
 

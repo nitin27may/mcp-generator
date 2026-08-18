@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PlaygroundToolPanel } from '@/components/playground/PlaygroundToolPanel';
 import { ConflictBanner } from '@/components/wizard/ConflictBanner';
 import { StepFooter } from '@/components/wizard/StepFooter';
+import { useProjectQuery } from '@/api-client/queries';
 import { useWizardState } from '@/wizard/useWizard';
 import { en } from '@/i18n/en';
 
@@ -15,8 +16,12 @@ export function PlaygroundView({ projectId }: { projectId: string }) {
   const [selectedToolName, setSelectedToolName] = useState<string | null>(enabledTools[0]?.name ?? null);
   const toolSelectLabels = new Map(enabledTools.map((tool) => [tool.name, `${tool.name} — ${tool.sourceOperation.method} ${tool.sourceOperation.path}`]));
 
-  if (!configDraft) return null;
   const selectedTool = selectedToolName ? enabledTools.find((tool) => tool.name === selectedToolName) : undefined;
+  // Required-ness for ToolInputForm's fields — only known via the underlying operation's real
+  // parameter/body schema, not the tool config itself.
+  const detailQuery = useProjectQuery(projectId, ['operationDetail'], selectedTool?.sourceOperation.internalOperationId);
+
+  if (!configDraft) return null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -40,7 +45,15 @@ export function PlaygroundView({ projectId }: { projectId: string }) {
                 </SelectContent>
               </Select>
 
-              {selectedTool && <PlaygroundToolPanel key={selectedTool.name} projectId={projectId} config={configDraft} toolConfig={selectedTool} />}
+              {selectedTool && (
+                <PlaygroundToolPanel
+                  key={selectedTool.name}
+                  projectId={projectId}
+                  config={configDraft}
+                  toolConfig={selectedTool}
+                  operationDetail={detailQuery.data?.operationDetail}
+                />
+              )}
             </>
           )}
         </CardContent>

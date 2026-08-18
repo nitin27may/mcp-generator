@@ -99,7 +99,7 @@ export function ToolsView({ projectId }: { projectId: string }) {
           ) : rows.length === 0 ? (
             <p className="text-sm text-muted-foreground">{en.toolsNoResults}</p>
           ) : (
-            <div className={cn('grid gap-4', selectedOperation ? 'grid-cols-[1fr_360px]' : 'grid-cols-1')}>
+            <div className={cn('grid items-start gap-4', selectedOperation ? 'grid-cols-[1fr_360px]' : 'grid-cols-1')}>
               <OperationTable
                 rows={rows}
                 selectedId={selectedId}

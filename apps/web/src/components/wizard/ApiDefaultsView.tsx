@@ -41,6 +41,7 @@ export function ApiDefaultsView({ projectId }: { projectId: string }) {
             onChange={handleBaseUrlChange}
             allowedKinds={['environment', 'static']}
             idPrefix="api-base-url"
+            required
           />
         </CardContent>
       </Card>
