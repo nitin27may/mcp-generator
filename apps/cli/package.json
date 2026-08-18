@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "description": "The open-source mcpgen CLI: serve, validate, print-tools, print-config, generate. Not the runtime baked into a *generated* package's own dist/cli.mjs (see @mcpgen/generator's bundleRuntime) — this is the tool that produces that package.",
-  "main": "./dist/cli.js",
-  "bin": { "mcpgen": "./dist/cli.js" },
+  "main": "./dist/mcpgen.mjs",
+  "bin": { "mcpgen": "./dist/mcpgen.mjs" },
   "files": ["dist"],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node scripts/build.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "rm -rf dist .turbo"
   },
@@ -23,9 +23,14 @@
     "@mcpgen/openapi-adapter": "workspace:*",
     "@mcpgen/redaction": "workspace:*",
     "@mcpgen/risk-engine": "workspace:*",
-    "@mcpgen/upstream-auth": "workspace:*"
+    "@mcpgen/upstream-auth": "workspace:*",
+    "@modelcontextprotocol/core": "2.0.0",
+    "@modelcontextprotocol/node": "2.0.0",
+    "@modelcontextprotocol/server": "2.0.0",
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^22.19.0"
+    "@types/node": "^22.19.0",
+    "esbuild": "0.28.2"
   }
 }

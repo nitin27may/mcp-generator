@@ -107,6 +107,14 @@ for (const pkg of listWorkspacePackages()) {
   const deps = { ...(manifest.dependencies ?? {}) };
   const allDeclared = { ...deps, ...(manifest.devDependencies ?? {}) };
   const isTestOnlySdkUse = shortName === 'test-fixtures';
+  // `cli` bundles @mcpgen/mcp-protocol's compiled output directly into its own published
+  // artifact (esbuild's `external`, apps/cli/scripts/build.mjs) — the real SDK packages have to
+  // resolve from ITS OWN node_modules once mcp-protocol's wrapper code is inlined, so its
+  // package.json legitimately declares them as dependencies. This is a manifest-only exception:
+  // unlike test-fixtures, cli's SOURCE files still may never literally `import` from
+  // '@modelcontextprotocol/*' — that stays exclusively mcp-protocol's job (ADR-0004) — so this
+  // flag is intentionally NOT passed to the source-level import check below.
+  const isManifestOnlySdkDependency = shortName === 'cli';
 
   // --- manifest-level checks -------------------------------------------------
   if (shortName === 'domain' && Object.keys(deps).length > 0) {
@@ -114,7 +122,7 @@ for (const pkg of listWorkspacePackages()) {
   }
 
   for (const dep of Object.keys(deps)) {
-    if (dep.startsWith(SDK_SCOPE) && !SDK_ALLOWED.has(shortName) && !isTestOnlySdkUse) {
+    if (dep.startsWith(SDK_SCOPE) && !SDK_ALLOWED.has(shortName) && !isTestOnlySdkUse && !isManifestOnlySdkDependency) {
       fail('sdk-confined', shortName, `declares runtime dependency ${dep}`);
     }
     if (dep.startsWith(PARSER_SCOPE) && !PARSER_ALLOWED.has(shortName)) {
