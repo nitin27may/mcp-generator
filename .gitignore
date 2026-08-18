@@ -35,6 +35,7 @@ secrets.json
 
 # Local generated artifacts produced while testing the generator
 /tmp-generated/
+/dist-mcp/
 *.local.mcp.config.json
 
 # Editor / OS

@@ -7,7 +7,7 @@ production-grade.
 
 > Import OpenAPI. Configure once. Run MCP anywhere.
 
-[![Status](https://img.shields.io/badge/status-pre--implementation-blue)](docs/TECHNICAL-PLAN.md#83-work-breakdown-structure)
+[![Status](https://img.shields.io/badge/status-implemented-15803d)](docs/TECHNICAL-PLAN.md#83-work-breakdown-structure)
 [![MCP](https://img.shields.io/badge/MCP-2026--07--28-0f766e)](docs/adr/0009-mcp-sdk-v2-and-modern-era.md)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-2.0%20%7C%203.0%20%7C%203.1%20%7C%203.2-c2410c)](docs/BRD.md#102-openapi-import)
 [![Node](https://img.shields.io/badge/node-22%20LTS-15803d)](docs/TECHNICAL-PLAN.md#3-technology-stack--pinned)
@@ -71,9 +71,99 @@ stdio · Streamable HTTP · Docker · hosted (later)
 
 ## Status
 
-**Documentation baseline. Pre-implementation.** No product code exists yet by design — the
-technical plan (§65) is explicit that the canonical model and runtime are built before any UI,
-because a polished UI over a wrong domain model only hides architectural debt.
+**Implemented and tested.** The canonical model, readiness/risk engines, MCP runtime, package
+generator, CLI, and the guided web wizard are all built — 17 packages, 550+ tests. See
+[`docs/TECHNICAL-PLAN.md`'s WBS](docs/TECHNICAL-PLAN.md#83-work-breakdown-structure) for exactly
+what's done versus outstanding, and the [reconciliation log (§93)](docs/TECHNICAL-PLAN.md) for
+every gap found and fixed along the way.
+
+## Quickstart
+
+There are two ways to use `mcpgen`: the **web wizard** (guided, no JSON hand-authoring) or the
+**CLI** (scriptable, npm-installable from source today — not yet published to the registry).
+Both call the exact same engine and produce the exact same kind of output: a portable
+`mcp.config.json` plus a generated, redistributable MCP server package.
+
+### 1. Prerequisites
+
+- Node.js ≥ 22.11 (`engines.node` in the root `package.json`)
+- [pnpm](https://pnpm.io) 11.22 (`packageManager` in the root `package.json` — `corepack enable`
+  will pick up the pinned version automatically)
+
+### 2. Install and build
+
+```bash
+git clone https://github.com/nitin27may/mcp-generator.git
+cd mcp-generator
+pnpm install
+pnpm build
+```
+
+### 3. Run the web wizard
+
+```bash
+pnpm --filter @mcpgen/web dev
+```
+
+Open `http://localhost:3000`. The wizard is desktop-only by design (import → readiness → configure
+→ generate); everything it needs is documented in-app at `/docs` once you land there. Projects are
+stored under an ephemeral, disk-backed workspace (`MCPGEN_WORKSPACE_ROOT`, default
+`$TMPDIR/mcpgen-workspace`) — no accounts, no database. The full environment variable list (project
+TTLs, upload/build size caps, the private-egress opt-in used for local playground testing) is in
+[`apps/web/src/server/env.ts`](apps/web/src/server/env.ts).
+
+### 4. Install the CLI from source
+
+The CLI isn't on the npm registry yet, but it's fully usable straight from a clone:
+
+```bash
+cd apps/cli
+npm link          # exposes a global `mcpgen` command backed by this build
+cd ../..
+
+mcpgen print-tools --config fixtures/openapi-3.1/customer.mcp.config.json \
+                    --spec   fixtures/openapi-3.1/customer.json
+mcpgen generate     --config fixtures/openapi-3.1/customer.mcp.config.json \
+                    --spec   fixtures/openapi-3.1/customer.json \
+                    --out    ./dist-mcp
+```
+
+(`mcpgen validate` against this same fixture will report two diagnostics — `BND-005`/`AUT-001`,
+an unresolved base-URL environment variable and a missing upstream credential. That's expected:
+the fixture references real deploy-time secrets on purpose, and catching exactly that is what
+`validate` is for.)
+
+Commands: `serve | validate | print-tools | print-config | generate`. Flags: `--config`, `--spec`,
+`--transport stdio|http` (`serve` only, defaults to `stdio`), `--host`/`--port` (`http` only),
+`--out` (`generate` only, defaults to `./dist-mcp`).
+
+If `npm link` fails with a permissions error (some systems' global npm prefix isn't
+user-writable), either fix npm's global prefix or run it scoped to a writable one:
+`npm_config_prefix=$HOME/.npm-global npm link` (and add `$HOME/.npm-global/bin` to `PATH`).
+
+### 5. Run with Docker Compose
+
+```bash
+docker compose up
+```
+
+Builds and runs the web wizard in a container — same app, same flow, nothing lighter or different
+about it. Open `http://localhost:3000` and use it exactly as in step 3.
+
+### 6. What you get from Generate
+
+Whichever path you use, `generate` produces a `.zip` (web) or a directory (CLI) that is
+**self-documenting** — it ships its own `README.md` covering required environment variables and
+secrets, local `npx` setup, an MCP client-configuration JSON snippet, optional Docker instructions,
+and troubleshooting. You don't need this repo's docs to run what it generates; open the generated
+package's own README first.
+
+### 7. Learn more
+
+- In-app, once the wizard is running: `/` (what this is) and `/docs` (wizard walkthrough + CLI
+  reference side by side).
+- [`docs/BRD.md`](docs/BRD.md) and [`docs/TECHNICAL-PLAN.md`](docs/TECHNICAL-PLAN.md) for the full
+  architecture and requirements.
 
 ## Documents
 
