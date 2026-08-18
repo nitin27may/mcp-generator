@@ -16,6 +16,7 @@
   },
   "scripts": {
     "dev": "turbo run dev",
+    "start:web": "pnpm --filter @mcpgen/web start",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "eslint . && pnpm run lint:boundaries",
