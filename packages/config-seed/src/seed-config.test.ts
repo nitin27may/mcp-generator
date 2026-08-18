@@ -61,12 +61,43 @@ describe('seedProjectConfig', () => {
     expect(config.upstreamAuthentication).toMatchObject({ value: { name: 'CUSTOMER_API_KEY' } });
   });
 
-  it('omits upstreamAuthentication entirely for an OAuth2 scheme rather than seeding an invalid tokenUrl', async () => {
+  it('seeds a complete oauth2ClientCredentials config when the spec declares a real clientCredentials flow', async () => {
     const doc = {
       openapi: '3.1.0',
       info: { title: 'X', version: '1' },
       paths: { '/x': { get: { operationId: 'getX', responses: { '200': { description: 'ok' } }, security: [{ oauth: [] }] } } },
-      components: { securitySchemes: { oauth: { type: 'oauth2', flows: { clientCredentials: { tokenUrl: 'https://example.com/token', scopes: {} } } } } },
+      components: {
+        securitySchemes: {
+          oauth: { type: 'oauth2', flows: { clientCredentials: { tokenUrl: 'https://example.com/token', scopes: { 'x:read': 'Read x' } } } },
+        },
+      },
+    };
+    const parsed = await parseOpenApi(doc, { sourceId: 'x' });
+    if (!parsed.value) throw new Error(`fixture doc failed to parse: ${JSON.stringify(parsed.diagnostics)}`);
+
+    const config = seedProjectConfig(parsed.value, 'OAuth API');
+
+    expect(config.upstreamAuthentication).toMatchObject({
+      type: 'oauth2ClientCredentials',
+      tokenUrl: 'https://example.com/token',
+      clientId: { source: 'environment', name: 'OAUTH_API_CLIENT_ID' },
+      clientSecret: { source: 'secret', name: 'OAUTH_API_CLIENT_SECRET' },
+      scopes: ['x:read'],
+    });
+    const result = parseProjectConfig(config);
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  it('omits upstreamAuthentication entirely for an OAuth2 scheme that declares no clientCredentials flow', async () => {
+    const doc = {
+      openapi: '3.1.0',
+      info: { title: 'X', version: '1' },
+      paths: { '/x': { get: { operationId: 'getX', responses: { '200': { description: 'ok' } }, security: [{ oauth: [] }] } } },
+      components: {
+        securitySchemes: {
+          oauth: { type: 'oauth2', flows: { authorizationCode: { authorizationUrl: 'https://example.com/authorize', tokenUrl: 'https://example.com/token', scopes: {} } } },
+        },
+      },
     };
     const parsed = await parseOpenApi(doc, { sourceId: 'x' });
     if (!parsed.value) throw new Error(`fixture doc failed to parse: ${JSON.stringify(parsed.diagnostics)}`);

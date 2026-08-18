@@ -13,11 +13,12 @@ export type SeedAuthResult =
   | { readonly kind: 'unsupported'; readonly reason: SeedAuthUnsupportedReason };
 
 /**
- * OAuth2/OIDC schemes are deliberately NOT seeded — `OAuth2ClientCredentialsAuthSchema.tokenUrl`
- * is `z.string().url()` and cannot be seeded blank, and a config born invalid at creation time
- * because of a guessed placeholder is worse than no seed at all. `CanonicalSecurityScheme` also
- * does not carry OAuth flow data (the adapter discards it) — capturing and seeding a real
- * `tokenUrl` is a separate, deliberately scoped follow-up.
+ * A scheme's `tokenUrl` is never guessed or defaulted — `OAuth2ClientCredentialsAuthSchema.tokenUrl`
+ * is `z.string().url()`, so a config born invalid because of a placeholder would be worse than no
+ * seed at all. OAuth2 is only seeded when the source document declared a real `clientCredentials`
+ * flow (`CanonicalSecurityScheme.oauth2Flows`, populated by the adapter from the spec's own
+ * `flows.clientCredentials.tokenUrl`) — a spec with only authorizationCode/implicit/password flows,
+ * or `openIdConnect` (which yields only a discovery URL), is reported as unsupported instead.
  */
 export function seedAuth(scheme: CanonicalSecurityScheme, slug: string): SeedAuthResult {
   const envNames = deriveEnvNames(slug);
@@ -50,8 +51,21 @@ export function seedAuth(scheme: CanonicalSecurityScheme, slug: string): SeedAut
       }
       // Treat any other HTTP scheme (bearer, or an unrecognized one) as bearer — the closest fit.
       return { kind: 'seeded', auth: { type: 'bearer', token: { source: 'secret', name: envNames.token } } };
-    case 'oauth2':
-      return { kind: 'unsupported', reason: 'oauth2-flow-unsupported' };
+    case 'oauth2': {
+      const tokenUrl = scheme.oauth2Flows?.clientCredentials?.tokenUrl;
+      if (tokenUrl === undefined) return { kind: 'unsupported', reason: 'oauth2-flow-unsupported' };
+      const scopes = scheme.oauth2Flows?.clientCredentials?.scopes;
+      return {
+        kind: 'seeded',
+        auth: {
+          type: 'oauth2ClientCredentials',
+          tokenUrl,
+          clientId: { source: 'environment', name: envNames.clientId },
+          clientSecret: { source: 'secret', name: envNames.clientSecret },
+          ...(scopes && scopes.length > 0 ? { scopes } : {}),
+        },
+      };
+    }
     case 'openIdConnect':
       return { kind: 'unsupported', reason: 'openid-connect' };
   }

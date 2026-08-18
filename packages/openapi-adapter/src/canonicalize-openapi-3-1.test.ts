@@ -22,6 +22,42 @@ describe('canonicalizeOpenApi31', () => {
     expect(api.securitySchemes).toEqual([{ name: 'bearerAuth', type: 'http', scheme: 'bearer' }]);
   });
 
+  it('captures an oauth2 clientCredentials flow, dropping empty scopes', () => {
+    const api = canonicalizeOpenApi31(
+      {
+        info: {},
+        components: {
+          securitySchemes: {
+            oauth: { type: 'oauth2', flows: { clientCredentials: { tokenUrl: 'https://example.com/token', scopes: { 'x:read': 'Read x' } } } },
+          },
+        },
+        paths: {},
+      },
+      SOURCE,
+    );
+
+    expect(api.securitySchemes).toEqual([
+      { name: 'oauth', type: 'oauth2', oauth2Flows: { clientCredentials: { tokenUrl: 'https://example.com/token', scopes: ['x:read'] } } },
+    ]);
+  });
+
+  it('omits oauth2Flows when the scheme declares no clientCredentials flow', () => {
+    const api = canonicalizeOpenApi31(
+      {
+        info: {},
+        components: {
+          securitySchemes: {
+            oauth: { type: 'oauth2', flows: { authorizationCode: { authorizationUrl: 'https://example.com/authorize', tokenUrl: 'https://example.com/token', scopes: {} } } },
+          },
+        },
+        paths: {},
+      },
+      SOURCE,
+    );
+
+    expect(api.securitySchemes).toEqual([{ name: 'oauth', type: 'oauth2' }]);
+  });
+
   it('falls back to method + normalized path when operationId is absent', () => {
     const api = canonicalizeOpenApi31(
       { info: {}, paths: { '/customers/{id}': { get: { responses: {} } } } },

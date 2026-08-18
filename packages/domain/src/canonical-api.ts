@@ -25,6 +25,18 @@ export interface CanonicalServer {
 
 export type CanonicalSecuritySchemeType = 'apiKey' | 'http' | 'oauth2' | 'openIdConnect';
 
+export interface CanonicalOAuth2ClientCredentialsFlow {
+  readonly tokenUrl: string;
+  readonly scopes?: string[];
+}
+
+/** Only the flow this platform can act on (config-schema's `OAuth2ClientCredentialsAuthSchema`
+ * is the only OAuth2 grant it supports) is captured — authorizationCode/implicit/password flows
+ * carry no information a non-interactive seeder could use, so they are deliberately not modeled. */
+export interface CanonicalOAuth2Flows {
+  readonly clientCredentials?: CanonicalOAuth2ClientCredentialsFlow;
+}
+
 export interface CanonicalSecurityScheme {
   readonly name: string;
   readonly type: CanonicalSecuritySchemeType;
@@ -34,6 +46,8 @@ export interface CanonicalSecurityScheme {
   readonly paramName?: string;
   /** For `http` schemes: "bearer" | "basic". */
   readonly scheme?: string;
+  /** For `oauth2` schemes. Undefined when the source document declares no `clientCredentials` flow. */
+  readonly oauth2Flows?: CanonicalOAuth2Flows;
 }
 
 /** TIP §6.2 — the permanent business domain model. Never an OpenAPI object graph (ADR-0003). */

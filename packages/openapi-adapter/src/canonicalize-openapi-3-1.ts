@@ -80,6 +80,7 @@ function canonicalizeServer(server: Json): CanonicalServer {
 function canonicalizeSecurityScheme(name: string, scheme: Json): CanonicalSecurityScheme {
   const type = String(scheme.type ?? '') as CanonicalSecurityScheme['type'];
   const location = typeof scheme.in === 'string' ? (scheme.in as 'header' | 'query' | 'cookie') : undefined;
+  const oauth2Flows = type === 'oauth2' ? canonicalizeOAuth2Flows(scheme.flows) : undefined;
   return {
     name,
     type,
@@ -87,7 +88,26 @@ function canonicalizeSecurityScheme(name: string, scheme: Json): CanonicalSecuri
     ...(location !== undefined ? { in: location } : {}),
     ...(scheme.name !== undefined ? { paramName: String(scheme.name) } : {}),
     ...(scheme.scheme !== undefined ? { scheme: String(scheme.scheme) } : {}),
+    ...(oauth2Flows !== undefined ? { oauth2Flows } : {}),
   };
+}
+
+/**
+ * Captures only the `clientCredentials` flow — the only OAuth2 grant `config-schema`'s
+ * `OAuth2ClientCredentialsAuthSchema` supports. A spec that declares oauth2 but only
+ * authorizationCode/implicit/password flows yields `undefined` here, same as declaring
+ * no flows at all; the seeder reports that as unsupported rather than guessing a grant
+ * this platform cannot execute.
+ */
+function canonicalizeOAuth2Flows(flows: unknown): CanonicalSecurityScheme['oauth2Flows'] {
+  const clientCredentials = (flows as Json | undefined)?.clientCredentials as Json | undefined;
+  const tokenUrl = clientCredentials?.tokenUrl;
+  if (typeof tokenUrl !== 'string' || tokenUrl.length === 0) return undefined;
+
+  const scopesObject = clientCredentials?.scopes as Json | undefined;
+  const scopes = scopesObject !== undefined ? Object.keys(scopesObject) : undefined;
+
+  return { clientCredentials: { tokenUrl, ...(scopes && scopes.length > 0 ? { scopes } : {}) } };
 }
 
 function canonicalizeSchema(schema: unknown): CanonicalSchema {
