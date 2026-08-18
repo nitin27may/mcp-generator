@@ -28,6 +28,7 @@ const RULES = [
   { id: 'parser-confined', description: 'only `openapi-adapter` may use @scalar/*', adr: 'ADR-0003' },
   { id: 'sdk-confined', description: 'only `mcp-protocol` may use @modelcontextprotocol/*', adr: 'ADR-0004' },
   { id: 'analysis-pure', description: '`readiness-engine`/`risk-engine` must not use the SDK, parser, or UI', adr: 'ADR-0007' },
+  { id: 'contracts-pure', description: '`control-contracts` must not use react/next/UI — shared by apps/web today, may gain another consumer later' },
   { id: 'auth-planes-separate', description: '`upstream-auth` must not import `mcp-protocol`', adr: 'ADR-0005' },
   { id: 'apps-are-leaves', description: 'no package may import from `apps/*`' },
   { id: 'modern-era-only', description: 'no `McpServer#connect()` — it silently serves the legacy protocol era', adr: 'ADR-0009' },
@@ -133,6 +134,12 @@ for (const pkg of listWorkspacePackages()) {
     }
   }
 
+  if (shortName === 'control-contracts') {
+    for (const dep of Object.keys(allDeclared)) {
+      if (UI_PACKAGES.includes(dep)) fail('contracts-pure', shortName, `declares ${dep}`);
+    }
+  }
+
   // --- source-level checks ---------------------------------------------------
   for (const file of sourceFiles(dir)) {
     checked.files++;
@@ -159,6 +166,9 @@ for (const pkg of listWorkspacePackages()) {
       if ((shortName === 'readiness-engine' || shortName === 'risk-engine')
           && (spec.startsWith(SDK_SCOPE) || spec.startsWith(PARSER_SCOPE) || UI_PACKAGES.includes(spec))) {
         fail('analysis-pure', shortName, `imports ${spec}`, file);
+      }
+      if (shortName === 'control-contracts' && UI_PACKAGES.includes(spec)) {
+        fail('contracts-pure', shortName, `imports ${spec}`, file);
       }
       if (group === 'packages' && /(^|\/)apps\//.test(spec)) {
         fail('apps-are-leaves', shortName, `imports ${spec}`, file);

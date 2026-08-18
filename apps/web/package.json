@@ -12,9 +12,17 @@
     "clean": "rm -rf .next .turbo"
   },
   "dependencies": {
+    "@mcpgen/binding-engine": "workspace:*",
+    "@mcpgen/config-schema": "workspace:*",
+    "@mcpgen/control-contracts": "workspace:*",
+    "@mcpgen/domain": "workspace:*",
+    "@mcpgen/mcp-runtime": "workspace:*",
+    "@mcpgen/openapi-adapter": "workspace:*",
+    "@mcpgen/risk-engine": "workspace:*",
     "next": "16.3.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

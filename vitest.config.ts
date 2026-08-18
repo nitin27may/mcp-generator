@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -46,6 +47,12 @@ export default defineConfig({
           environment: 'node',
           testTimeout: 30_000,
           hookTimeout: 30_000,
+        },
+        // Route handlers under apps/web/src/app/api/** use the `@/*` -> `apps/web/src/*`
+        // alias Next.js resolves via tsconfig at build/dev time; vitest doesn't read
+        // tsconfig paths on its own, so integration tests need the same mapping here.
+        resolve: {
+          alias: { '@': fileURLToPath(new URL('./apps/web/src', import.meta.url)) },
         },
       },
       {

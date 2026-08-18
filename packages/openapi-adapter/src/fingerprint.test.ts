@@ -25,4 +25,13 @@ describe('fingerprintOf', () => {
   it('distinguishes array order (order is semantic, unlike object keys)', () => {
     expect(fingerprintOf(['a', 'b'])).not.toBe(fingerprintOf(['b', 'a']));
   });
+
+  it('does not throw for undefined — e.g. a document that failed to normalize into anything', () => {
+    expect(() => fingerprintOf(undefined)).not.toThrow();
+    expect(fingerprintOf(undefined)).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('does not throw for other non-JSON-serializable values (a bare function)', () => {
+    expect(() => fingerprintOf(() => {})).not.toThrow();
+  });
 });

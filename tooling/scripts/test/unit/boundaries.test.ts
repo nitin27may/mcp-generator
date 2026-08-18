@@ -85,6 +85,10 @@ describe('boundaries checker', () => {
       packages: { 'risk-engine': { manifest: { devDependencies: { react: '^19' } } } },
     },
     {
+      rule: 'contracts-pure',
+      packages: { 'control-contracts': { manifest: { dependencies: { next: '^16' } } } },
+    },
+    {
       rule: 'modern-era-only',
       packages: {
         'mcp-protocol': {

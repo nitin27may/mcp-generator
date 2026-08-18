@@ -10,7 +10,10 @@ export function fingerprintOf(value: unknown): string {
 }
 
 function stableStringify(value: unknown): string {
-  return JSON.stringify(sortKeysDeep(value));
+  // JSON.stringify(undefined) returns undefined (not a string) — e.g. a document
+  // that failed to parse into anything at all. Fall back to String() so this
+  // function never crashes for any `unknown` input, matching its signature.
+  return JSON.stringify(sortKeysDeep(value)) ?? String(value);
 }
 
 function sortKeysDeep(value: unknown): unknown {

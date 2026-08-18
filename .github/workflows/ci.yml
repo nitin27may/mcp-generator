@@ -47,8 +47,9 @@ jobs:
       - name: Unit and golden tests
         run: pnpm run test
 
-      # Empty until the web UI plan's Increment 2 lands apps/web/test/integration/**.
-      # --passWithNoTests is a placeholder, same convention as the security/e2e jobs below.
+      # Increment 2 of the web UI plan landed apps/web/test/integration/** —
+      # real Route Handlers against real @mcpgen/* packages and a real temp
+      # disk store, zero mocks. --passWithNoTests stays as a safety net.
       - name: Integration tests
         run: pnpm exec vitest run --project integration --passWithNoTests
 
