@@ -44,6 +44,9 @@ importers:
       '@mcpgen/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@mcpgen/generator':
+        specifier: workspace:*
+        version: link:../../packages/generator
       '@mcpgen/mcp-protocol':
         specifier: workspace:*
         version: link:../../packages/mcp-protocol

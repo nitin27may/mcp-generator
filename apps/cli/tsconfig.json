@@ -5,6 +5,7 @@
   "references": [
     { "path": "../../packages/domain" },
     { "path": "../../packages/config-schema" },
+    { "path": "../../packages/generator" },
     { "path": "../../packages/binding-engine" },
     { "path": "../../packages/upstream-auth" },
     { "path": "../../packages/mcp-protocol" },

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "P0 dogfood CLI: serve, validate, print-tools, print-config. Not the generated-package CLI (that's P2-W15-E02).",
+  "description": "The open-source mcpgen CLI: serve, validate, print-tools, print-config, generate. Not the runtime baked into a *generated* package's own dist/cli.mjs (see @mcpgen/generator's bundleRuntime) — this is the tool that produces that package.",
   "main": "./dist/cli.js",
   "files": ["dist"],
   "scripts": {
@@ -15,6 +15,7 @@
     "@mcpgen/binding-engine": "workspace:*",
     "@mcpgen/config-schema": "workspace:*",
     "@mcpgen/domain": "workspace:*",
+    "@mcpgen/generator": "workspace:*",
     "@mcpgen/mcp-protocol": "workspace:*",
     "@mcpgen/mcp-runtime": "workspace:*",
     "@mcpgen/openapi-adapter": "workspace:*",

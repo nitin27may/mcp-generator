@@ -4,6 +4,7 @@ import { runServe } from './commands/serve.js';
 import { runValidate } from './commands/validate.js';
 import { runPrintTools } from './commands/print-tools.js';
 import { runPrintConfig } from './commands/print-config.js';
+import { runGenerate } from './commands/generate.js';
 
 interface ParsedArgs {
   readonly command: string;
@@ -12,6 +13,7 @@ interface ParsedArgs {
   readonly transport: 'stdio' | 'http';
   readonly host?: string;
   readonly port?: number;
+  readonly outDir: string;
 }
 
 function parseArgs(argv: readonly string[]): ParsedArgs {
@@ -21,6 +23,7 @@ function parseArgs(argv: readonly string[]): ParsedArgs {
   let transport: 'stdio' | 'http' = 'stdio'; // TIP §31: stdio is the default transport
   let host: string | undefined;
   let port: number | undefined;
+  let outDir = './dist-mcp';
 
   for (let i = 1; i < argv.length; i++) {
     if (argv[i] === '--config') configPath = argv[++i] ?? configPath;
@@ -32,10 +35,10 @@ function parseArgs(argv: readonly string[]): ParsedArgs {
     else if (argv[i] === '--port') {
       const value = argv[++i];
       if (value !== undefined) port = Number(value);
-    }
+    } else if (argv[i] === '--out') outDir = argv[++i] ?? outDir;
   }
 
-  return { command, configPath, specPath, transport, ...(host ? { host } : {}), ...(port !== undefined ? { port } : {}) };
+  return { command, configPath, specPath, transport, outDir, ...(host ? { host } : {}), ...(port !== undefined ? { port } : {}) };
 }
 
 async function main(): Promise<number> {
@@ -54,8 +57,10 @@ async function main(): Promise<number> {
       return runPrintTools(args.configPath, args.specPath);
     case 'print-config':
       return runPrintConfig(args.configPath);
+    case 'generate':
+      return runGenerate(args.configPath, args.specPath, args.outDir);
     default:
-      process.stderr.write(`Unknown command "${args.command}". Expected: serve | validate | print-tools | print-config\n`);
+      process.stderr.write(`Unknown command "${args.command}". Expected: serve | validate | print-tools | print-config | generate\n`);
       return 1;
   }
 }
