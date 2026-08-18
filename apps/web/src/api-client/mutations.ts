@@ -5,6 +5,8 @@ import type {
   DryRunResult,
   ExecuteRequest,
   ExecutionTrace,
+  GenerateRequest,
+  GenerateResult,
   ImportRequest,
   ImportResult,
   ProjectAnalysis,
@@ -49,5 +51,11 @@ export function useDryRunMutation(projectId: string) {
 export function useExecuteMutation(projectId: string) {
   return useMutation({
     mutationFn: (request: ExecuteRequest) => apiPost<ExecutionTrace>(`/api/projects/${projectId}/playground/execute`, request).then((r) => r.data),
+  });
+}
+
+export function useGenerateMutation(projectId: string) {
+  return useMutation({
+    mutationFn: (request: GenerateRequest = {}) => apiPost<GenerateResult>(`/api/projects/${projectId}/generate`, request).then((r) => r.data),
   });
 }

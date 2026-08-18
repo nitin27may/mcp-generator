@@ -37,3 +37,11 @@ export function stagingRoot(): string {
 export function stagingDir(importId: string): string {
   return join(stagingRoot(), assertValidId(importId));
 }
+
+export function buildsRoot(projectId: string): string {
+  return join(projectDir(projectId), 'out');
+}
+
+export function buildDir(projectId: string, buildId: string): string {
+  return join(buildsRoot(projectId), assertValidId(buildId));
+}

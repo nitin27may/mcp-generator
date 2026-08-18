@@ -174,9 +174,28 @@ async function sweepDir(root: string, ttlHours: number): Promise<number> {
   return swept;
 }
 
-/** TTL sweep — projects and staged imports independently, since they have different TTLs. Run on boot + every 15 min (`instrumentation.ts`). */
-export async function sweepExpired(): Promise<{ projectsSwept: number; stagingSwept: number }> {
+/** Every project's `out/<buildId>/` directory has its own, much shorter TTL than the project itself — swept independently, before the project-level sweep, so a build never outlives its purpose even inside a long-lived project. */
+async function sweepBuilds(root: string, ttlHours: number): Promise<number> {
+  let entries: string[];
+  try {
+    entries = await readdir(root);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return 0;
+    throw error;
+  }
+
+  let swept = 0;
+  for (const entry of entries) {
+    if (entry.startsWith('_')) continue;
+    swept += await sweepDir(join(root, entry, 'out'), ttlHours);
+  }
+  return swept;
+}
+
+/** TTL sweep — projects, staged imports, and per-project builds independently, since they have different TTLs. Run on boot + every 15 min (`instrumentation.ts`). */
+export async function sweepExpired(): Promise<{ projectsSwept: number; stagingSwept: number; buildsSwept: number }> {
+  const buildsSwept = await sweepBuilds(workspaceRoot(), getEnv().MCPGEN_BUILD_TTL_MINUTES / 60);
   const projectsSwept = await sweepDir(workspaceRoot(), getEnv().MCPGEN_PROJECT_TTL_HOURS);
   const stagingSwept = await sweepDir(stagingRoot(), getEnv().MCPGEN_STAGING_TTL_HOURS);
-  return { projectsSwept, stagingSwept };
+  return { projectsSwept, stagingSwept, buildsSwept };
 }

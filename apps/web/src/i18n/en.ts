@@ -224,6 +224,7 @@ export const en = {
   playgroundExecuteSubmit: 'Execute for real',
   playgroundExecuteRunning: 'Executing…',
   playgroundTraceHeading: 'Execution trace',
+  playgroundContinue: 'Continue to generate',
 
   traceResultSuccess: 'Success',
   traceResultUpstreamError: 'Upstream error',
@@ -236,4 +237,14 @@ export const en = {
     `"${toolName}" is classified Destructive or Privileged. Executing it for real will make an actual upstream call and may change data. This cannot be undone from here.`,
   riskDialogCancel: 'Cancel',
   riskDialogConfirm: 'Execute anyway',
+
+  generateTitle: 'Generate',
+  generateSubtitle: 'Build a redistributable MCP server package from this configuration.',
+  generateSubmit: 'Generate package',
+  generateRunning: 'Generating…',
+  generateManifestHeading: 'Generated files',
+  generateTotalSize: (bytes: number) => `${(bytes / 1024).toFixed(1)} KB total`,
+  generateDownload: 'Download .zip',
+  generateNoResultYet: 'Generate a package to see its file manifest here.',
+  generateRegenerateNote: 'Generating again produces a fresh build — the previous one still downloads until it expires.',
 };
