@@ -1,7 +1,7 @@
 import { CreateProjectRequestSchema } from '@mcpgen/control-contracts';
 import { fail, invalidJsonBody, ok } from '@/server/http';
 import { createProject, readStaging } from '@/server/project-store';
-import { seedProjectConfig } from '@/server/seed-config';
+import { seedProjectConfig } from '@mcpgen/config-seed';
 import { buildProjectSnapshot } from '@/server/snapshot';
 
 export async function POST(request: Request): Promise<Response> {

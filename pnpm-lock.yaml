@@ -90,6 +90,9 @@ importers:
       '@mcpgen/config-schema':
         specifier: workspace:*
         version: link:../../packages/config-schema
+      '@mcpgen/config-seed':
+        specifier: workspace:*
+        version: link:../../packages/config-seed
       '@mcpgen/control-contracts':
         specifier: workspace:*
         version: link:../../packages/control-contracts
@@ -216,6 +219,25 @@ importers:
         specifier: 4.4.3
         version: 4.4.3
     devDependencies:
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.1
+
+  packages/config-seed:
+    dependencies:
+      '@mcpgen/config-schema':
+        specifier: workspace:*
+        version: link:../config-schema
+      '@mcpgen/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@mcpgen/risk-engine':
+        specifier: workspace:*
+        version: link:../risk-engine
+    devDependencies:
+      '@mcpgen/openapi-adapter':
+        specifier: workspace:*
+        version: link:../openapi-adapter
       '@types/node':
         specifier: ^22.19.0
         version: 22.20.1

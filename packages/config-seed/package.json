@@ -1,0 +1,25 @@
+{
+  "name": "@mcpgen/config-seed",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Derives a draft McpProjectConfig from a CanonicalApi — env-var naming, tool defaults, and best-effort auth-scheme seeding. Shared by the web wizard (apps/web) and the CLI's `init` command so the two front doors cannot drift on what a variable is called.",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@mcpgen/domain": "workspace:*",
+    "@mcpgen/config-schema": "workspace:*",
+    "@mcpgen/risk-engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@mcpgen/openapi-adapter": "workspace:*",
+    "@types/node": "^22.19.0"
+  }
+}

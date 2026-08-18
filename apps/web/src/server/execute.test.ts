@@ -4,7 +4,7 @@ import { parseOpenApi } from '@mcpgen/openapi-adapter';
 import { startFixtureApi, type FixtureApiHandle } from '@mcpgen/test-fixtures';
 import { afterEach, describe, expect, it } from 'vitest';
 import { performExecute } from './execute.js';
-import { seedProjectConfig } from './seed-config.js';
+import { seedProjectConfig } from '@mcpgen/config-seed';
 
 const CUSTOMER_SPEC_PATH = fileURLToPath(new URL('../../../../fixtures/openapi-3.1/customer.json', import.meta.url));
 const BEARER_TOKEN = 'sk-e2e-sentinel-secret';

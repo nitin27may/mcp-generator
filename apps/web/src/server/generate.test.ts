@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { parseOpenApi } from '@mcpgen/openapi-adapter';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { performGenerate, walkFiles } from './generate.js';
-import { seedProjectConfig } from './seed-config.js';
+import { seedProjectConfig } from '@mcpgen/config-seed';
 import { buildDir } from './paths.js';
 
 const CUSTOMER_SPEC_PATH = fileURLToPath(new URL('../../../../fixtures/openapi-3.1/customer.json', import.meta.url));

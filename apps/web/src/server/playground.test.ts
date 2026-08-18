@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { parseOpenApi } from '@mcpgen/openapi-adapter';
 import { describe, expect, it } from 'vitest';
 import { performDryRun } from './playground.js';
-import { seedProjectConfig } from './seed-config.js';
+import { seedProjectConfig } from '@mcpgen/config-seed';
 
 const CUSTOMER_SPEC_PATH = fileURLToPath(new URL('../../../../fixtures/openapi-3.1/customer.json', import.meta.url));
 
