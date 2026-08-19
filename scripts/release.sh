@@ -103,6 +103,12 @@ process.stdout.write(\`\${major}.\${minor}.\${patch}\`);
 echo "    Last tagged version: v$LAST_VERSION"
 echo "    Releasing:           v$VERSION"
 
+# Read by apps/cli/scripts/build.mjs's esbuild `define`, baking the real version into --version's
+# output. Declared in turbo.json's build task `env` — an undeclared var here would be silently
+# dropped before the build ever saw it, and (worse) absent from turbo's cache key, so a stale
+# build from a previous version could be served as if it were this one.
+export MCPGEN_VERSION="$VERSION"
+
 echo "==> Verification chain"
 pnpm install --frozen-lockfile
 pnpm build

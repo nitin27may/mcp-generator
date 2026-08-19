@@ -9,7 +9,7 @@
       // not part of the task's cache key, a stale output would be reused across
       // different values. MCPGEN_PUBLIC_URL is read at build time by `/` and
       // `/docs`'s statically prerendered metadata, so it has to be declared here.
-      "env": ["MCPGEN_PUBLIC_URL"],
+      "env": ["MCPGEN_PUBLIC_URL", "MCPGEN_VERSION"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "typecheck": {
