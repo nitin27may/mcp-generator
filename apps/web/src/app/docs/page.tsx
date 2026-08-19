@@ -24,9 +24,17 @@ pnpm build
 
 cd apps/cli && npm link`;
 
-const USE_SNIPPET = `mcpgen validate --spec ./openapi.json
-mcpgen generate --config ./mcp.config.json --spec ./openapi.json --out ./server
-mcpgen serve --config ./mcp.config.json --spec ./openapi.json`;
+const USE_SNIPPET = `mcpgen init     --spec ./openapi.json --enable-read-only
+mcpgen validate --config ./mcp.config.json --spec ./openapi.json
+mcpgen generate --config ./mcp.config.json --spec ./openapi.json --out ./server`;
+
+/** Variable-name format strings, not translatable prose — same treatment as INSTALL_SNIPPET/USE_SNIPPET above. */
+const AUTH_TABLE_ROWS = [
+  { scheme: 'API key', vars: ['<SLUG>_API_KEY'], secrets: en.docsCliAuthApiKeySecrets },
+  { scheme: 'Bearer token', vars: ['<SLUG>_TOKEN'], secrets: en.docsCliAuthBearerSecrets },
+  { scheme: 'Basic auth', vars: ['<SLUG>_USERNAME', '<SLUG>_PASSWORD'], secrets: en.docsCliAuthBasicSecrets },
+  { scheme: 'OAuth2 client credentials', vars: ['<SLUG>_CLIENT_ID', '<SLUG>_CLIENT_SECRET'], secrets: en.docsCliAuthOAuth2Secrets },
+] as const;
 
 /**
  * This page has no project open, so `isStepOptional`'s auth branch has nothing
@@ -84,6 +92,49 @@ export default function DocsPage() {
           <p className="text-muted-foreground text-pretty">{en.docsCliBody}</p>
           <CodeBlock caption={en.docsCliInstallCaption} code={INSTALL_SNIPPET} />
           <CodeBlock caption={en.docsCliUseCaption} code={USE_SNIPPET} />
+        </section>
+
+        <section className="flex flex-col gap-4">
+          <h2 className="font-heading text-2xl font-medium tracking-tight">{en.docsCliAuthHeading}</h2>
+          <p className="text-muted-foreground text-pretty">{en.docsCliAuthBody}</p>
+          {/* min-w forces real horizontal overflow at narrow viewports — without it the browser
+              just compresses column widths instead of scrolling, truncating "Which are secrets"
+              into unreadable fragments (found by actually screenshotting this at 375px).
+              role="region" + tabIndex mirrors CodeBlock's own fix for the same axe
+              scrollable-region-focusable finding earlier this session — a horizontally
+              scrolling region has to be focusable, or a keyboard user can't reach the rest of it. */}
+          <div
+            role="region"
+            aria-label={en.docsCliAuthHeading}
+            tabIndex={0}
+            className="overflow-x-auto rounded-lg ring-1 ring-foreground/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            <table className="w-full min-w-[560px] text-left text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th scope="col" className="px-3 py-2 font-medium">{en.docsCliAuthTableScheme}</th>
+                  <th scope="col" className="px-3 py-2 font-medium">{en.docsCliAuthTableEnvVars}</th>
+                  <th scope="col" className="px-3 py-2 font-medium">{en.docsCliAuthTableSecrets}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {AUTH_TABLE_ROWS.map((row) => (
+                  <tr key={row.scheme} className="border-t">
+                    <td className="px-3 py-2">{row.scheme}</td>
+                    <td className="px-3 py-2">
+                      {row.vars.map((v, i) => (
+                        <span key={v}>
+                          {i > 0 && ', '}
+                          <code className="rounded bg-muted px-1 py-0.5 text-xs">{v}</code>
+                        </span>
+                      ))}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">{row.secrets}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section className="flex flex-col gap-4">

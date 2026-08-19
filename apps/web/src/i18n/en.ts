@@ -324,9 +324,20 @@ export const en = {
 
   docsCliHeading: 'The CLI',
   docsCliBody:
-    'Not published to the npm registry yet, but fully usable from a clone. Build it once, link it, and it is on your PATH.',
+    'Not published to the npm registry yet, but fully usable from a clone. Build it once, link it, and it is on your PATH. `init` derives a complete config from your spec — no JSON hand-authoring — then `validate`, `generate`, and `serve` take it the rest of the way.',
   docsCliInstallCaption: 'Install from source',
-  docsCliUseCaption: 'Generate a server, then run it',
+  docsCliUseCaption: 'Derive a config, then generate a server',
+
+  docsCliAuthHeading: 'Authentication: env vars, resolved at run time',
+  docsCliAuthBody:
+    'init derives environment variable names from the spec’s own security scheme — never a literal credential in the config, only the variable name. The credential itself is supplied however you launch the server: export it in your shell, pass --dotenv with a file, or let your MCP client inject it via its own launch config. You never type a credential while curating the tool surface, only when you actually run the server.',
+  docsCliAuthTableScheme: 'Scheme',
+  docsCliAuthTableEnvVars: 'Env vars init derives',
+  docsCliAuthTableSecrets: 'Which are secrets',
+  docsCliAuthApiKeySecrets: 'the key itself',
+  docsCliAuthBearerSecrets: 'the token',
+  docsCliAuthBasicSecrets: 'password only',
+  docsCliAuthOAuth2Secrets: 'client secret only',
 
   docsGeneratedHeading: 'The generated package documents itself',
   docsGeneratedBody:

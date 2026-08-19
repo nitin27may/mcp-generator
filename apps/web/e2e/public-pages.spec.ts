@@ -38,3 +38,15 @@ test('the docs page does not present authentication as unconditionally skippable
     await expect(page.getByRole('listitem').filter({ hasText: step }).first()).toContainText('Optional');
   }
 });
+
+test('the docs page leads the CLI section with init, and the auth table names every supported scheme', async ({ page }) => {
+  await page.goto('/docs');
+
+  await expect(page.getByText('mcpgen init', { exact: false }).first()).toBeVisible();
+
+  const authTable = page.getByRole('region', { name: 'Authentication: env vars, resolved at run time' });
+  await expect(authTable.getByRole('cell', { name: 'API key' })).toBeVisible();
+  await expect(authTable.getByRole('cell', { name: 'Bearer token' })).toBeVisible();
+  await expect(authTable.getByRole('cell', { name: 'Basic auth' })).toBeVisible();
+  await expect(authTable.getByRole('cell', { name: 'OAuth2 client credentials' })).toBeVisible();
+});
