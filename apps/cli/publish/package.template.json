@@ -1,0 +1,33 @@
+{
+  "name": "@nitin27may/mcpgen",
+  "version": "__VERSION__",
+  "type": "module",
+  "description": "Turn an OpenAPI/Swagger document into a governed, portable MCP server. Import OpenAPI. Configure once. Run MCP anywhere.",
+  "bin": { "mcpgen": "./mcpgen.mjs" },
+  "files": ["mcpgen.mjs", "runtime-cli.mjs", "README.md", "LICENSE"],
+  "engines": { "node": ">=22.11" },
+  "license": "MIT",
+  "author": "Nitin Singh <nitin27may@gmail.com>",
+  "repository": { "type": "git", "url": "git+https://github.com/nitin27may/mcp-generator.git", "directory": "apps/cli" },
+  "homepage": "https://github.com/nitin27may/mcp-generator#readme",
+  "bugs": { "url": "https://github.com/nitin27may/mcp-generator/issues" },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "openapi",
+    "swagger",
+    "openapi-to-mcp",
+    "mcp-server",
+    "api-governance",
+    "ai-agents",
+    "agent-tools",
+    "llm-tools"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/core": "2.0.0",
+    "@modelcontextprotocol/node": "2.0.0",
+    "@modelcontextprotocol/server": "2.0.0",
+    "zod": "4.4.3"
+  },
+  "publishConfig": { "access": "public" }
+}

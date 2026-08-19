@@ -4,10 +4,12 @@ node_modules/
 
 # Build output
 dist/
+dist-npm/
 build/
 out/
 *.tsbuildinfo
 .next/
+*.tgz
 
 # Turborepo
 .turbo/
