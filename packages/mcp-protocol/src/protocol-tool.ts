@@ -1,3 +1,5 @@
+import type { CallerIdentity } from '@mcpgen/domain';
+
 /**
  * The shape this package needs to register a tool with the SDK — deliberately
  * NOT `mcp-runtime`'s richer `RuntimeTool` (TIP §28). `mcp-runtime` depends on
@@ -23,7 +25,13 @@ export interface ProtocolTool {
   readonly description: string;
   /** JSON Schema 2020-12, already MCP-sanitized by schema-normalizer. */
   readonly inputSchema: Record<string, unknown>;
-  execute(args: Record<string, unknown>): Promise<ProtocolToolResult>;
+  /**
+   * `caller` is the Plane A identity when the HTTP transport verified one, and undefined
+   * otherwise (stdio, or no `mcpAccess` configured). Passed per call rather than captured
+   * at registration because it is per request — the modern era builds a fresh server per
+   * invocation, but tools themselves are shared across callers.
+   */
+  execute(args: Record<string, unknown>, caller?: CallerIdentity): Promise<ProtocolToolResult>;
 }
 
 export interface ServerInfo {

@@ -17,11 +17,13 @@ export {
   BearerAuthSchema,
   BasicAuthSchema,
   OAuth2ClientCredentialsAuthSchema,
+  OAuth2TokenExchangeAuthSchema,
   type UpstreamAuthentication,
   type ApiKeyAuth,
   type BearerAuth,
   type BasicAuth,
   type OAuth2ClientCredentialsAuth,
+  type OAuth2TokenExchangeAuth,
 } from './upstream-auth.js';
 export {
   McpAccessSchema,

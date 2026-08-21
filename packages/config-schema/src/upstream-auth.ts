@@ -46,15 +46,46 @@ export const OAuth2ClientCredentialsAuthSchema = z
   })
   .strict();
 
+/**
+ * ADR-0010, RFC 8693. User-delegated upstream access: the verified inbound MCP access
+ * token is presented to the AUTHORIZATION SERVER as a `subject_token` and exchanged for
+ * one minted for the upstream API.
+ *
+ * This is what lets a tool call act as the caller rather than as the server's service
+ * account, without ever forwarding the caller's token to the upstream — the thing
+ * ADR-0005 forbids and MCP states as a MUST NOT.
+ *
+ * Only meaningful when `mcpAccess.mode` is `oauth2`; with no verified caller there is no
+ * subject to exchange, and a tool call falls back to no upstream credential rather than
+ * silently borrowing the server's own identity.
+ *
+ * Not expressible in OpenAPI — no `securityScheme` describes it — so `init` never seeds
+ * this from a spec. It is always a deliberate configuration choice.
+ */
+export const OAuth2TokenExchangeAuthSchema = z
+  .object({
+    type: z.literal('oauth2TokenExchange'),
+    tokenUrl: z.string().url(),
+    clientId: ValueBindingSchema,
+    // Deliberately narrower than ValueBinding: a client secret is always a secret.
+    clientSecret: SecretBindingSchema,
+    /** RFC 8693 `audience` — the upstream API the exchanged token should be minted for. */
+    audience: z.string().min(1).optional(),
+    scopes: z.array(z.string().min(1)).optional(),
+  })
+  .strict();
+
 export const UpstreamAuthenticationSchema = z.discriminatedUnion('type', [
   ApiKeyAuthSchema,
   BearerAuthSchema,
   BasicAuthSchema,
   OAuth2ClientCredentialsAuthSchema,
+  OAuth2TokenExchangeAuthSchema,
 ]);
 
 export type ApiKeyAuth = z.infer<typeof ApiKeyAuthSchema>;
 export type BearerAuth = z.infer<typeof BearerAuthSchema>;
 export type BasicAuth = z.infer<typeof BasicAuthSchema>;
 export type OAuth2ClientCredentialsAuth = z.infer<typeof OAuth2ClientCredentialsAuthSchema>;
+export type OAuth2TokenExchangeAuth = z.infer<typeof OAuth2TokenExchangeAuthSchema>;
 export type UpstreamAuthentication = z.infer<typeof UpstreamAuthenticationSchema>;

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "1.0",
+  "project": {
+    "name": "customer-exchange",
+    "description": "ADR-0010 — the caller's verified MCP token is exchanged (RFC 8693) for one minted for the upstream API, so a tool call acts as the signed-in user."
+  },
+  "api": {
+    "baseUrl": { "source": "environment", "name": "CUSTOMER_API_URL", "required": true }
+  },
+  "mcpAccess": {
+    "mode": "oauth2",
+    "issuer": { "source": "environment", "name": "MCP_ISSUER_URL", "required": true },
+    "resource": { "source": "environment", "name": "MCP_PUBLIC_URL", "required": true },
+    "dangerouslyAllowInsecureIssuer": true
+  },
+  "upstreamAuthentication": {
+    "type": "oauth2TokenExchange",
+    "tokenUrl": "http://placeholder.invalid/token",
+    "clientId": { "source": "environment", "name": "EXCHANGE_CLIENT_ID", "required": true },
+    "clientSecret": { "source": "secret", "name": "EXCHANGE_CLIENT_SECRET" },
+    "audience": "https://customers.example.com",
+    "scopes": ["customers:read"]
+  },
+  "tools": {
+    "get_customer": {
+      "enabled": true,
+      "sourceOperation": {
+        "internalOperationId": "getCustomer",
+        "method": "GET",
+        "path": "/customers/{customerId}",
+        "operationId": "getCustomer"
+      },
+      "name": "get_customer",
+      "description": "Fetch a customer by id",
+      "bindings": {
+        "customerId": { "source": "tool-input", "inputName": "customer_id" },
+        "expand": { "source": "tool-input", "inputName": "expand" }
+      },
+      "risk": "READ_ONLY"
+    }
+  },
+  "generation": {
+    "packageName": "@acme/customer-exchange",
+    "binName": "customer-exchange",
+    "version": "0.1.0",
+    "transports": ["http"],
+    "emitDockerfile": false,
+    "mode": "thin"
+  }
+}
