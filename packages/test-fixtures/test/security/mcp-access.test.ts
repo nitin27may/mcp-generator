@@ -117,6 +117,49 @@ describe('Plane A access gate — required scopes', () => {
   });
 });
 
+describe('Plane A access gate — audiences that are not URLs', () => {
+  // Found by running the Keycloak sandbox: real authorization servers mint an opaque
+  // identifier, not the RFC 8707 resource URL. Rejecting those outright would leave Plane A
+  // unusable against Keycloak, Entra ID and Auth0 alike.
+  const OPAQUE = 'mcp-server';
+
+  it('accepts an opaque audience that exactly matches the configured one', async () => {
+    const gate2 = await createMcpAccessGate({
+      issuer: idp.issuer,
+      resource: RESOURCE,
+      audience: OPAQUE,
+      dangerouslyAllowInsecureIssuer: true,
+    });
+    const token = await idp.mintAccessToken({ audience: OPAQUE, scopes: ['mcp:tools'] });
+    expect(await gate2.authorize(request(token))).not.toBeInstanceOf(Response);
+  });
+
+  it('refuses an audience that merely resembles the configured one', async () => {
+    // Exact equality, never prefix matching — otherwise a staging server's token would be
+    // accepted by production.
+    const gate2 = await createMcpAccessGate({
+      issuer: idp.issuer,
+      resource: RESOURCE,
+      audience: OPAQUE,
+      dangerouslyAllowInsecureIssuer: true,
+    });
+    const token = await idp.mintAccessToken({ audience: `${OPAQUE}-staging`, scopes: ['mcp:tools'] });
+    expect((await gate2.authorize(request(token))) as Response).toHaveProperty('status', 401);
+  });
+
+  it('still publishes the resource URL in discovery when the audience is opaque', async () => {
+    const gate2 = await createMcpAccessGate({
+      issuer: idp.issuer,
+      resource: RESOURCE,
+      audience: OPAQUE,
+      dangerouslyAllowInsecureIssuer: true,
+    });
+    const response = gate2.metadata(new Request('https://mcp.example.com/.well-known/oauth-protected-resource/mcp'));
+    const document = (await response!.json()) as { resource: string };
+    expect(document.resource).toBe(RESOURCE);
+  });
+});
+
 describe('Plane A access gate — construction refuses unsafe configuration', () => {
   it('rejects a plaintext issuer unless explicitly permitted', async () => {
     await expect(createMcpAccessGate({ issuer: idp.issuer, resource: RESOURCE })).rejects.toThrow(/not https/i);

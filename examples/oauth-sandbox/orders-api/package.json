@@ -1,0 +1,10 @@
+{
+  "name": "mcpgen-sandbox-orders-api",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Protected upstream API for the mcpgen OAuth sandbox. Deliberately outside the pnpm workspace so it never enters the repo's build or CI.",
+  "engines": { "node": ">=22.11" },
+  "scripts": { "start": "node server.mjs" },
+  "dependencies": { "jose": "^6.2.9" }
+}

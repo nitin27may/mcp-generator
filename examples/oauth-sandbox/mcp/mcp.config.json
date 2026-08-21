@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "1.0",
+  "project": {
+    "name": "orders-mcp",
+    "description": "Sandbox MCP server over the Orders API. Both authentication planes are live: callers authenticate to this server with a Keycloak token, and this server exchanges that token for one the Orders API accepts."
+  },
+  "api": {
+    "baseUrl": { "source": "environment", "name": "ORDERS_API_URL", "required": true }
+  },
+  "mcpAccess": {
+    "mode": "oauth2",
+    "issuer": { "source": "environment", "name": "MCP_ISSUER_URL", "required": true },
+    "resource": { "source": "environment", "name": "MCP_PUBLIC_URL", "required": true },
+    "audience": "mcp-server",
+    "requiredScopes": ["mcp:tools"],
+    "dangerouslyAllowInsecureIssuer": true
+  },
+  "upstreamAuthentication": {
+    "type": "oauth2TokenExchange",
+    "tokenUrl": "http://localhost:8280/realms/mcpgen/protocol/openid-connect/token",
+    "clientId": { "source": "environment", "name": "EXCHANGE_CLIENT_ID", "required": true },
+    "clientSecret": { "source": "secret", "name": "EXCHANGE_CLIENT_SECRET" },
+    "audience": "orders-api",
+    "scopes": ["orders:read"]
+  },
+  "tools": {
+    "list_orders": {
+      "enabled": true,
+      "sourceOperation": {
+        "internalOperationId": "listOrders",
+        "method": "GET",
+        "path": "/orders",
+        "operationId": "listOrders"
+      },
+      "name": "list_orders",
+      "description": "List the orders belonging to the signed-in caller. The response echoes back which identity the Orders API actually saw.",
+      "bindings": {
+        "status": { "source": "tool-input", "inputName": "status" }
+      },
+      "risk": "READ_ONLY"
+    },
+    "get_order": {
+      "enabled": true,
+      "sourceOperation": {
+        "internalOperationId": "getOrder",
+        "method": "GET",
+        "path": "/orders/{orderId}",
+        "operationId": "getOrder"
+      },
+      "name": "get_order",
+      "description": "Fetch a single order by id, if it belongs to the signed-in caller.",
+      "bindings": {
+        "orderId": { "source": "tool-input", "inputName": "order_id" }
+      },
+      "risk": "READ_ONLY"
+    },
+    "create_order": {
+      "enabled": false,
+      "sourceOperation": {
+        "internalOperationId": "createOrder",
+        "method": "POST",
+        "path": "/orders",
+        "operationId": "createOrder"
+      },
+      "name": "create_order",
+      "description": "Place an order for the signed-in caller.",
+      "bindings": {
+        "total": { "source": "tool-input", "inputName": "total" },
+        "status": { "source": "tool-input", "inputName": "status" }
+      },
+      "risk": "WRITE"
+    },
+    "delete_order": {
+      "enabled": false,
+      "sourceOperation": {
+        "internalOperationId": "deleteOrder",
+        "method": "DELETE",
+        "path": "/orders/{orderId}",
+        "operationId": "deleteOrder"
+      },
+      "name": "delete_order",
+      "description": "Permanently delete an order.",
+      "bindings": {
+        "orderId": { "source": "tool-input", "inputName": "order_id" }
+      },
+      "risk": "DESTRUCTIVE"
+    }
+  },
+  "generation": {
+    "packageName": "@sandbox/orders-mcp",
+    "binName": "orders-mcp",
+    "version": "0.1.0",
+    "transports": ["http"],
+    "emitDockerfile": false,
+    "mode": "thin"
+  }
+}

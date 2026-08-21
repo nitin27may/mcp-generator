@@ -19,7 +19,7 @@
  * `--root <dir>` points the scanner at a fixture tree so the gate itself is testable.
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootArgIndex = process.argv.indexOf('--root');
@@ -29,7 +29,7 @@ const ROOT =
     : fileURLToPath(new URL('../..', import.meta.url));
 const QUIET = process.argv.includes('--quiet');
 
-const SCAN_DIRS = ['packages', 'apps', 'fixtures', 'docs'];
+const SCAN_DIRS = ['packages', 'apps', 'fixtures', 'docs', 'examples'];
 const SCAN_EXTENSIONS = /\.(ts|tsx|mts|cts|js|mjs|json|md)$/;
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'dist-npm', '.next', '.turbo', '__snapshots__']);
 
@@ -58,6 +58,7 @@ const SENTINEL_MARKERS = [
   'test-',
   'not-a-',
   'redacted',
+  'sandbox',
 ];
 // Requires at least one underscore-separated segment. A bare run of capitals and digits
 // is not distinguishable from a real credential — an AWS access key ID (AKIA...) matches
@@ -67,6 +68,13 @@ const ENV_VAR_NAME = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$/;
 
 const isTestFile = (path) => /\.(test|spec)\.[cm]?[jt]sx?$/.test(path);
 const isFixturePackage = (path) => path.includes(`${join('packages', 'test-fixtures')}`);
+/**
+ * The OAuth sandbox ships a Keycloak realm, an admin password and a client secret. They are
+ * local-only and disposable by construction, but they are still credential literals in a
+ * repository that is about to become public — so they are scanned, and held to the same
+ * sentinel requirement as test data rather than exempted.
+ */
+const isExample = (path) => path.split(sep)[0] === 'examples';
 
 function isAcceptableSentinel(value) {
   const lower = value.toLowerCase();
@@ -97,7 +105,7 @@ for (const group of SCAN_DIRS) {
     const rel = relative(ROOT, file);
     const text = readFileSync(file, 'utf8');
     // Test data is allowed to look like a credential; production code never is.
-    const allowSentinels = isTestFile(rel) || isFixturePackage(rel);
+    const allowSentinels = isTestFile(rel) || isFixturePackage(rel) || isExample(rel);
 
     SECRET_ASSIGNMENT.lastIndex = 0;
     let match;
