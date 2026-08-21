@@ -1,8 +1,20 @@
 # Documentation index
 
-The root [`README.md`](../README.md) covers installing and using `mcpgen`. Everything here is the
-engineering record behind it — requirements, architecture, and the decisions that constrain
-implementation.
+The root [`README.md`](../README.md) covers installing and using `mcpgen`.
+
+## Using it
+
+| Document | Purpose |
+|---|---|
+| [CONFIG.md](CONFIG.md) | `mcp.config.json` reference — every field of the artifact this project produces |
+| [CLI.md](CLI.md) | All six commands, every flag, exit codes, MCP client registration |
+| [OAUTH.md](OAUTH.md) | Both authentication planes, end to end, with a runnable sandbox |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | The 16 packages, the pipeline, and the boundaries that are actually enforced |
+| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Every diagnostic code, what it means, and what to do |
+
+## The engineering record
+
+Requirements, architecture, and the decisions that constrain implementation.
 
 | Document | Purpose |
 |---|---|

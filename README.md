@@ -5,7 +5,7 @@
 > Import OpenAPI. Configure once. Run MCP anywhere.
 
 [![MCP](https://img.shields.io/badge/MCP-2026--07--28-0f766e)](docs/adr/0009-mcp-sdk-v2-and-modern-era.md)
-[![OpenAPI](https://img.shields.io/badge/OpenAPI-2.0%20%7C%203.0%20%7C%203.1%20%7C%203.2-c2410c)](docs/BRD.md#102-openapi-import)
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-2.0%20%7C%203.0%20%7C%203.1-c2410c)](docs/BRD.md#102-openapi-import)
 [![Node](https://img.shields.io/badge/node-22%20LTS-15803d)](docs/README.md)
 [![License](https://img.shields.io/badge/license-MIT-64748b)](LICENSE)
 
@@ -38,10 +38,44 @@ OpenAPI / Swagger → Validation + Normalization → Agent Readiness Analysis �
 `api-governance` · `ai-agents` · `typescript` · `openapi-to-mcp` · `agent-tools` · `llm-tools` ·
 `api-security`
 
+## Project status
+
+**Pre-release.** Not yet published to npm; installing from source works fully today and is
+covered by the Quickstart below. The compatibility contract is `mcp.config.json`'s
+`schemaVersion` (currently `"1.0"`), not the CLI version — flag names and diagnostic codes may
+still change in a `0.x` release.
+
+Both authentication planes have been verified end to end against a real identity provider,
+not only against in-repo fixtures — see [`examples/oauth-sandbox/`](examples/oauth-sandbox/).
+
+### Known limitations
+
+Stated plainly, because finding these out by hitting them is worse:
+
+- **Cancellation is not propagated.** `notifications/cancelled` does not yet abort an
+  in-flight upstream call, so it runs to completion or timeout (`P1-W13-T01`).
+- **OpenAPI 3.2 is not supported.** 2.0 and 3.0 are upgraded to 3.1 internally; 3.2 reports
+  `IMP-001` (`P1-W03-T03`).
+- **`upstreamAuthentication.tokenUrl` is a plain string, not a binding**, so unlike `issuer`
+  and `resource` it cannot come from an environment variable — one config cannot move between
+  environments without editing.
+- **No per-tag or per-operation auth override.** `upstreamAuthentication` is project-level
+  only (`FR-AUTH-UP-004`).
+- **Oversized upstream responses are rejected, not paginated or projected** — half a JSON
+  document is not a usable result (`UPS-003`).
+- **No inbound request-body size cap** on the HTTP transport.
+- **No config inheritance or schema migration.** `schemaVersion` is pinned at `"1.0"`; a
+  future bump will come with instructions rather than an automatic upgrade.
+- **Legacy MCP protocol eras are disabled by design**
+  ([ADR-0009](docs/adr/0009-mcp-sdk-v2-and-modern-era.md)).
+- **The web wizard has no authentication** — no accounts, no database, projects on a TTL. It
+  is a local tool; do not expose it beyond localhost.
+- **Single maintainer**, best-effort support.
+
 ## Quickstart
 
 There are two ways to use `mcpgen`: the **web wizard** (guided, no JSON hand-authoring) or the
-**CLI** (scriptable, npm-installable from source today — not yet published to the registry). Both
+**CLI** (scriptable, installable from source today). Both
 call the exact same engine and produce the exact same kind of output: a portable `mcp.config.json`
 plus a generated, redistributable MCP server package.
 
@@ -154,9 +188,18 @@ package's own README first.
 
 ### 7. Learn more
 
-- In-app, once the wizard is running: `/` (what this is) and `/docs` (wizard walkthrough + CLI
-  reference side by side).
-- [`docs/README.md`](docs/README.md) for the full architecture, requirements, and ADRs.
+| Document | What it covers |
+|---|---|
+| [`docs/CONFIG.md`](docs/CONFIG.md) | Every field of `mcp.config.json` — the artifact this produces |
+| [`docs/CLI.md`](docs/CLI.md) | All six commands, every flag, exit codes |
+| [`docs/OAUTH.md`](docs/OAUTH.md) | Both authentication planes, end to end |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The 16 packages and the boundaries between them |
+| [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) | What every diagnostic code means |
+| [`examples/oauth-sandbox/`](examples/oauth-sandbox/) | A runnable stack: Keycloak, a protected API, the generated server |
+
+In-app, once the wizard is running: `/` (what this is) and `/docs` (wizard walkthrough + CLI
+reference side by side). [`docs/README.md`](docs/README.md) indexes the full engineering
+record — requirements, technical plan, ADRs and the risk register.
 
 ## License
 

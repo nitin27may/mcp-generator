@@ -126,3 +126,18 @@ describe('McpProjectConfigSchema — the P0 three-tool config', () => {
     expect(result.diagnostics[0]).toMatchObject({ severity: 'error', code: 'BND-003' });
   });
 });
+
+describe('$schema pointer', () => {
+  it('accepts a $schema key so editors can validate the file', () => {
+    // Shipping schemas/mcp.config.schema.json is pointless if referencing it is an error.
+    expect(
+      McpProjectConfigSchema.safeParse({ ...BASE, tools: { get_customer: tool() }, $schema: './schemas/mcp.config.schema.json' }).success,
+    ).toBe(true);
+  });
+
+  it('still rejects any other unknown top-level key', () => {
+    // The allowance is exactly one key wide — .strict() is what stops a leaked literal
+    // from being silently dropped (ADR-0006).
+    expect(McpProjectConfigSchema.safeParse({ ...BASE, tools: { get_customer: tool() }, schemaUrl: 'x' }).success).toBe(false);
+  });
+});
