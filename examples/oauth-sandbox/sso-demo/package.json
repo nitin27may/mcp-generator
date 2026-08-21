@@ -1,0 +1,9 @@
+{
+  "name": "mcpgen-sandbox-sso-demo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "The ordinary browser SSO flow, for side-by-side comparison with the MCP one. No dependencies.",
+  "engines": { "node": ">=22.11" },
+  "scripts": { "start": "node server.mjs" }
+}

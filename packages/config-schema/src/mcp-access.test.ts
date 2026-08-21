@@ -72,6 +72,16 @@ describe('McpAccessSchema — Plane A, ADR-0005', () => {
     ).toBe(false);
   });
 
+  it('accepts an opaque audience distinct from the resource URL', () => {
+    // Keycloak mints a client id, Entra ID mints api://<guid>. The resource still has to be
+    // a URL because RFC 9728 discovery is derived from it, so the two are separate fields.
+    expect(McpAccessSchema.safeParse({ mode: 'oauth2', issuer, resource, audience: 'mcp-server' }).success).toBe(true);
+  });
+
+  it('rejects an empty audience', () => {
+    expect(McpAccessSchema.safeParse({ mode: 'oauth2', issuer, resource, audience: '' }).success).toBe(false);
+  });
+
   it('rejects an empty scope string', () => {
     expect(McpAccessSchema.safeParse({ mode: 'oauth2', issuer, resource, requiredScopes: [''] }).success).toBe(false);
   });

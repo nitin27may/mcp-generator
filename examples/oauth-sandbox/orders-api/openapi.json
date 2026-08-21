@@ -1,0 +1,146 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Orders API",
+    "version": "1.0.0",
+    "description": "A small order-management API used by the mcpgen OAuth sandbox. Every operation requires an OAuth2 access token issued by the sandbox Keycloak realm, and reads are scoped separately from writes so the generated tool surface has something real to govern."
+  },
+  "servers": [{ "url": "http://localhost:8281", "description": "Sandbox" }],
+  "components": {
+    "securitySchemes": {
+      "keycloak": {
+        "type": "oauth2",
+        "description": "Sandbox Keycloak realm `mcpgen`.",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "http://localhost:8280/realms/mcpgen/protocol/openid-connect/token",
+            "scopes": {
+              "orders:read": "Read orders",
+              "orders:write": "Create and modify orders"
+            }
+          },
+          "authorizationCode": {
+            "authorizationUrl": "http://localhost:8280/realms/mcpgen/protocol/openid-connect/auth",
+            "tokenUrl": "http://localhost:8280/realms/mcpgen/protocol/openid-connect/token",
+            "scopes": {
+              "orders:read": "Read orders",
+              "orders:write": "Create and modify orders"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Order": {
+        "type": "object",
+        "required": ["id", "customer", "status", "total"],
+        "properties": {
+          "id": { "type": "string", "description": "Order identifier." },
+          "customer": { "type": "string", "description": "Username the order belongs to." },
+          "status": { "type": "string", "enum": ["pending", "shipped", "cancelled"], "description": "Current fulfilment status." },
+          "total": { "type": "number", "description": "Order total in GBP." },
+          "placedAt": { "type": "string", "format": "date-time", "description": "When the order was placed." }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": { "type": "string" },
+          "detail": { "type": "string" }
+        }
+      }
+    }
+  },
+  "security": [{ "keycloak": ["orders:read"] }],
+  "paths": {
+    "/orders": {
+      "get": {
+        "operationId": "listOrders",
+        "summary": "List orders visible to the caller",
+        "description": "Returns the orders belonging to the authenticated user. A token obtained through client credentials sees every order, because it carries a service identity rather than a person's — which is exactly the difference the sandbox is built to demonstrate.",
+        "security": [{ "keycloak": ["orders:read"] }],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Only return orders in this status.",
+            "schema": { "type": "string", "enum": ["pending", "shipped", "cancelled"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The caller's orders.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["items", "callerIdentity"],
+                  "properties": {
+                    "items": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } },
+                    "callerIdentity": {
+                      "type": "string",
+                      "description": "Who this API believes is calling, echoed back so the sandbox can show whose identity actually arrived."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid token.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "post": {
+        "operationId": "createOrder",
+        "summary": "Place an order",
+        "description": "Creates an order owned by the authenticated caller.",
+        "security": [{ "keycloak": ["orders:write"] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["total"],
+                "properties": {
+                  "total": { "type": "number", "description": "Order total in GBP." },
+                  "status": { "type": "string", "enum": ["pending", "shipped", "cancelled"], "description": "Initial status. Defaults to pending." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
+          "403": { "description": "Token lacks the orders:write scope.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "parameters": [
+        { "name": "orderId", "in": "path", "required": true, "description": "Order identifier.", "schema": { "type": "string" } }
+      ],
+      "get": {
+        "operationId": "getOrder",
+        "summary": "Fetch a single order",
+        "description": "Returns one order, if it belongs to the authenticated caller.",
+        "security": [{ "keycloak": ["orders:read"] }],
+        "responses": {
+          "200": { "description": "The order.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
+          "404": { "description": "No such order for this caller.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "delete": {
+        "operationId": "deleteOrder",
+        "summary": "Permanently delete an order",
+        "description": "Irreversibly removes an order. Present so the sandbox has a genuinely destructive operation for the risk engine to classify and refuse to enable by default.",
+        "security": [{ "keycloak": ["orders:write"] }],
+        "responses": {
+          "204": { "description": "Deleted." },
+          "404": { "description": "No such order for this caller.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    }
+  }
+}

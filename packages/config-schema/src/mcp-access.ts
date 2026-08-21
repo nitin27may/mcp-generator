@@ -49,6 +49,15 @@ export const McpAccessOAuth2Schema = z
      * otherwise be accepted here.
      */
     resource: DeploymentUrlBinding,
+    /**
+     * What the token's `aud` claim is checked against, when that is not the `resource` URL.
+     *
+     * These are the same value in the RFC 8707 model, and different in practice: Keycloak
+     * mints a client id, Entra ID mints `api://<guid>`, Auth0 mints an API identifier.
+     * `resource` still has to be this server's real URL because RFC 9728 discovery is
+     * derived from it, so the audience gets its own field rather than being overloaded onto it.
+     */
+    audience: z.string().min(1).optional(),
     /** Overrides the `jwks_uri` from discovery. Only needed when an AS misreports it. */
     jwksUri: DeploymentUrlBinding.optional(),
     /** Scopes every caller must present. A token missing any is refused `403`. */

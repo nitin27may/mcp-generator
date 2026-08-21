@@ -38,8 +38,10 @@ import { createRemoteJWKSet, jwtVerify } from 'jose';
 export interface McpAccessConfig {
   /** Authorization server issuer identifier; its metadata and keys are discovered from here. */
   readonly issuer: string;
-  /** This server's public URL — the RFC 8707 resource identifier `aud` is checked against. */
+  /** This server's public URL. RFC 9728 discovery is derived from it, so it must be a URL. */
   readonly resource: string;
+  /** What `aud` is checked against, when the authorization server does not mint the resource URL. */
+  readonly audience?: string;
   /** Overrides the discovered `jwks_uri`. */
   readonly jwksUri?: string;
   /** Scopes every caller must present; a token missing any is refused `403`. */
@@ -132,15 +134,27 @@ function audiencesOf(payload: Record<string, unknown>): string[] {
 }
 
 /**
- * True when any `aud` value names this server. `checkResourceAllowed` throws on a value
- * that is not a URL — an audience like `"account"` (Keycloak's default) is legal in a JWT
- * but can never identify a resource server, so it simply does not match.
+ * True when any `aud` value names this server.
+ *
+ * Two forms are accepted, because real authorization servers disagree about what an
+ * audience is. MCP and RFC 8707 model it as a resource URL, and `checkResourceAllowed`
+ * implements that properly, including the hierarchical path rule. But Keycloak mints a
+ * client id (`orders-api`), Entra ID mints `api://<guid>`, and Auth0 mints an arbitrary
+ * API identifier — none of which parse as a URL. Accepting only the URL form would leave
+ * Plane A unusable against most enterprise identity providers.
+ *
+ * The non-URL case is exact string equality and nothing looser. That is the same strength
+ * of check: it still answers "was this token minted for me, specifically". What it does
+ * not do is prefix or substring matching, which would let `orders-api-staging` satisfy a
+ * server configured as `orders-api`.
  */
 function audienceMatches(audiences: readonly string[], resource: string): boolean {
   return audiences.some((audience) => {
+    if (audience === resource) return true;
     try {
       return checkResourceAllowed({ requestedResource: audience, configuredResource: resource });
     } catch {
+      // Not a URL, and not an exact match — nothing further to try.
       return false;
     }
   });
@@ -180,6 +194,8 @@ export async function createMcpAccessGate(
     );
   }
 
+  const expectedAudience = config.audience ?? resourceUrl.href;
+
   const metadata = await discoverAuthorizationServer(issuer, fetchImpl);
   const jwksUri = config.jwksUri ?? metadata.jwks_uri;
   if (!jwksUri) {
@@ -211,12 +227,12 @@ export async function createMcpAccessGate(
       }
 
       const audiences = audiencesOf(payload);
-      if (!audienceMatches(audiences, resourceUrl.href)) {
+      if (!audienceMatches(audiences, expectedAudience)) {
         // Deliberately does not echo the token or its full claim set — an error body is a
         // place secrets leak from (ADR-0006, R6).
         throw new OAuthError(
           OAuthErrorCode.InvalidToken,
-          `access token audience ${JSON.stringify(audiences)} does not include this server's resource identifier "${resourceUrl.href}"`,
+          `access token audience ${JSON.stringify(audiences)} does not include this server's expected audience "${expectedAudience}"`,
         );
       }
 

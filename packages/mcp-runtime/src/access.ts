@@ -41,6 +41,7 @@ export async function resolveMcpAccess(
     access: {
       issuer,
       resource,
+      ...(access.audience ? { audience: access.audience } : {}),
       ...(jwksUri !== undefined ? { jwksUri } : {}),
       ...(access.requiredScopes ? { requiredScopes: access.requiredScopes } : {}),
       ...(access.dangerouslyAllowInsecureIssuer ? { dangerouslyAllowInsecureIssuer: true } : {}),

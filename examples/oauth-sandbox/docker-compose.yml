@@ -1,0 +1,67 @@
+# The mcpgen OAuth sandbox: a real identity provider, a real protected API, and the
+# generated MCP server, all on loopback. Everything here is throwaway — the realm, its
+# clients and its users are recreated from source on every `up`.
+#
+#   docker compose up --build
+#
+# Ports: Keycloak 8280, orders API 8281, SSO demo 8282, MCP server 8290.
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command:
+      - start-dev
+      - --import-realm
+      # The sandbox is HTTP-only on loopback by design. This is the flag that permits it,
+      # and it is the reason nothing here may be reused outside a local machine.
+      - --hostname-strict=false
+      - --http-enabled=true
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: sandbox-e2e-admin-not-a-real-credential
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    ports:
+      # Keycloak listens on 8080 inside the container; 8280 on the host avoids the
+      # ports most local dev stacks have already taken.
+      - "8280:8080"
+    healthcheck:
+      # Keycloak 26 serves health on the management port (9000), not the HTTP port.
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '\"status\": \"UP\"'"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
+
+  orders-api:
+    build:
+      context: ./orders-api
+    environment:
+      PORT: "8281"
+      # Inside the compose network Keycloak is reachable as `keycloak`, but tokens are
+      # issued with the issuer the browser used. Both names have to agree or every token
+      # fails issuer validation — this is the single most common way a setup like this
+      # breaks, so the sandbox pins the host-visible issuer everywhere.
+      OIDC_ISSUER: "http://localhost:8280/realms/mcpgen"
+      OIDC_AUDIENCE: "orders-api"
+    # Shares the host's loopback so `localhost:8280` means the same thing here as it does
+    # in your browser and in the generated server. Publishing ports is neither needed nor
+    # permitted in this mode — the container already owns :8281 on the host.
+    network_mode: host
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+  sso-demo:
+    build:
+      context: ./sso-demo
+    environment:
+      PORT: "8282"
+      OIDC_ISSUER: "http://localhost:8280/realms/mcpgen"
+      CLIENT_ID: "sso-demo"
+      ORDERS_API: "http://localhost:8281"
+    network_mode: host
+    depends_on:
+      keycloak:
+        condition: service_healthy
