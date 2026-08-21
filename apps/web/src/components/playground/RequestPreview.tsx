@@ -11,7 +11,7 @@ function fullUrl(result: DryRunResult): string {
 export function RequestPreview({ result }: { result: DryRunResult }) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto rounded-md bg-muted p-2 font-mono text-xs">
+      <div role="region" aria-label="Request line" tabIndex={0} className="overflow-x-auto rounded-md bg-muted p-2 font-mono text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
         <span className="font-semibold">{result.request.method}</span> {fullUrl(result)}
       </div>
 
@@ -31,7 +31,7 @@ export function RequestPreview({ result }: { result: DryRunResult }) {
       {result.request.body !== undefined && (
         <div>
           <p className="mb-1 text-xs font-medium text-muted-foreground">{en.playgroundBodyHeading}</p>
-          <pre className="overflow-x-auto rounded-md bg-muted p-2 font-mono text-xs whitespace-pre-wrap">{JSON.stringify(result.request.body, null, 2)}</pre>
+          <pre role="region" aria-label="Request body" tabIndex={0} className="overflow-x-auto rounded-md bg-muted p-2 font-mono text-xs whitespace-pre-wrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{JSON.stringify(result.request.body, null, 2)}</pre>
         </div>
       )}
 

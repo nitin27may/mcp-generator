@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { en } from '@/i18n/en';
 
 /**
@@ -9,7 +10,7 @@ import { en } from '@/i18n/en';
 export function AppHeader() {
   return (
     <header className="border-b bg-card">
-      <div className="mx-auto flex max-w-5xl items-center gap-4 px-6 py-3">
+      <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3 sm:px-6">
         {/* The wordmark points at `/` now that `/` is a real page rather than a
             two-line placeholder — a header logo that skips the landing page and
             drops you straight into an import form is a trap on a public site. */}
@@ -19,13 +20,14 @@ export function AppHeader() {
           </span>
           mcpgen
         </Link>
-        <nav aria-label="Main" className="ml-auto flex items-center gap-4 text-sm">
+        <nav aria-label="Main" className="ml-auto flex items-center gap-3 text-sm sm:gap-4">
           <Link href="/docs" className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
             {en.footerDocs}
           </Link>
           <a href={en.footerRepoUrl} className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
             {en.footerGithub}
           </a>
+          <ThemeToggle />
         </nav>
       </div>
     </header>

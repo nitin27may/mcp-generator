@@ -24,7 +24,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
+    <html lang="en" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
+      <head>
+        {/* Runs before first paint. Without it a dark-theme user gets a white flash on
+            every navigation, because the class can only be applied once React hydrates.
+            Inline and synchronous is the only thing that happens early enough; it reads
+            the same key ThemeToggle writes and is deliberately tiny. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('mcpgen-theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light';}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body>
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground">
           Skip to content

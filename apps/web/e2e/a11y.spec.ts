@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { seedReadyProject } from './fixtures/seed-project';
 
 const PROJECT_SCOPED_STEPS = ['validation', 'readiness', 'api', 'auth', 'tools', 'bindings', 'policy', 'playground', 'generate'] as const;
@@ -13,6 +13,27 @@ const PROJECT_SCOPED_STEPS = ['validation', 'readiness', 'api', 'auth', 'tools',
  */
 const PUBLIC_ROUTES = ['/', '/docs'] as const;
 
+/**
+ * Runs axe against a settled page.
+ *
+ * Without this, a scan can land mid-transition and read an interpolated colour — a primary
+ * button caught part-way through its hover fade reported 2.49:1 against a background that
+ * is 4.5:1+ once settled. That is a false positive, and an intermittent one, which is worse
+ * than a real failure: it trains people to re-run CI until it passes.
+ *
+ * Disabling animation removes the whole class of flake without weakening anything. Every
+ * assertion here is about resting-state contrast, which is what a person actually reads.
+ */
+async function scanSettled(page: Page) {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.addStyleTag({
+    content: '*, *::before, *::after { transition: none !important; animation: none !important; }',
+  });
+  const results = await new AxeBuilder({ page }).analyze();
+  return results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+}
+
+
 test.describe('accessibility (axe)', () => {
   // The two routes a stranger can reach cold, and the only two built mobile-first —
   // scanned at a narrow viewport as well, since that layout is genuinely different
@@ -21,8 +42,7 @@ test.describe('accessibility (axe)', () => {
     test(`the public ${route} page has no serious/critical violations`, async ({ page }) => {
       await page.goto(route);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-      const results = await new AxeBuilder({ page }).analyze();
-      const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+      const serious = await scanSettled(page);
       expect(serious, JSON.stringify(serious, null, 2)).toEqual([]);
     });
 
@@ -30,8 +50,7 @@ test.describe('accessibility (axe)', () => {
       await page.setViewportSize({ width: 375, height: 812 });
       await page.goto(route);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-      const results = await new AxeBuilder({ page }).analyze();
-      const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+      const serious = await scanSettled(page);
       expect(serious, JSON.stringify(serious, null, 2)).toEqual([]);
     });
   }
@@ -39,8 +58,7 @@ test.describe('accessibility (axe)', () => {
   test('the new-project import page has no serious/critical violations', async ({ page }) => {
     await page.goto('/projects/new/import');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    const results = await new AxeBuilder({ page }).analyze();
-    const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    const serious = await scanSettled(page);
     expect(serious, JSON.stringify(serious, null, 2)).toEqual([]);
   });
 
@@ -49,8 +67,7 @@ test.describe('accessibility (axe)', () => {
       const projectId = await seedReadyProject(request, `a11y-${step}`);
       await page.goto(`/projects/${projectId}/${step}`);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-      const results = await new AxeBuilder({ page }).analyze();
-      const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+      const serious = await scanSettled(page);
       expect(serious, JSON.stringify(serious, null, 2)).toEqual([]);
     });
   }

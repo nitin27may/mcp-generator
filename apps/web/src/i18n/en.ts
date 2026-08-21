@@ -192,6 +192,28 @@ export const en = {
   envSummaryColumnSensitive: 'Sensitive',
   envSummaryColumnUsedBy: 'Used by',
   envSummaryEmpty: 'No environment variables or secrets are referenced yet.',
+  // Accessible names for the wizard's horizontally scrollable tables. A scroll region
+  // needs a name, or a screen-reader user lands in an unlabelled box.
+  toolsTableLabel: 'Operations',
+  policyTableLabel: 'Per-tool safety settings',
+  bindingsTableLabel: 'Parameter bindings',
+  envSummaryTableLabel: 'Required environment variables',
+  readinessEmpty: 'Nothing analysed yet. Run the analysis to score this API against the 30 readiness rules.',
+  themeLabel: 'Colour theme',
+  themeLight: 'Light',
+  themeDark: 'Dark',
+  themeSystem: 'Match system',
+  // Route-level error and empty states.
+  notFoundTitle: 'That project is not here',
+  notFoundBody:
+    'Projects live on disk with a time limit and are cleared after a week, so a link you saved earlier may simply have expired. Nothing was lost that you had already generated and downloaded.',
+  notFoundStartOver: 'Import a spec',
+  notFoundHome: 'Back to the start',
+  errorTitle: 'Something went wrong on our side',
+  errorBody:
+    'Your project is saved — every step is written to disk as you go, so retrying picks up where you left off rather than starting again.',
+  errorRetry: 'Try again',
+  errorDigest: 'Reference:',
   envSummaryUsedByCount: (count: number) => `${count} tool${count === 1 ? '' : 's'}`,
   envSummaryUsedByBaseUrl: 'base URL',
   envSummaryUsedByAuth: 'upstream authentication',

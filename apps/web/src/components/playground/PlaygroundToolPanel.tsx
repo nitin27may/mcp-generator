@@ -78,7 +78,7 @@ export function PlaygroundToolPanel({
   const showExecutePanel = executeMutation.isPending || latestTrace !== undefined || executeErrors.length > 0;
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div className="flex flex-col gap-3">
         <h3 className="text-sm font-medium">{en.playgroundInputsHeading}</h3>
         <ToolInputForm

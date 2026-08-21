@@ -1,5 +1,7 @@
 'use client';
 
+import { Gauge } from 'lucide-react';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScoreDial } from '@/components/readiness/ScoreDial';
@@ -40,7 +42,13 @@ export function ReadinessView({ projectId }: { projectId: string }) {
               <CategoryBars categoryScores={analysis.readiness.categoryScores} />
             </>
           ) : (
-            !analyzeMutation.isPending && !projectQuery.isLoading && <p className="text-sm text-muted-foreground">{en.readinessSubtitle}</p>
+            !analyzeMutation.isPending &&
+            !projectQuery.isLoading && (
+              <div className="flex flex-col items-center gap-2 py-8 text-center">
+                <Gauge aria-hidden="true" className="size-8 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground text-pretty">{en.readinessEmpty}</p>
+              </div>
+            )
           )}
         </CardContent>
       </Card>

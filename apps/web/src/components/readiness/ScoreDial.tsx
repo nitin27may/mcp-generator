@@ -20,8 +20,8 @@ export function ScoreDial({ score }: { score: number }) {
   const offset = CIRCUMFERENCE * (1 - score / 100);
 
   return (
-    <div className="flex items-center gap-4">
-      <svg width="120" height="120" viewBox="0 0 120 120" role="img" aria-label={en.readinessOutOf(score)}>
+    <div className="flex flex-wrap items-center gap-4">
+      <svg width="120" height="120" viewBox="0 0 120 120" className="shrink-0" role="img" aria-label={en.readinessOutOf(score)}>
         <circle cx="60" cy="60" r={RADIUS} fill="none" strokeWidth="10" className="stroke-muted" />
         <circle
           cx="60"

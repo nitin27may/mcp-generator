@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ValueBindingField } from '@/components/config/ValueBindingField';
 import { en } from '@/i18n/en';
+import { ScrollableTable } from '@/components/ui/scrollable-table';
 
 interface BindingField {
   readonly sourceName: string;
@@ -56,7 +57,7 @@ export function BindingTable({
       {detail.requestBody && fields.some((f) => f.location === 'body') && (
         <p className="text-xs font-medium text-muted-foreground">{en.bindingsRequestBodyHeading}</p>
       )}
-      <table className="w-full border-collapse text-sm">
+      <ScrollableTable label={en.bindingsTableLabel} minWidthClass="min-w-[680px]">
         <thead>
           <tr className="border-b text-left text-xs text-muted-foreground">
             <th className="py-2 pr-2 font-medium">{en.bindingsColumnParameter}</th>
@@ -107,7 +108,7 @@ export function BindingTable({
             );
           })}
         </tbody>
-      </table>
+      </ScrollableTable>
     </div>
   );
 }

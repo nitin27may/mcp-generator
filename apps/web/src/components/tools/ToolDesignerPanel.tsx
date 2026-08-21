@@ -40,7 +40,7 @@ export function ToolDesignerPanel({
   const nameCollides = tool.enabled && findNameCollision(configDraft.tools, operation.id, tool.name);
 
   return (
-    <Card className="sticky top-4">
+    <Card className="xl:sticky xl:top-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{en.toolDesignerTitle}</CardTitle>
         <Button variant="ghost" size="sm" onClick={onClose} aria-label={en.toolDesignerClose}>

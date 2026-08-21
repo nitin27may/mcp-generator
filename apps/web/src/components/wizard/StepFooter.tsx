@@ -33,7 +33,7 @@ export function StepFooter({
   skipLabel?: string;
 }) {
   return (
-    <div className="flex items-center justify-between border-t pt-3">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
       {backHref !== undefined ? (
         <Link href={backHref} className={cn(buttonVariants({ variant: 'outline' }))}>
           Back

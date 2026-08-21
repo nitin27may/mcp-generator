@@ -24,7 +24,7 @@ export function SourceEditor({
   return (
     <div className="overflow-hidden rounded-lg ring-1 ring-foreground/10" role="group" aria-label={ariaLabel}>
       <MonacoEditor
-        height="480px"
+        height="min(480px, 60vh)"
         language={language}
         value={value}
         theme="light"
