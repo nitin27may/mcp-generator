@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { GenerationConfigSchema } from './generation-config.js';
+import { McpAccessSchema } from './mcp-access.js';
 import { ToolConfigSchema } from './tool-config.js';
 import { UpstreamAuthenticationSchema } from './upstream-auth.js';
 import { EnvironmentBindingSchema, StaticBindingSchema } from './value-binding.js';
@@ -22,17 +23,26 @@ const ApiRuntimeConfigSchema = z
   .strict();
 
 /**
- * TIP §11.1, trimmed to what P0's hand-authored config needs: project
- * metadata, API base URL, one upstream auth scheme, and the tool surface.
- * `groups`, `mcpAccess`, `defaults`, and `runtime` are P1+ config surface —
- * added when a task needs them (config inheritance is `P1-W05-T01`), not
- * speculatively.
+ * TIP §11.1. Project metadata, API base URL, the two authentication planes, and
+ * the tool surface.
+ *
+ * The two auth keys are deliberately separate and must stay that way (ADR-0005):
+ * `mcpAccess` governs who may call this server (Plane A), `upstreamAuthentication`
+ * is the credential this server presents to the upstream API (Plane B).
+ *
+ * `groups`, `defaults`, and `runtime` remain P1+ config surface — added when a task
+ * needs them (config inheritance is `P1-W05-T01`), not speculatively.
  */
 export const McpProjectConfigSchema = z
   .object({
     schemaVersion: z.literal(CONFIG_SCHEMA_VERSION),
     project: ProjectMetadataSchema,
     api: ApiRuntimeConfigSchema,
+    // Plane A: inbound. Absent means unauthenticated, which is safe for the default
+    // loopback-bound stdio/HTTP local case and unsafe anywhere else — validateStartupRequirements
+    // warns when an HTTP transport binds beyond loopback without it.
+    mcpAccess: McpAccessSchema.optional(),
+    // Plane B: outbound.
     upstreamAuthentication: UpstreamAuthenticationSchema.optional(),
     tools: z.record(z.string(), ToolConfigSchema),
     generation: GenerationConfigSchema,

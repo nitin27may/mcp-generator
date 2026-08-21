@@ -163,7 +163,15 @@ Forwarding the inbound MCP token upstream is the convenient implementation and a
 
 **Mitigation.** [ADR-0005](adr/0005-separate-auth-planes.md). `upstream-auth` cannot import
 `mcp-protocol`, enforced by the `boundaries` script. Permanent token-passthrough regression test in
-the `security` suite. Error code `SEC-006` makes a blocked attempt legible.
+the `security` suite — `packages/test-fixtures/test/security/token-passthrough.test.ts`, running
+both planes against the real CLI binary. Error code `SEC-006` makes a blocked attempt legible,
+emitted by `checkAccessPosture` in `packages/mcp-runtime/src/access.ts`.
+
+The audience half of this risk is now closed too: `P6-W23-E01` landed Plane A, so an inbound token
+minted for a different resource server is rejected rather than accepted, and
+`packages/test-fixtures/test/security/mcp-access.test.ts` covers that path along with expiry,
+signature and issuer rejection. Status stays `mitigating` rather than `closed` because the risk
+re-opens the moment Plane B gains RFC 8693 token exchange, which is when the planes first touch.
 
 **Trigger.** Any proposal to "simplify" auth configuration by reusing the inbound token.
 

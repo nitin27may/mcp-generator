@@ -190,7 +190,8 @@ export const en = {
   envSummaryEmpty: 'No environment variables or secrets are referenced yet.',
   envSummaryUsedByCount: (count: number) => `${count} tool${count === 1 ? '' : 's'}`,
   envSummaryUsedByBaseUrl: 'base URL',
-  envSummaryUsedByAuth: 'authentication',
+  envSummaryUsedByAuth: 'upstream authentication',
+  envSummaryUsedByMcpAccess: 'MCP access',
 
   policyTitle: 'Safety',
   policySubtitle: 'Review the risk classification and retry behavior for every enabled tool. Confirmation-before-execution is not yet configurable here.',

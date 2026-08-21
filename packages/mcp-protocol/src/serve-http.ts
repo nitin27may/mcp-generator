@@ -10,6 +10,7 @@ import {
   type NodeIncomingMessageLike,
 } from '@modelcontextprotocol/node';
 import { buildServerFactory } from './build-server-factory.js';
+import type { McpAccessGate } from './mcp-access.js';
 import type { ProtocolTool, ServerInfo } from './protocol-tool.js';
 
 export interface McpHttpServerHandle {
@@ -36,11 +37,47 @@ export interface ServeToolsOverHttpOptions {
    * DNS-rebinding threat, which is browser-JS-initiated.
    */
   readonly allowedOriginHostnames?: readonly string[];
+  /**
+   * Plane A authorization (ADR-0005). When present, `/mcp` requires a valid bearer
+   * token audience-bound to this server, and the RFC 9728 / RFC 8414 discovery
+   * documents are published. When absent the endpoint is unauthenticated, which is
+   * only defensible because the default bind is loopback.
+   */
+  readonly access?: McpAccessGate;
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { 'content-type': 'application/json' });
   res.end(JSON.stringify(body));
+}
+
+/**
+ * A headers-only view of the Node request, for the authorization gate and the
+ * discovery routes.
+ *
+ * Deliberately does NOT use the SDK's `toWebRequest`: that reads the Node stream to
+ * completion, and the body still has to be available to the MCP handler afterwards.
+ * Authorization looks only at the method, URL and headers, so none of it is needed
+ * here — and not touching the stream is what keeps the two concerns independent.
+ */
+function toHeaderRequest(req: IncomingMessage): Request {
+  const host = req.headers.host ?? 'localhost';
+  const url = new URL(req.url ?? '/', `http://${host}`);
+  const headers = new Headers();
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (value === undefined) continue;
+    for (const entry of Array.isArray(value) ? value : [value]) headers.append(key, entry);
+  }
+  return new Request(url, { method: req.method ?? 'GET', headers });
+}
+
+async function sendWebResponse(res: ServerResponse, response: Response): Promise<void> {
+  const headers: Record<string, string> = {};
+  response.headers.forEach((value, key) => {
+    headers[key] = value;
+  });
+  res.writeHead(response.status, headers);
+  res.end(response.body ? Buffer.from(await response.arrayBuffer()) : undefined);
 }
 
 /**
@@ -58,6 +95,12 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
  * `/health` and `/ready` are served outside the MCP endpoint (TIP §26.3) —
  * mixing health checks into `/mcp`'s protocol semantics is exactly what that
  * section warns against.
+ *
+ * Request order is load-bearing. Host and Origin run first, because a rebinding
+ * attempt should be refused before it can learn anything — including which
+ * authorization server this deployment trusts. Discovery and health then answer
+ * without a token, since a client cannot obtain one until it has read discovery.
+ * Everything else reaching `/mcp` passes through the bearer gate.
  */
 export function serveToolsOverHttp(
   tools: readonly ProtocolTool[],
@@ -77,6 +120,8 @@ export function serveToolsOverHttp(
     ? originValidation([...options.allowedOriginHostnames])
     : localhostOriginValidation();
 
+  const access = options.access;
+
   const server: Server = createServer((rawReq: IncomingMessage, res: ServerResponse) => {
     // Node's IncomingMessage types method/url as `string | undefined`; the
     // SDK's duck-typed NodeIncomingMessageLike declares them non-optional
@@ -88,17 +133,44 @@ export function serveToolsOverHttp(
     if (!validateHost(req, res)) return;
     if (!validateOrigin(req, res)) return;
 
-    if (req.method === 'GET' && (req.url === '/health' || req.url === '/ready')) {
-      sendJson(res, 200, { status: 'ok' });
-      return;
-    }
+    void (async () => {
+      try {
+        if (access) {
+          // Unauthenticated by necessity: this is how a client learns where to get a token.
+          const discovery = access.metadata(toHeaderRequest(rawReq));
+          if (discovery) {
+            await sendWebResponse(res, discovery);
+            return;
+          }
+        }
 
-    if (req.url !== '/mcp') {
-      sendJson(res, 404, { error: 'not found' });
-      return;
-    }
+        if (req.method === 'GET' && (req.url === '/health' || req.url === '/ready')) {
+          sendJson(res, 200, { status: 'ok' });
+          return;
+        }
 
-    void nodeHandler(req, res);
+        if (req.url !== '/mcp') {
+          sendJson(res, 404, { error: 'not found' });
+          return;
+        }
+
+        if (access) {
+          const outcome = await access.authorize(toHeaderRequest(rawReq));
+          if (outcome instanceof Response) {
+            await sendWebResponse(res, outcome);
+            return;
+          }
+          // `toNodeHandler` forwards `req.auth` to the handler as its pass-through
+          // `authInfo`, which is what surfaces the caller at `ctx.http.authInfo`.
+          (req as { auth?: unknown }).auth = outcome;
+        }
+
+        await nodeHandler(req, res);
+      } catch (error) {
+        options.onError?.(error instanceof Error ? error : new Error(String(error)));
+        if (!res.headersSent) sendJson(res, 500, { error: 'internal error' });
+      }
+    })();
   });
 
   const host = options.host ?? '127.0.0.1';

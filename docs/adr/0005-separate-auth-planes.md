@@ -60,8 +60,32 @@ is deliberately deferred, so some legitimate scenarios are not served at MVP.
 ## Enforcement
 
 - `boundaries` script: `upstream-auth` must not import `mcp-protocol`. The auth planes cannot see
-  each other.
+  each other. — `tooling/scripts/boundaries.mjs`, rule `auth-planes-separate`.
 - **Token-passthrough regression test** in the `security` suite (TIP §86) — a permanent test, not a
-  one-time check.
-- Error code `SEC-006` exists specifically to make a blocked passthrough attempt legible.
+  one-time check. — `packages/test-fixtures/test/security/token-passthrough.test.ts`. It runs both
+  planes at once against the real CLI binary, with deliberately distinct sentinels, and asserts
+  three things: the upstream receives the configured Plane B credential, the inbound Plane A token
+  appears nowhere in the upstream request, and a refused caller token reaches the upstream not at
+  all.
+- Error code `SEC-006` exists specifically to make a blocked passthrough attempt legible. — emitted
+  by `checkAccessPosture` in `packages/mcp-runtime/src/access.ts` when an HTTP transport binds
+  beyond loopback with no `mcpAccess` configured.
+- Plane A's own rejection paths are covered separately in
+  `packages/test-fixtures/test/security/mcp-access.test.ts`: wrong audience, expired, missing `exp`,
+  foreign signing key, wrong issuer, and insufficient scope.
 - BR-007 and BR-008 are MVP/MUST invariants: a release violating either is not shippable.
+
+## Status of the two planes
+
+Plane A landed with `P6-W23-E01`: `packages/mcp-protocol/src/mcp-access.ts` builds an
+`OAuthTokenVerifier` over the authorization server's JWKS and binds the audience with the SDK's
+`checkResourceAllowed`; `serve-http.ts` publishes the RFC 9728 and RFC 8414 discovery documents and
+gates `/mcp` behind it. Note what this does *not* do: the server never performs an authorization
+redirect. Under MCP 2026-07-28 it is a Resource Server, so the redirect belongs to the client, and
+the server's obligations are discovery, verification and audience binding.
+
+Plane B supports API key, bearer, basic and OAuth2 client credentials. User-delegated upstream
+access remains unbuilt; when it lands it will be RFC 8693 token exchange rather than an
+authorization-code flow, because a headless tool call has no browser and no consent surface. That
+is the point at which the two planes first touch, and the passthrough test above is what keeps the
+invariant honest through that change.

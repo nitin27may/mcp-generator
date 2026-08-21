@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "The sole owner of @modelcontextprotocol/* imports — ADR-0004, ADR-0009.",
+  "description": "The sole owner of @modelcontextprotocol/* imports \u2014 ADR-0004, ADR-0009.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -24,7 +24,8 @@
     "@mcpgen/domain": "workspace:*",
     "@modelcontextprotocol/core": "2.0.0",
     "@modelcontextprotocol/node": "2.0.0",
-    "@modelcontextprotocol/server": "2.0.0"
+    "@modelcontextprotocol/server": "2.0.0",
+    "jose": "6.2.9"
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "2.0.0",

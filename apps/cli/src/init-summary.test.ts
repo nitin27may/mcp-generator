@@ -16,8 +16,8 @@ function summary(overrides: Partial<InitSummary> = {}): InitSummary {
     toolsByRisk: { READ_ONLY: 2, WRITE: 0, DESTRUCTIVE: 0, PRIVILEGED: 0, UNKNOWN: 0 },
     unmatchedEnableNames: [],
     envVars: [
-      { name: 'CUSTOMER_API_BASE_URL', sensitive: false, required: true, usedByToolCount: 0, usedByBaseUrl: true, usedByAuth: false },
-      { name: 'CUSTOMER_API_TOKEN', sensitive: true, required: true, usedByToolCount: 0, usedByBaseUrl: false, usedByAuth: true },
+      { name: 'CUSTOMER_API_BASE_URL', sensitive: false, required: true, usedByToolCount: 0, usedByBaseUrl: true, usedByAuth: false, usedByMcpAccess: false },
+      { name: 'CUSTOMER_API_TOKEN', sensitive: true, required: true, usedByToolCount: 0, usedByBaseUrl: false, usedByAuth: true, usedByMcpAccess: false },
     ],
     ...overrides,
   };

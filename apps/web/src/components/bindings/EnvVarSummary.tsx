@@ -5,6 +5,7 @@ import { en } from '@/i18n/en';
 function usedByLabel(entry: EnvVarSummaryEntry): string {
   const parts: string[] = [];
   if (entry.usedByBaseUrl) parts.push(en.envSummaryUsedByBaseUrl);
+  if (entry.usedByMcpAccess) parts.push(en.envSummaryUsedByMcpAccess);
   if (entry.usedByAuth) parts.push(en.envSummaryUsedByAuth);
   if (entry.usedByToolCount > 0) parts.push(en.envSummaryUsedByCount(entry.usedByToolCount));
   return parts.join(', ');
