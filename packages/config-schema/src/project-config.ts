@@ -35,6 +35,16 @@ const ApiRuntimeConfigSchema = z
  */
 export const McpProjectConfigSchema = z
   .object({
+    /**
+     * Optional pointer to `schemas/mcp.config.schema.json`, purely so editors can offer
+     * completion and inline validation on a file users are told to commit.
+     *
+     * It has to be declared: every object here is `.strict()`, so an undeclared `$schema`
+     * is a hard error — which would make shipping a JSON Schema pointless, since nobody
+     * could reference it. Ignored entirely at run time; `schemaVersion` remains the real
+     * compatibility contract.
+     */
+    $schema: z.string().optional(),
     schemaVersion: z.literal(CONFIG_SCHEMA_VERSION),
     project: ProjectMetadataSchema,
     api: ApiRuntimeConfigSchema,

@@ -130,6 +130,9 @@ fs.writeFileSync('apps/cli/dist-npm/package.json', template.replace('__VERSION__
 
 cp apps/cli/dist/mcpgen.mjs "$STAGE_DIR/"
 cp apps/cli/dist/runtime-cli.mjs "$STAGE_DIR/"
+# The config JSON Schema ships with the CLI: `mcp.config.json` is the artifact users
+# commit, and editor validation of it should not require cloning this repo.
+cp schemas/mcp.config.schema.json "$STAGE_DIR/"
 cp apps/cli/README.md "$STAGE_DIR/"
 cp LICENSE "$STAGE_DIR/"
 

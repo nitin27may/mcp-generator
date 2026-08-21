@@ -10,9 +10,15 @@ This is the npm package page. For the full project — the web wizard, architect
 
 ```bash
 npm install -g @nitin27may/mcpgen
+# or, without installing:
+npx @nitin27may/mcpgen --help
 ```
 
 Requires Node.js ≥ 22.11.
+
+> **Not yet published.** Until the first release lands on the registry, install from source —
+> see [Quickstart](https://github.com/nitin27may/mcp-generator#quickstart). This page ships
+> with the package, so it describes the published form.
 
 ## Quickstart
 

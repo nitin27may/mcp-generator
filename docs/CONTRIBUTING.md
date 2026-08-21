@@ -42,7 +42,9 @@ npm_config_prefix=$HOME/.npm-global npm link
 
 (and add `$HOME/.npm-global/bin` to `PATH`.)
 
-## Publishing to npm — TODO, not yet live
+## Publishing to npm
+
+Not yet live: nothing has been published to the registry.
 
 `scripts/release.sh` builds, verifies, and packs `@nitin27may/mcpgen` (the only package this repo
 ever publishes — every `@mcpgen/*` workspace package stays `private: true` forever, not just for
@@ -68,9 +70,18 @@ package.json`, version substituted), run `npm pack`, and install the *real tarba
 directory to prove it works standalone — the same proof a real `npm install -g @nitin27may/mcpgen`
 would need, without touching the real registry.
 
-There is deliberately no GitHub Actions release workflow yet either — Actions credit is exhausted
-this month. `scripts/release.sh` is written so that a future `workflow_dispatch`-only workflow can
-just call it directly, with no separate CI-only logic to keep in sync.
+There is deliberately no GitHub Actions release workflow yet either. `scripts/release.sh` is
+written so a future `workflow_dispatch`-only workflow can call it directly, with no separate
+CI-only logic to keep in sync. npm provenance additionally requires a public repository and
+Actions OIDC, so the first real publish waits on that regardless.
+
+## Changelog
+
+Any user-visible change — a new flag, a changed default, a new diagnostic code, a fixed bug
+someone could have hit — needs an entry under `## [Unreleased]` in [`../CHANGELOG.md`](../CHANGELOG.md),
+in the same pull request. Reconstructing one at release time means guessing what mattered.
+
+Internal refactors, test-only changes and documentation fixes do not need an entry.
 
 ## Running the web wizard
 
