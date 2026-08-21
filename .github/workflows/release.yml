@@ -1,0 +1,69 @@
+name: Release
+
+# Manual only. A release is a decision, not a consequence of merging.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version, or one of: major | minor | patch | prerelease'
+        required: true
+        type: string
+      dry_run:
+        description: 'Run npm publish --dry-run instead of publishing'
+        required: false
+        type: boolean
+        default: true
+      dist_tag:
+        description: 'npm dist-tag for a real publish'
+        required: false
+        type: string
+        default: latest
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: publish @nitin27may/mcpgen
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      # Provenance needs OIDC, and the tag push needs write. Both are requested here rather
+      # than granted repo-wide, so no other workflow inherits them.
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # release.sh derives the version from the latest v* tag, so a shallow clone would
+          # make it think every release is the first one.
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          registry-url: https://registry.npmjs.org
+
+      # All the real logic lives in scripts/release.sh: the verification chain, the staged
+      # manifest, npm pack, and a genuine install-and-run of the packed tarball in a scratch
+      # directory. Reimplementing any of that here would give us two release paths that drift,
+      # and the one people can run locally would stop being the one that ships.
+      - name: Release
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
+        run: |
+          set -euo pipefail
+          ARGS=("${{ inputs.version }}" --tag "${{ inputs.dist_tag }}")
+          if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS+=(--dry-run); fi
+          scripts/release.sh "${ARGS[@]}"
+
+      - name: Upload the packed tarball
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcpgen-tarball
+          path: apps/cli/dist-npm/*.tgz
+          if-no-files-found: ignore

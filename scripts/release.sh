@@ -110,12 +110,18 @@ echo "    Releasing:           v$VERSION"
 export MCPGEN_VERSION="$VERSION"
 
 echo "==> Verification chain"
+# Must be at least as strong as the pull-request gate. It previously skipped typecheck, the
+# protocol E2E and the secret scan, which meant a release could ship something CI would have
+# refused to merge.
 pnpm install --frozen-lockfile
 pnpm build
 pnpm lint
+pnpm run typecheck
 pnpm test
 pnpm run test:integration
 pnpm run test:security
+pnpm exec vitest run --project e2e --passWithNoTests
+node tooling/scripts/scan-secrets.mjs
 
 echo "==> Staging the publish manifest"
 STAGE_DIR="$ROOT/apps/cli/dist-npm"

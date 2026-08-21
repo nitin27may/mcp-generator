@@ -1,0 +1,43 @@
+name: Feature request
+description: Something this should do and does not
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Some things are deliberately not built, and some never will be — an upstream
+        `authorization_code` flow, for instance, is permanently out of scope and
+        [ADR-0010](https://github.com/nitin27may/mcp-generator/blob/main/docs/adr/0010-token-exchange-not-passthrough.md)
+        explains why. Worth checking the non-goals before writing.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you were trying to do, and what stopped you. Not the solution yet.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you think should happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope-check
+    attributes:
+      label: Existing decisions this touches
+      description: >
+        A requirement (FR-*/BR-*), an ADR, or a WBS task — or confirmation that you checked the
+        non-goals list and this is not on it.
+      placeholder: 'e.g. FR-AUTH-UP-004, or: checked docs/BRD.md §36, not listed as a non-goal'
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you are doing instead today
+      description: A workaround tells us how much this hurts, which is most of the prioritisation.

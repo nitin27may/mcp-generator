@@ -1,0 +1,38 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      dev-tooling:
+        patterns: ['eslint*', '@eslint/*', 'typescript-eslint', 'vitest', '@vitest/*', 'turbo', 'typescript', 'jsdom']
+      next-and-react:
+        patterns: ['next', 'react', 'react-dom', '@types/react', '@types/react-dom', '@next/*']
+      minor-and-patch:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
+    ignore:
+      # Pinned exact and updated deliberately, never on a bot's schedule (ADR-0009).
+      #
+      # The SDK exposes two entry points with identical-looking signatures, one of which
+      # silently serves the previous protocol era. Which behaviour you get is not visible in
+      # the type signature, so an update has to be re-verified at the wire level against
+      # docs/research/sdk-v2-api-notes.md. docs/RISKS.md R12 records an incident caused by
+      # reading a version from exactly this package family and drawing the wrong conclusion.
+      - dependency-name: '@modelcontextprotocol/*'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+
+  - package-ecosystem: docker
+    directory: /apps/web
+    schedule:
+      interval: weekly
