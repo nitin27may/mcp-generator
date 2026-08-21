@@ -1,7 +1,7 @@
 import type { HttpRequestParts } from '@mcpgen/binding-engine';
 import type { RetryConfig, ToolRisk, UpstreamAuthentication } from '@mcpgen/config-schema';
 import type { Diagnostic } from '@mcpgen/domain';
-import { attachUpstreamAuth, type AuthTarget, type OAuthTokenProvider } from '@mcpgen/upstream-auth';
+import { attachUpstreamAuth, type AuthTarget, type OAuthTokenProvider, type TokenExchangeProvider } from '@mcpgen/upstream-auth';
 import { DEFAULT_RESPONSE_POLICY, DEFAULT_TIMEOUT_MS, isAllowedContentType, type ResponsePolicy } from './response-policy.js';
 import {
   computeBackoffMs,
@@ -39,6 +39,14 @@ export interface ExecuteUpstreamRequestInput {
 export interface ExecuteUpstreamRequestDeps {
   readonly fetchImpl?: typeof fetch;
   readonly oauthTokenProvider?: OAuthTokenProvider;
+  /** Long-lived, same reasoning as `oauthTokenProvider`. Required for `oauth2TokenExchange`. */
+  readonly tokenExchangeProvider?: TokenExchangeProvider;
+  /**
+   * The verified Plane A access token (ADR-0010). Reaches `attachUpstreamAuth` for one
+   * purpose — to be exchanged at the authorization server — and is never attached to the
+   * request built below.
+   */
+  readonly callerToken?: string;
 }
 
 function networkFailureDiagnostic(reason: string): Diagnostic {
@@ -198,20 +206,24 @@ function sleep(ms: number, signal: AbortSignal | undefined): Promise<void> {
 export async function executeUpstreamRequest(
   input: ExecuteUpstreamRequestInput,
   deps: ExecuteUpstreamRequestDeps = {},
-): Promise<{ result?: ExecutionResult; diagnostics: Diagnostic[] }> {
+): Promise<{ result?: ExecutionResult; diagnostics: Diagnostic[]; acquiredSecrets?: readonly string[] }> {
   const fetchImpl = deps.fetchImpl ?? fetch;
   const responsePolicy = input.responsePolicy ?? DEFAULT_RESPONSE_POLICY;
   const timeoutMs = input.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const retryPolicy = input.retryPolicy ?? DEFAULT_RETRY_POLICY;
 
   let target: AuthTarget = { headers: input.parts.headers, query: input.parts.query };
+  let acquiredSecrets: readonly string[] = [];
   if (input.auth) {
     const attached = await attachUpstreamAuth(target, input.auth.config, input.auth.resolvedValues, {
       ...(deps.oauthTokenProvider ? { tokenProvider: deps.oauthTokenProvider } : {}),
+      ...(deps.tokenExchangeProvider ? { tokenExchangeProvider: deps.tokenExchangeProvider } : {}),
+      ...(deps.callerToken ? { callerToken: deps.callerToken } : {}),
       ...(deps.fetchImpl ? { fetchImpl: deps.fetchImpl } : {}),
     });
     if (attached.diagnostics.length > 0) return { diagnostics: attached.diagnostics };
     target = attached.target;
+    acquiredSecrets = attached.acquiredSecrets ?? [];
   }
 
   const url = new URL(input.parts.path, input.baseUrl);
@@ -236,8 +248,10 @@ export async function executeUpstreamRequest(
     const shouldRetry = retryEligible && outcome.transient && !isLastAttempt && !wouldExceedDeadline && input.signal?.aborted !== true;
 
     if (!shouldRetry) {
-      if (outcome.result) return { result: { ...outcome.result, attempts: attempt }, diagnostics: [] };
-      return { diagnostics: outcome.diagnostics };
+      // acquiredSecrets rides along on every terminal outcome, success or failure: a
+      // failure body is exactly where an echoed credential would show up.
+      if (outcome.result) return { result: { ...outcome.result, attempts: attempt }, diagnostics: [], acquiredSecrets };
+      return { diagnostics: outcome.diagnostics, acquiredSecrets };
     }
 
     await sleep(backoffMs, input.signal);

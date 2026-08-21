@@ -4,7 +4,7 @@ These are the decisions that constrain implementation. They exist as separate fi
 [TIP §66](../TECHNICAL-PLAN.md#66-critical-design-decisions), so they can be cited in a code review
 by name instead of by a section number inside a 93-section document.
 
-**Five of the eight are mandatory.** A pull request that violates a mandatory ADR is rejected or must
+**Eight of the ten are mandatory.** A pull request that violates a mandatory ADR is rejected or must
 amend the ADR — those are the only two options.
 
 | ADR | Decision | Status | Enforced by |
@@ -18,6 +18,7 @@ amend the ADR — those are the only two options.
 | [0007](0007-deterministic-readiness-before-ai.md) | Readiness deterministic first, AI second | **Mandatory** | AI-disabled CI run, determinism test |
 | [0008](0008-destructive-retry-disabled-by-default.md) | Destructive retry disabled by default | **Mandatory** | Unit tests on retry policy |
 | [0009](0009-mcp-sdk-v2-and-modern-era.md) | Use MCP SDK v2 scoped packages via the modern-era factory path | **Mandatory** | Wire assertion on `server/discover`, lint ban on `connect()` |
+| [0010](0010-token-exchange-not-passthrough.md) | User-delegated upstream access is token exchange, never passthrough | **Mandatory** | Token-passthrough regression test |
 
 ## Superseded open questions
 

@@ -18,6 +18,7 @@ export function authBindingsOf(auth: UpstreamAuthentication): Record<string, Val
     case 'basic':
       return { username: auth.username, password: auth.password };
     case 'oauth2ClientCredentials':
+    case 'oauth2TokenExchange':
       return { clientId: auth.clientId, clientSecret: auth.clientSecret };
   }
 }

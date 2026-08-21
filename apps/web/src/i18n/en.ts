@@ -101,6 +101,7 @@ export const en = {
   authTypeBearer: 'Bearer Token',
   authTypeBasic: 'Basic Auth',
   authTypeOAuth2: 'OAuth2 (Client Credentials)',
+  authTypeTokenExchange: 'OAuth2 (Token Exchange — act as the caller)',
   authApiKeyLocationLabel: 'Send as',
   authApiKeyLocationHeader: 'Header',
   authApiKeyLocationQuery: 'Query parameter',
@@ -115,6 +116,9 @@ export const en = {
   authOAuth2ClientSecretLabel: 'Client secret',
   authOAuth2ScopesLabel: 'Scopes (comma-separated)',
   authOAuth2ScopesHelp: 'For Entra ID app registrations, this is usually api://<application-id-uri>/.default',
+  authExchangeHelp:
+    'Trades the caller\u2019s verified MCP access token for one minted for the upstream API, so a tool call acts as the signed-in user instead of as this server. Requires MCP access to be set to OAuth2 \u2014 without a verified caller there is no token to exchange. Not derivable from an OpenAPI spec, so it is never seeded by import.',
+  authExchangeAudienceLabel: 'Audience (the upstream API the exchanged token is for)',
   authContinue: 'Continue to tools',
 
   toolsTitle: 'Tools',

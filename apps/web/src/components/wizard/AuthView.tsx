@@ -23,6 +23,7 @@ const AUTH_TYPE_LABELS: Record<AuthTypeOrNone, string> = {
   bearer: en.authTypeBearer,
   basic: en.authTypeBasic,
   oauth2ClientCredentials: en.authTypeOAuth2,
+  oauth2TokenExchange: en.authTypeTokenExchange,
 };
 
 const API_KEY_LOCATION_LABELS: Record<ApiKeyAuth['in'], string> = {
@@ -42,6 +43,8 @@ function defaultForType(type: AuthTypeOrNone): UpstreamAuthentication | undefine
       return { type: 'basic', username: { source: 'environment', name: '' }, password: { source: 'secret', name: '' } };
     case 'oauth2ClientCredentials':
       return { type: 'oauth2ClientCredentials', tokenUrl: '', clientId: { source: 'environment', name: '' }, clientSecret: { source: 'secret', name: '' } };
+    case 'oauth2TokenExchange':
+      return { type: 'oauth2TokenExchange', tokenUrl: '', clientId: { source: 'environment', name: '' }, clientSecret: { source: 'secret', name: '' } };
   }
 }
 
@@ -54,9 +57,12 @@ export function AuthView({ projectId }: { projectId: string }) {
 
   function updateAuth(next: UpstreamAuthentication | undefined) {
     if (!configDraft) return;
-    const { project, api, tools, generation } = configDraft;
-    const base = { schemaVersion: configDraft.schemaVersion, project, api, tools, generation };
-    dispatch({ type: 'CONFIG_DRAFT_CHANGED', config: next !== undefined ? { ...base, upstreamAuthentication: next } : base });
+    // Spread the whole draft rather than rebuilding it from a hand-listed set of keys.
+    // The previous form named schemaVersion/project/api/tools/generation explicitly, so
+    // every config key added later — mcpAccess was the first — was silently dropped the
+    // moment somebody changed the auth type on this step.
+    const { upstreamAuthentication: _dropped, ...rest } = configDraft;
+    dispatch({ type: 'CONFIG_DRAFT_CHANGED', config: next !== undefined ? { ...rest, upstreamAuthentication: next } : rest });
   }
 
   return (
@@ -188,6 +194,65 @@ export function AuthView({ projectId }: { projectId: string }) {
                   }}
                 />
                 <p className="text-xs text-muted-foreground">{en.authOAuth2ScopesHelp}</p>
+              </div>
+            </>
+          )}
+
+          {auth?.type === 'oauth2TokenExchange' && (
+            <>
+              <p className="text-sm text-muted-foreground">{en.authExchangeHelp}</p>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="auth-exchange-tokenurl" required>{en.authOAuth2TokenUrlLabel}</Label>
+                <Input
+                  id="auth-exchange-tokenurl"
+                  value={auth.tokenUrl}
+                  placeholder="https://idp.example.com/oauth2/token"
+                  onChange={(event) => updateAuth({ ...auth, tokenUrl: event.target.value })}
+                />
+              </div>
+              <ValueBindingField
+                label={en.authOAuth2ClientIdLabel}
+                value={auth.clientId}
+                onChange={(next: BindableValue) => updateAuth({ ...auth, clientId: next })}
+                allowedKinds={['environment', 'secret', 'static']}
+                idPrefix="auth-exchange-clientid"
+                required
+              />
+              <SecretBindingField
+                label={en.authOAuth2ClientSecretLabel}
+                value={auth.clientSecret}
+                onChange={(next) => updateAuth({ ...auth, clientSecret: next })}
+                idPrefix="auth-exchange-clientsecret"
+                required
+              />
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="auth-exchange-audience" optional>{en.authExchangeAudienceLabel}</Label>
+                <Input
+                  id="auth-exchange-audience"
+                  value={auth.audience ?? ''}
+                  placeholder="https://orders-api.example.com"
+                  onChange={(event) => {
+                    const audience = event.target.value.trim();
+                    const { audience: _current, ...withoutAudience } = auth;
+                    updateAuth(audience.length > 0 ? { ...withoutAudience, audience } : withoutAudience);
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="auth-exchange-scopes" optional>{en.authOAuth2ScopesLabel}</Label>
+                <Input
+                  id="auth-exchange-scopes"
+                  value={(auth.scopes ?? []).join(', ')}
+                  placeholder="orders:read"
+                  onChange={(event) => {
+                    const scopes = event.target.value
+                      .split(',')
+                      .map((s) => s.trim())
+                      .filter((s) => s.length > 0);
+                    const { scopes: _currentScopes, ...authWithoutScopes } = auth;
+                    updateAuth(scopes.length > 0 ? { ...authWithoutScopes, scopes } : authWithoutScopes);
+                  }}
+                />
               </div>
             </>
           )}

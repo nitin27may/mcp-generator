@@ -3,7 +3,7 @@ import type { BindingResolutionContext } from '@mcpgen/binding-engine';
 import { createMcpAccessGate, serveToolsOverHttp, serveToolsOverStdio, type McpAccessGate } from '@mcpgen/mcp-protocol';
 import { buildToolRegistry, checkAccessPosture, resolveMcpAccess, validateStartupRequirements } from '@mcpgen/mcp-runtime';
 import { createLogger } from '@mcpgen/redaction';
-import { EnvironmentSecretProvider, OAuthTokenProvider } from '@mcpgen/upstream-auth';
+import { EnvironmentSecretProvider, OAuthTokenProvider, TokenExchangeProvider } from '@mcpgen/upstream-auth';
 import { loadProject } from '../load-project.js';
 
 export interface ServeOptions {
@@ -28,6 +28,9 @@ export async function runServe(configPath: string, manifestPath: string, options
   // cache only helps across calls if it survives between them. Its earlier absence here meant
   // every OAuth2 tool call in a generated server re-acquired a token from scratch.
   const oauthTokenProvider = new OAuthTokenProvider();
+  // Same lifetime argument as above, and one more besides: this cache is keyed per
+  // caller, so a per-call instance would re-exchange on every single tool invocation.
+  const tokenExchangeProvider = new TokenExchangeProvider();
   const ctx: BindingResolutionContext = { toolInput: {}, getEnv: (name) => process.env[name], resolveSecret: (name) => secretProvider.get(name) };
 
   const startup = await validateStartupRequirements(config, ctx);
@@ -42,6 +45,7 @@ export async function runServe(configPath: string, manifestPath: string, options
     getEnv: (name) => process.env[name],
     resolveSecret: (name) => secretProvider.get(name),
     oauthTokenProvider,
+    tokenExchangeProvider,
   });
   if (registryDiagnostics.some((d) => d.severity === 'error')) {
     for (const diagnostic of registryDiagnostics) logger.error(diagnostic.message, { code: diagnostic.code });

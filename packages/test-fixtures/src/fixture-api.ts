@@ -22,6 +22,12 @@ export interface FixtureApiRequestLog {
 export interface FixtureApiOptions {
   /** The exact bearer token the fixture accepts. Requests with any other value get 401. */
   readonly expectedToken: string;
+  /**
+   * Overrides the exact-match check. Needed once the credential is minted at run time
+   * rather than configured — an exchanged RFC 8693 token is a fresh JWT the test cannot
+   * know in advance, so the fixture has to judge it by shape instead of by equality.
+   */
+  readonly acceptToken?: (token: string) => boolean;
 }
 
 interface Customer {
@@ -54,7 +60,11 @@ export async function startFixtureApi(options: FixtureApiOptions): Promise<Fixtu
       const body = req.method === 'POST' ? await readBody(req) : undefined;
       requests.push({ method: req.method ?? '', url: req.url ?? '', headers: req.headers, ...(body !== undefined ? { body } : {}) });
 
-      if (req.headers.authorization !== `Bearer ${options.expectedToken}`) {
+      const presented = /^Bearer (.+)$/.exec(req.headers.authorization ?? '')?.[1];
+      const authorized = options.acceptToken
+        ? presented !== undefined && options.acceptToken(presented)
+        : req.headers.authorization === `Bearer ${options.expectedToken}`;
+      if (!authorized) {
         send(res, 401, { error: 'unauthorized' });
         return;
       }

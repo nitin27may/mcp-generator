@@ -1,9 +1,9 @@
 import { buildHttpRequestParts, resolveBindingValues, type BindingResolutionContext } from '@mcpgen/binding-engine';
 import type { McpProjectConfig, ToolConfig, ValueBinding } from '@mcpgen/config-schema';
-import type { CanonicalOperation, Diagnostic } from '@mcpgen/domain';
+import type { CallerIdentity, CanonicalOperation, Diagnostic } from '@mcpgen/domain';
 import type { ProtocolTool, ProtocolToolResult } from '@mcpgen/mcp-protocol';
 import { redactValue } from '@mcpgen/redaction';
-import { authBindingsOf, type OAuthTokenProvider } from '@mcpgen/upstream-auth';
+import { authBindingsOf, type OAuthTokenProvider, type TokenExchangeProvider } from '@mcpgen/upstream-auth';
 import { executeUpstreamRequest } from '@mcpgen/upstream-http';
 
 export interface RuntimeDeps {
@@ -13,6 +13,8 @@ export interface RuntimeDeps {
   readonly fetchImpl?: typeof fetch;
   /** Long-lived (constructed once per server process) so its token cache actually caches — see `OAuthTokenProvider`'s class doc. */
   readonly oauthTokenProvider?: OAuthTokenProvider;
+  /** Long-lived for the same reason. Required by `oauth2TokenExchange` (ADR-0010). */
+  readonly tokenExchangeProvider?: TokenExchangeProvider;
 }
 
 /**
@@ -56,7 +58,7 @@ function buildExecute(
   config: McpProjectConfig,
   deps: RuntimeDeps,
 ): ProtocolTool['execute'] {
-  return async (args: Record<string, unknown>): Promise<ProtocolToolResult> => {
+  return async (args: Record<string, unknown>, caller?: CallerIdentity): Promise<ProtocolToolResult> => {
     const ctx: BindingResolutionContext = { toolInput: args, getEnv: deps.getEnv, resolveSecret: deps.resolveSecret };
 
     const resolvedBindings = await resolveBindingValues(toolConfig.bindings, ctx);
@@ -76,7 +78,7 @@ function buildExecute(
       auth = { config: config.upstreamAuthentication, resolvedValues: resolvedAuth.values };
     }
 
-    const { result, diagnostics } = await executeUpstreamRequest(
+    const { result, diagnostics, acquiredSecrets } = await executeUpstreamRequest(
       {
         baseUrl: deps.baseUrl,
         parts,
@@ -86,8 +88,16 @@ function buildExecute(
       {
         ...(deps.fetchImpl ? { fetchImpl: deps.fetchImpl } : {}),
         ...(deps.oauthTokenProvider ? { oauthTokenProvider: deps.oauthTokenProvider } : {}),
+        ...(deps.tokenExchangeProvider ? { tokenExchangeProvider: deps.tokenExchangeProvider } : {}),
+        // Handed over solely so it can be exchanged at the authorization server
+        // (ADR-0010). Nothing below attaches it to the upstream request.
+        ...(caller?.token ? { callerToken: caller.token } : {}),
       },
     );
+    // Credentials minted during the call — an OAuth or exchanged token — are not in the
+    // binding graph, so without this they would be invisible to redaction. This closes
+    // that gap for every runtime-acquired credential, not just statically-bound ones.
+    if (acquiredSecrets?.length) secretValuesForRedaction.push(...acquiredSecrets);
     if (!result) return diagnosticsToResult(diagnostics);
 
     // FR-HTTP-005: an upstream response occasionally echoes back a header or
