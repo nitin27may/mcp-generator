@@ -1,0 +1,21 @@
+name: Setup
+description: >
+  Checkout-adjacent toolchain setup shared by every CI job: corepack (which resolves the
+  pnpm version pinned in the root package.json's packageManager field), Node from .nvmrc,
+  and a frozen-lockfile install. Factored out because four jobs had drifted copies of it.
+
+runs:
+  using: composite
+  steps:
+    - name: Enable corepack
+      shell: bash
+      run: corepack enable
+
+    - uses: actions/setup-node@v5
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+
+    - name: Install
+      shell: bash
+      run: pnpm install --frozen-lockfile

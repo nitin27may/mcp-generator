@@ -14,6 +14,11 @@ env:
   # Reproducible installs; fail rather than silently resolving a different tree.
   CI: true
 
+# Least privilege by default. No job here writes to the repo; the release workflow
+# requests what it needs at its own level rather than inheriting a broad default.
+permissions:
+  contents: read
+
 jobs:
   verify:
     name: lint · typecheck · build · test
@@ -21,23 +26,17 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
-
-      - name: Enable corepack
-        run: corepack enable
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       # `lint` runs eslint and then the boundaries checker, which enforces
       # ADR-0003/0004/0005/0007/0009. Both are blocking gates per TIP §49.
       - name: Lint and package boundaries
         run: pnpm run lint
 
+      # apps/web's typecheck runs `next typegen` first: the RouteContext<'/route'>
+      # type every API route handler uses is generated into .next/types, which does
+      # not exist on a fresh checkout. This passed locally only because a stale .next
+      # was lying around, and failed here every time.
       - name: Typecheck
         run: pnpm run typecheck
 
@@ -59,13 +58,13 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
-      - name: Enable corepack
-        run: corepack enable
-      - uses: actions/setup-node@v5
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
+
+      # The security suite imports @mcpgen/* packages by their published entry points,
+      # so it needs dist/ to exist. Without this the whole project failed to collect
+      # with "Failed to resolve entry for package @mcpgen/openapi-adapter".
+      - name: Build
+        run: pnpm run build
 
       # P1-W18-T01 landed the safe-fetch security suite in openapi-adapter
       # (ip-blocklist, safe-fetch, resolve-remote-refs). `--passWithNoTests`
@@ -73,15 +72,11 @@ jobs:
       - name: Security and secret-leakage tests
         run: pnpm exec vitest run --project security --passWithNoTests
 
-      - name: Scan fixtures for secret literals
-        run: |
-          if grep -rniE '(api[_-]?key|secret|token|password)[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"'<{$]{8,}' \
-               --include='*.ts' --include='*.json' --include='*.md' \
-               packages apps fixtures docs 2>/dev/null; then
-            echo "::error::Secret-shaped literal found. Secrets are references only — see ADR-0006."
-            exit 1
-          fi
-          echo "No secret literals found."
+      # ADR-0006. See tooling/scripts/scan-secrets.mjs for why this is a script and
+      # not the previous inline grep: that grep matched every test sentinel, so it
+      # could never have passed had it ever actually run.
+      - name: Scan for secret literals
+        run: node tooling/scripts/scan-secrets.mjs
 
   e2e:
     name: protocol E2E
@@ -89,13 +84,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
-      - name: Enable corepack
-        run: corepack enable
-      - uses: actions/setup-node@v5
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm run build
 
       # Drives a real MCP client against the spawned server. Includes the
@@ -109,13 +98,13 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
-      - name: Enable corepack
-        run: corepack enable
-      - uses: actions/setup-node@v5
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
+
+      # The Playwright specs import @mcpgen/test-fixtures to seed a project, and the
+      # dev server the config boots resolves the other @mcpgen/* packages from dist/.
+      - name: Build
+        run: pnpm run build
+
       - run: pnpm --filter @mcpgen/web exec playwright install --with-deps chromium
 
       # Real browser, real Next.js dev server (see apps/web/playwright.config.ts). Covers

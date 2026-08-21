@@ -8,7 +8,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "next typegen && tsc -p tsconfig.json --noEmit",
     "test:e2e": "playwright test",
     "clean": "rm -rf .next .turbo",
     "capture:hero": "node scripts/capture-hero.mjs"
@@ -52,7 +52,6 @@
     "@types/node": "^22.19.0",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
-    "@types/yazl": "^3.3.1",
-    "typescript": "7.0.2"
+    "@types/yazl": "^3.3.1"
   }
 }

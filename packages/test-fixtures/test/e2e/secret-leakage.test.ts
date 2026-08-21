@@ -53,7 +53,7 @@ describe('secret leakage — across config export, logs, and tool execution', ()
   });
 
   it('a 401 (wrong credential) response body does not surface the expected token anywhere in the MCP result', async () => {
-    api = await startFixtureApi({ expectedToken: 'a-different-token-than-configured' });
+    api = await startFixtureApi({ expectedToken: 'sk-a-different-token-than-configured' });
 
     const transport = new StdioClientTransport({
       command: process.execPath,

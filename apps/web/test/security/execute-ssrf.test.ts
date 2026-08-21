@@ -58,7 +58,7 @@ describe('performExecute — SSRF defense on live execution', () => {
   });
 
   it('blocks loopback (127.0.0.1) even though the fixture API itself runs there', async () => {
-    api = await startFixtureApi({ expectedToken: 'irrelevant' });
+    api = await startFixtureApi({ expectedToken: 'sk-irrelevant-sentinel' });
     const loopbackUrl = api.baseUrl.replace('localhost', '127.0.0.1');
     const { config, operationsById, toolName, secrets } = await configFor(loopbackUrl);
 
@@ -67,13 +67,13 @@ describe('performExecute — SSRF defense on live execution', () => {
   });
 
   it('allows loopback when allowPrivateEgress is explicitly true — the real fixture API actually responds', async () => {
-    api = await startFixtureApi({ expectedToken: 'dev-token' });
+    api = await startFixtureApi({ expectedToken: 'sk-dev-token-sentinel' });
     const { config, operationsById, toolName } = await configFor(api.baseUrl);
     const bearerToken = config.upstreamAuthentication?.type === 'bearer' ? config.upstreamAuthentication.token : undefined;
     const tokenBindingName = bearerToken?.source === 'secret' ? bearerToken.name : undefined;
     if (!tokenBindingName) throw new Error('expected bearer auth');
 
-    const outcome = await performExecute(config, operationsById, toolName, { customer_id: 'c-42' }, {}, { [tokenBindingName]: 'dev-token' }, false, true);
+    const outcome = await performExecute(config, operationsById, toolName, { customer_id: 'c-42' }, {}, { [tokenBindingName]: 'sk-dev-token-sentinel' }, false, true);
     expect(outcome.ok).toBe(true);
     if (!outcome.ok) return;
     expect(outcome.trace.upstreamStatus).toBe(200);
