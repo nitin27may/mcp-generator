@@ -106,14 +106,14 @@ describe('attachUpstreamAuth — oauth2ClientCredentials', () => {
   });
 
   it('reuses a cached token across two attachUpstreamAuth calls sharing one provider (no second fetch)', async () => {
-    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ access_token: 'tok-cached', expires_in: 3600 }), { status: 200 }));
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ access_token: 'sk-tok-cached', expires_in: 3600 }), { status: 200 }));
     const tokenProvider = new OAuthTokenProvider({ fetchImpl: fetchImpl as unknown as typeof fetch });
     const resolved = { clientId: 'client-abc', clientSecret: 'shh' };
 
     await attachUpstreamAuth(emptyTarget(), auth, resolved, { tokenProvider });
     const second = await attachUpstreamAuth(emptyTarget(), auth, resolved, { tokenProvider });
 
-    expect(second.target.headers.Authorization).toBe('Bearer tok-cached');
+    expect(second.target.headers.Authorization).toBe('Bearer sk-tok-cached');
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
