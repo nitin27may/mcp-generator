@@ -8,7 +8,7 @@
 | Supersedes | 1.0 (2026-08-17) |
 | Status | Product baseline / implementation input |
 | Date | 2026-08-17 |
-| Working product name | TBD — see [OQ-02](#37-open-questions-register) |
+| Working product name | `mcpgen`, published as `@nitin27may/mcpgen` ([OQ-02](#37-open-questions-register)) |
 | Primary positioning | Agent Readiness and Governance Layer for APIs |
 | Initial delivery | OpenAPI/Swagger → governed MCP tool surface → runnable stdio/HTTP package |
 | Companion document | [TECHNICAL-PLAN.md](TECHNICAL-PLAN.md) |
@@ -1746,8 +1746,8 @@ out as such.
 | ID | Question | Owner | Needed by | Status |
 |---|---|---|---|---|
 | **OQ-01** | ~~The official MCP TypeScript SDK does not support 2026-07-28.~~ | Architecture | P0 | **Dissolved 2026-08-17.** The premise was wrong: `@modelcontextprotocol/sdk@1.30.0` is the *legacy* distribution. The v2 scoped packages `@modelcontextprotocol/{core,server,client}@2.0.0` serve 2026-07-28 via the `serveStdio` factory path — confirmed on the wire (`supportedVersions: ["2026-07-28"]`). See [ADR-0009](adr/0009-mcp-sdk-v2-and-modern-era.md) and [`research/sdk-v2-api-notes.md`](research/sdk-v2-api-notes.md). No gap to bridge. |
-| OQ-02 | Working product name and npm scope for the platform's own packages. Does **not** affect generated packages (FR-PKG-006). | Product | P1 | Open. `@mcpgen/*` used as an explicit placeholder. |
-| OQ-03 | Which readiness rules are open source vs. commercial? TIP §71 flags this as needing a deliberate decision; if the rules are the moat, giving them away is strategy, not licensing detail. | Product + Architecture | P3 (before the readiness engine ships) | Open |
+| OQ-02 | Working product name and npm scope for the platform's own packages. Does **not** affect generated packages (FR-PKG-006). | Product | P1 | **Closed 2026-08-21.** The published name is `@nitin27may/mcpgen` — one package, assembled at release time from `apps/cli`. Every `@mcpgen/*` workspace package stays `private: true` permanently; they are implementation detail, not a public surface. Leaving this open contradicted the shipped manifest. |
+| OQ-03 | Which readiness rules are open source vs. commercial? | Product + Architecture | P3 | **Closed 2026-08-21.** All 30 deterministic readiness rules are MIT and stay MIT. The rules are not the moat — a rule set is readable, copyable and arguable, and withholding it would mostly deter the people best placed to improve it. Any future commercial offering would be hosting, collaboration and operations, never rule withholding. This is the single line most likely to be quoted by somebody deciding whether to build on this project, and it should say yes. |
 | OQ-04 | Hosted MCP isolation model: container-per-deployment vs. logically isolated multi-tenant runtime. TIP §58 recommends per-deployment first. | Architecture | P6 | Leaning per-deployment |
 | OQ-05 | Playground live-execution secret policy: session memory only, or short-TTL encrypted storage? Determines whether the hosted playground can support async/long-running calls. | Security | P4 | Open |
 | OQ-06 | AI provider contract terms — specifically a no-training commitment for customer data, required before selling AI features. | Product + Legal | P3 | Open |
