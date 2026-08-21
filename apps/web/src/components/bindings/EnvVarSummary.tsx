@@ -1,6 +1,7 @@
 import type { EnvVarSummaryEntry } from '@mcpgen/control-contracts';
 import { Badge } from '@/components/ui/badge';
 import { en } from '@/i18n/en';
+import { ScrollableTable } from '@/components/ui/scrollable-table';
 
 function usedByLabel(entry: EnvVarSummaryEntry): string {
   const parts: string[] = [];
@@ -18,7 +19,7 @@ export function EnvVarSummary({ entries }: { entries: readonly EnvVarSummaryEntr
   }
 
   return (
-    <table className="w-full border-collapse text-sm">
+    <ScrollableTable label={en.envSummaryTableLabel} minWidthClass="min-w-[560px]" focusable>
       <thead>
         <tr className="border-b text-left text-xs text-muted-foreground">
           <th className="py-2 pr-2 font-medium">{en.envSummaryColumnName}</th>
@@ -37,6 +38,6 @@ export function EnvVarSummary({ entries }: { entries: readonly EnvVarSummaryEntr
           </tr>
         ))}
       </tbody>
-    </table>
+    </ScrollableTable>
   );
 }

@@ -22,7 +22,13 @@ export function StepNav({ currentStepId, projectId }: { currentStepId: WizardSte
 
   return (
     <nav aria-label="Wizard steps">
-      <ol className="flex flex-col gap-0.5">
+      {/* Below `lg` the steps wrap onto a few rows instead of forming one 1240px-wide
+          horizontally scrolling strip. Scrolling was tried first and measured worse in two
+          ways: the strip's content escaped to the root, leaving the whole page draggable
+          sideways over empty space (`overflow` on every ancestor failed to contain it), and
+          it hid seven of the ten steps behind a gesture. Wrapping has no overflow to
+          contain and keeps the whole path visible, which is the point of a step nav. */}
+      <ol className="flex flex-wrap gap-1 lg:flex-col lg:flex-nowrap lg:gap-0.5">
         {WIZARD_STEPS.map((step) => {
           const gate = snapshot?.gates[step.id];
           const reachable = gate?.reachable ?? step.id === 'validation';

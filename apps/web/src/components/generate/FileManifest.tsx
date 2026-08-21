@@ -11,7 +11,7 @@ export function FileManifest({ files }: { files: readonly GeneratedFile[] }) {
   return (
     <ul className="flex flex-col gap-0.5 font-mono text-xs">
       {sorted.map((file) => (
-        <li key={file.path} className="flex justify-between gap-4">
+        <li key={file.path} className="flex flex-wrap justify-between gap-x-4 gap-y-1">
           <span>{file.path}</span>
           <span className="shrink-0 text-muted-foreground">{formatBytes(file.sizeBytes)}</span>
         </li>

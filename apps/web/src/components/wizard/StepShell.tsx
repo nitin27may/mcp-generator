@@ -40,13 +40,17 @@ export function StepShell({
   const hasUpstreamAuth = (configDraft ?? snapshot?.config)?.upstreamAuthentication !== undefined;
   const optional = isStepOptional(currentStepId, { hasUpstreamAuth });
 
+  // Below `lg` the sidebar becomes a horizontal strip above the content rather than a
+  // 220px column beside it. The fixed two-column grid used to apply at every width, so at
+  // 375px the main column was left with roughly 75px — every one of the nine wizard routes
+  // was unusable on a phone, from this one line.
   return (
-    <div className="mx-auto grid max-w-5xl grid-cols-[220px_1fr] gap-8 px-6 py-8">
-      <aside>
+    <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[220px_1fr] lg:gap-8 lg:py-8">
+      <aside className="min-w-0">
         {snapshot && <p className="mb-3 truncate px-2.5 text-xs font-medium text-muted-foreground" title={snapshot.name}>{snapshot.name}</p>}
         <StepNav projectId={projectId} currentStepId={currentStepId} />
       </aside>
-      <main id="main-content" className="flex flex-col gap-4">
+      <main id="main-content" className="flex min-w-0 flex-col gap-4">
         <header>
           <h1 ref={headingRef} tabIndex={-1} className="font-heading text-xl font-medium outline-none">
             {title}

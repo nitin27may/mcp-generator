@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { RiskBadge } from './RiskBadge';
 import { en } from '@/i18n/en';
 import { cn } from '@/lib/utils';
+import { ScrollableTable } from '@/components/ui/scrollable-table';
 
 export interface OperationRow {
   readonly summary: OperationSummary;
@@ -75,7 +76,7 @@ export function OperationTable({
   const SortIcon = sortDirection === 'asc' ? ArrowUp : sortDirection === 'desc' ? ArrowDown : ArrowUpDown;
 
   return (
-    <table className="w-full border-collapse text-sm">
+    <ScrollableTable label={en.toolsTableLabel} minWidthClass="min-w-[720px]">
       <thead>
         <tr className="border-b text-left text-xs text-muted-foreground">
           <th className="w-10 py-2 pr-2 font-medium">{en.toolsColumnEnabled}</th>
@@ -129,6 +130,6 @@ export function OperationTable({
           );
         })}
       </tbody>
-    </table>
+    </ScrollableTable>
   );
 }

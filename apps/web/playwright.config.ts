@@ -17,7 +17,18 @@ export default defineConfig({
     baseURL: 'http://localhost:4200',
     trace: 'on-first-retry',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // The wizard was desktop-only for as long as nothing checked otherwise. `a11y.spec.ts`
+    // already ran at 375px, but only against `/` and `/docs` — the nine wizard routes were
+    // never rendered narrow by anything. This project is what keeps the responsive work from
+    // silently regressing; it runs the a11y and public-page specs at a real phone viewport.
+    {
+      name: 'mobile',
+      use: { ...devices['Pixel 5'] },
+      testMatch: /(a11y|public-pages)\.spec\.ts/,
+    },
+  ],
   webServer: {
     command: 'pnpm exec next dev --port 4200',
     url: 'http://localhost:4200/api/health',

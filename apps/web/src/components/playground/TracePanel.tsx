@@ -26,7 +26,7 @@ export function TracePanel({ trace }: { trace: ExecutionTrace }) {
 
       {trace.resolvedRequest && (
         <div className="flex flex-col gap-2">
-          <div className="overflow-x-auto rounded-md bg-muted p-2 font-mono text-xs">
+          <div role="region" aria-label="Trace request" tabIndex={0} className="overflow-x-auto rounded-md bg-muted p-2 font-mono text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
             <span className="font-semibold">{trace.resolvedRequest.method}</span> {trace.resolvedRequest.url}
           </div>
           {Object.keys(trace.resolvedRequest.headers).length > 0 && (
@@ -46,7 +46,7 @@ export function TracePanel({ trace }: { trace: ExecutionTrace }) {
 
       <div>
         <p className="mb-1 text-xs font-medium text-muted-foreground">{en.traceResponseHeading}</p>
-        <pre className="overflow-x-auto rounded-md bg-muted p-2 font-mono text-xs whitespace-pre-wrap">{JSON.stringify(trace.response, null, 2)}</pre>
+        <pre role="region" aria-label="Trace response" tabIndex={0} className="overflow-x-auto rounded-md bg-muted p-2 font-mono text-xs whitespace-pre-wrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{JSON.stringify(trace.response, null, 2)}</pre>
       </div>
     </div>
   );

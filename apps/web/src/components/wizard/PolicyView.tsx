@@ -13,6 +13,7 @@ import { StepFooter } from '@/components/wizard/StepFooter';
 import { useProjectQuery } from '@/api-client/queries';
 import { useWizardDispatch, useWizardState } from '@/wizard/useWizard';
 import { en } from '@/i18n/en';
+import { ScrollableTable } from '@/components/ui/scrollable-table';
 
 export function PolicyView({ projectId }: { projectId: string }) {
   const { configDraft, saveStatus } = useWizardState();
@@ -63,7 +64,7 @@ export function PolicyView({ projectId }: { projectId: string }) {
           {enabledTools.length === 0 ? (
             <p className="text-sm text-muted-foreground">{en.policyNoEnabledTools}</p>
           ) : (
-            <table className="w-full border-collapse text-sm">
+            <ScrollableTable label={en.policyTableLabel} minWidthClass="min-w-[640px]">
               <thead>
                 <tr className="border-b text-left text-xs text-muted-foreground">
                   <th className="py-2 pr-2 font-medium">{en.policyColumnTool}</th>
@@ -94,7 +95,7 @@ export function PolicyView({ projectId }: { projectId: string }) {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </ScrollableTable>
           )}
         </CardContent>
       </Card>
