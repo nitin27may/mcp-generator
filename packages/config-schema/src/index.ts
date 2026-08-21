@@ -23,6 +23,14 @@ export {
   type BasicAuth,
   type OAuth2ClientCredentialsAuth,
 } from './upstream-auth.js';
+export {
+  McpAccessSchema,
+  McpAccessNoneSchema,
+  McpAccessOAuth2Schema,
+  type McpAccess,
+  type McpAccessNone,
+  type McpAccessOAuth2,
+} from './mcp-access.js';
 export { GenerationConfigSchema, type GenerationConfig } from './generation-config.js';
 export {
   ToolConfigSchema,

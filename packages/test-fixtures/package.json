@@ -22,10 +22,14 @@
   },
   "devDependencies": {
     "@mcpgen/cli": "workspace:*",
-    "@modelcontextprotocol/client": "2.0.0",
-    "@types/node": "^22.19.0",
-    "@mcpgen/generator": "workspace:*",
     "@mcpgen/config-schema": "workspace:*",
-    "@mcpgen/openapi-adapter": "workspace:*"
+    "@mcpgen/generator": "workspace:*",
+    "@mcpgen/mcp-protocol": "workspace:*",
+    "@mcpgen/openapi-adapter": "workspace:*",
+    "@modelcontextprotocol/client": "2.0.0",
+    "@types/node": "^22.19.0"
+  },
+  "dependencies": {
+    "jose": "6.2.9"
   }
 }

@@ -3,7 +3,7 @@ import { authBindingsOf } from './auth-bindings.js';
 
 /**
  * Every `environment`/`secret` binding a config actually depends on at run time — base URL,
- * upstream auth, and every *enabled* tool's bindings. Disabled tools are excluded deliberately:
+ * both authentication planes, and every *enabled* tool's bindings. Disabled tools are excluded deliberately:
  * a name here is a promise ("you need to set this to run"), and a variable the server will never
  * read because its tool is off is noise, not a promise.
  *
@@ -18,7 +18,11 @@ export interface ConfigEnvBinding {
   readonly required: boolean;
   readonly usedByToolCount: number;
   readonly usedByBaseUrl: boolean;
+  /** Plane B — the credential this server presents upstream. */
   readonly usedByAuth: boolean;
+  /** Plane A — who may call this server. Kept distinct from `usedByAuth`: ADR-0005's
+   *  whole point is that these are different credentials with different blast radii. */
+  readonly usedByMcpAccess: boolean;
 }
 
 interface MutableEntry {
@@ -28,12 +32,13 @@ interface MutableEntry {
   usedByToolCount: number;
   usedByBaseUrl: boolean;
   usedByAuth: boolean;
+  usedByMcpAccess: boolean;
 }
 
 function record(
   entries: Map<string, MutableEntry>,
   binding: ValueBinding,
-  options: { usedByBaseUrl?: boolean; usedByAuth?: boolean; usedByTool?: boolean },
+  options: { usedByBaseUrl?: boolean; usedByAuth?: boolean; usedByTool?: boolean; usedByMcpAccess?: boolean },
 ): void {
   if (binding.source !== 'environment' && binding.source !== 'secret') return;
 
@@ -46,6 +51,7 @@ function record(
     existing.required = existing.required || required;
     existing.usedByBaseUrl = existing.usedByBaseUrl || (options.usedByBaseUrl ?? false);
     existing.usedByAuth = existing.usedByAuth || (options.usedByAuth ?? false);
+    existing.usedByMcpAccess = existing.usedByMcpAccess || (options.usedByMcpAccess ?? false);
     if (options.usedByTool) existing.usedByToolCount += 1;
   } else {
     entries.set(binding.name, {
@@ -55,6 +61,7 @@ function record(
       usedByToolCount: options.usedByTool ? 1 : 0,
       usedByBaseUrl: options.usedByBaseUrl ?? false,
       usedByAuth: options.usedByAuth ?? false,
+      usedByMcpAccess: options.usedByMcpAccess ?? false,
     });
   }
 }
@@ -64,6 +71,12 @@ export function collectConfigEnvBindings(config: McpProjectConfig): readonly Con
   const entries = new Map<string, MutableEntry>();
 
   record(entries, config.api.baseUrl, { usedByBaseUrl: true });
+
+  if (config.mcpAccess && config.mcpAccess.mode === 'oauth2') {
+    record(entries, config.mcpAccess.issuer, { usedByMcpAccess: true });
+    record(entries, config.mcpAccess.resource, { usedByMcpAccess: true });
+    if (config.mcpAccess.jwksUri) record(entries, config.mcpAccess.jwksUri, { usedByMcpAccess: true });
+  }
 
   if (config.upstreamAuthentication) {
     for (const binding of Object.values(authBindingsOf(config.upstreamAuthentication))) {

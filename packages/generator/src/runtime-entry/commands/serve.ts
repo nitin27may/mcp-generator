@@ -1,7 +1,7 @@
 import process from 'node:process';
 import type { BindingResolutionContext } from '@mcpgen/binding-engine';
-import { serveToolsOverHttp, serveToolsOverStdio } from '@mcpgen/mcp-protocol';
-import { buildToolRegistry, validateStartupRequirements } from '@mcpgen/mcp-runtime';
+import { createMcpAccessGate, serveToolsOverHttp, serveToolsOverStdio, type McpAccessGate } from '@mcpgen/mcp-protocol';
+import { buildToolRegistry, checkAccessPosture, resolveMcpAccess, validateStartupRequirements } from '@mcpgen/mcp-runtime';
 import { createLogger } from '@mcpgen/redaction';
 import { EnvironmentSecretProvider, OAuthTokenProvider } from '@mcpgen/upstream-auth';
 import { loadProject } from '../load-project.js';
@@ -57,12 +57,43 @@ export async function runServe(configPath: string, manifestPath: string, options
     return waitForShutdown(logger, () => handle.close());
   }
 
+  // Plane A (ADR-0005), identical discipline to apps/cli's serve command: resolved and
+  // constructed before the port opens, so a misconfigured authorization server fails with
+  // nothing listening rather than leaving an endpoint up in an unknown state.
+  const accessResolution = await resolveMcpAccess(config, ctx);
+  for (const diagnostic of accessResolution.diagnostics) {
+    (diagnostic.severity === 'error' ? logger.error : logger.warn)(diagnostic.message, { code: diagnostic.code });
+  }
+  if (accessResolution.diagnostics.some((d) => d.severity === 'error')) return 1;
+  for (const diagnostic of checkAccessPosture(config, 'http', options.host)) {
+    logger.warn(diagnostic.message, { code: diagnostic.code });
+  }
+
+  let access: McpAccessGate | undefined;
+  if (accessResolution.access) {
+    try {
+      access = await createMcpAccessGate(accessResolution.access);
+    } catch (error) {
+      logger.error('mcpAccess configuration could not be initialised', {
+        code: 'AUT-001',
+        message: error instanceof Error ? error.message : String(error),
+      });
+      return 1;
+    }
+  }
+
   const handle = await serveToolsOverHttp(tools, serverInfo, {
     onError,
     ...(options.host ? { host: options.host } : {}),
     ...(options.port !== undefined ? { port: options.port } : {}),
+    ...(access ? { access } : {}),
   });
-  logger.info('serving', { tools: tools.length, transport: 'http', url: handle.url });
+  logger.info('serving', {
+    tools: tools.length,
+    transport: 'http',
+    url: handle.url,
+    authorization: access ? 'oauth2' : 'none',
+  });
   return waitForShutdown(logger, () => handle.close());
 }
 

@@ -16,7 +16,7 @@ function config(overrides: Partial<McpProjectConfig> = {}): McpProjectConfig {
 describe('buildEnvVarSummary', () => {
   it('includes the base URL as a required, non-sensitive entry', () => {
     const summary = buildEnvVarSummary(config());
-    expect(summary).toEqual([{ name: 'API_BASE_URL', sensitive: false, required: true, usedByToolCount: 0, usedByBaseUrl: true, usedByAuth: false }]);
+    expect(summary).toEqual([{ name: 'API_BASE_URL', sensitive: false, required: true, usedByToolCount: 0, usedByBaseUrl: true, usedByAuth: false, usedByMcpAccess: false }]);
   });
 
   it('marks secret bindings sensitive and implicitly required, regardless of an auth field explicit required flag', () => {

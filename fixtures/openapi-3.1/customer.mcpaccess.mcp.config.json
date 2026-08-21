@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0",
+  "project": {
+    "name": "customer-mcpaccess",
+    "description": "Both authentication planes at once (ADR-0005): OAuth2-protected MCP access inbound, a separate bearer credential outbound."
+  },
+  "api": {
+    "baseUrl": { "source": "environment", "name": "CUSTOMER_API_URL", "required": true }
+  },
+  "mcpAccess": {
+    "mode": "oauth2",
+    "issuer": { "source": "environment", "name": "MCP_ISSUER_URL", "required": true },
+    "resource": { "source": "environment", "name": "MCP_PUBLIC_URL", "required": true },
+    "dangerouslyAllowInsecureIssuer": true
+  },
+  "upstreamAuthentication": {
+    "type": "bearer",
+    "token": { "source": "secret", "name": "CUSTOMER_API_KEY" }
+  },
+  "tools": {
+    "get_customer": {
+      "enabled": true,
+      "sourceOperation": {
+        "internalOperationId": "getCustomer",
+        "method": "GET",
+        "path": "/customers/{customerId}",
+        "operationId": "getCustomer"
+      },
+      "name": "get_customer",
+      "description": "Fetch a customer by id",
+      "bindings": {
+        "customerId": { "source": "tool-input", "inputName": "customer_id" },
+        "expand": { "source": "tool-input", "inputName": "expand" }
+      },
+      "risk": "READ_ONLY"
+    }
+  },
+  "generation": {
+    "packageName": "@acme/customer-mcpaccess",
+    "binName": "customer-mcpaccess",
+    "version": "0.1.0",
+    "transports": ["http"],
+    "emitDockerfile": false,
+    "mode": "thin"
+  }
+}
