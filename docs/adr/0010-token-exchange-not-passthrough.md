@@ -3,7 +3,7 @@
 - **Status:** Accepted — **MANDATORY** (security invariant)
 - **Date:** 2026-08-21
 - **Amends:** [ADR-0005](0005-separate-auth-planes.md), which this narrows rather than overturns
-- **Relates to:** TIP §18, §19 · BRD `FR-AUTH-UP-003` · [R11](../RISKS.md), [R14](../RISKS.md)
+- **Relates to:** TIP §18, §19 · BRD `FR-AUTH-UP-003` · [R11](https://github.com/nitin27may/mcp-generator/blob/main/docs/RISKS.md), [R14](https://github.com/nitin27may/mcp-generator/blob/main/docs/RISKS.md)
 
 ## Context
 

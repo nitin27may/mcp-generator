@@ -102,7 +102,7 @@ package that owns it:
 
 ## The rules that are actually enforced
 
-Eight boundaries are checked by [`tooling/scripts/boundaries.mjs`](../tooling/scripts/boundaries.mjs)
+Eight boundaries are checked by [`tooling/scripts/boundaries.mjs`](https://github.com/nitin27may/mcp-generator/blob/main/tooling/scripts/boundaries.mjs)
 on every push — against both declared dependencies *and* actual import statements, because a
 transitive import bypasses a manifest check and a phantom dependency bypasses an import check.
 
@@ -133,7 +133,7 @@ from importing `mcp-protocol` so the two cannot be confused by accident
 ([ADR-0005](adr/0005-separate-auth-planes.md), [ADR-0010](adr/0010-token-exchange-not-passthrough.md)).
 
 See [`OAUTH.md`](OAUTH.md) for how they work, and
-[`examples/oauth-sandbox/`](../examples/oauth-sandbox/) for a running demonstration.
+[`examples/oauth-sandbox/`](https://github.com/nitin27may/mcp-generator/tree/main/examples/oauth-sandbox/) for a running demonstration.
 
 ## Testing
 
@@ -155,6 +155,6 @@ bytes on the wire, so those suites run real processes rather than mocks.
 ## Reading further
 
 - [`CONFIG.md`](CONFIG.md) — the artifact all of this produces
-- [`adr/`](adr/) — ten decision records; eight are mandatory
-- [`TECHNICAL-PLAN.md`](TECHNICAL-PLAN.md) — the full engineering record (long)
-- [`RISKS.md`](RISKS.md) — the maintained risk register
+- [`adr/`](adr/index.md) — ten decision records; eight are mandatory
+- [`TECHNICAL-PLAN.md`](https://github.com/nitin27may/mcp-generator/blob/main/docs/TECHNICAL-PLAN.md) — the full engineering record (long)
+- [`RISKS.md`](https://github.com/nitin27may/mcp-generator/blob/main/docs/RISKS.md) — the maintained risk register

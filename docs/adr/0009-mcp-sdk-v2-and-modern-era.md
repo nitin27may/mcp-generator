@@ -4,7 +4,7 @@
 - **Date:** 2026-08-17
 - **Supersedes:** the open question OQ-01, which is dissolved rather than resolved
 - **Relates to:** [ADR-0004](0004-mcp-protocol-isolated-behind-adapter.md) · TIP §2, §24, §25, §26, §27, §92
-- **Evidence:** [`docs/research/sdk-v2-api-notes.md`](../research/sdk-v2-api-notes.md) — verified 2026-08-17
+- **Evidence:** [`docs/research/sdk-v2-api-notes.md`](https://github.com/nitin27may/mcp-generator/blob/main/docs/research/sdk-v2-api-notes.md) — verified 2026-08-17
 
 ## Context
 

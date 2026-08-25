@@ -4,6 +4,7 @@
 
 > Import OpenAPI. Configure once. Run MCP anywhere.
 
+[![Docs](https://img.shields.io/badge/docs-nitinksingh.com-0f766e)](https://nitinksingh.com/mcp-generator/)
 [![MCP](https://img.shields.io/badge/MCP-2026--07--28-0f766e)](docs/adr/0009-mcp-sdk-v2-and-modern-era.md)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-2.0%20%7C%203.0%20%7C%203.1-c2410c)](docs/BRD.md#102-openapi-import)
 [![Node](https://img.shields.io/badge/node-22%20LTS-15803d)](docs/README.md)

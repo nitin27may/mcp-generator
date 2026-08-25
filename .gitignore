@@ -60,3 +60,7 @@ yarn-error.log*
 # dev and build modes (.next/dev/types vs .next/types), so committing it guarantees a
 # permanently dirty working tree. Every entry point that needs it regenerates it.
 apps/web/next-env.d.ts
+
+# Docs site build (mkdocs)
+.venv-docs/
+site/

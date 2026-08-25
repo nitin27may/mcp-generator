@@ -167,7 +167,7 @@ every push.
 
 ## Try it
 
-[`examples/oauth-sandbox/`](../examples/oauth-sandbox/) runs the whole thing on loopback:
+[`examples/oauth-sandbox/`](https://github.com/nitin27may/mcp-generator/tree/main/examples/oauth-sandbox/) runs the whole thing on loopback:
 Keycloak, a protected Orders API, a classic SSO page for comparison, and the generated MCP
 server.
 

@@ -100,7 +100,7 @@ Exit `1` if any error diagnostic is emitted.
 On a fresh clone with no deployment variables set this reports `BND-005` and `AUT-001` — an
 unresolved base URL and a missing credential. **That is the expected result**, and catching
 exactly that before `serve` starts is what the command is for. See
-[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md#startup-and-credentials--aut-bnd-005-sec).
+[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md#startup-and-credentials--aut--bnd-005-sec-).
 
 ## `serve`
 

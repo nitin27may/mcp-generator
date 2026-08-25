@@ -28,7 +28,7 @@ instead of validating as "no scopes required".
 ```
 
 The schema is generated from the same zod definitions the CLI validates against
-([`schemas/mcp.config.schema.json`](../schemas/mcp.config.schema.json), also shipped inside
+([`schemas/mcp.config.schema.json`](https://github.com/nitin27may/mcp-generator/blob/main/schemas/mcp.config.schema.json), also shipped inside
 the npm package), and a test fails if the two ever diverge. `$schema` is the one otherwise
 unknown key the config accepts, precisely so it can be referenced.
 

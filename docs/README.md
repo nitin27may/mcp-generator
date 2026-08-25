@@ -1,5 +1,9 @@
 # Documentation index
 
+The public pages here are published as a searchable site at
+**<https://nitinksingh.com/mcp-generator/>**. The engineering record below
+(BRD, technical plan, risks, research) is deliberately not part of that site.
+
 The root [`README.md`](../README.md) covers installing and using `mcpgen`.
 
 ## Using it

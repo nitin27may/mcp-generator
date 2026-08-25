@@ -1,7 +1,7 @@
 # Contributing
 
 Building from source and running the pieces locally. If you only want to *use* `mcpgen`, see the
-root [`README.md`](../README.md) instead — this file is for working on the repo itself.
+root [`README.md`](https://github.com/nitin27may/mcp-generator/blob/main/README.md) instead — this file is for working on the repo itself.
 
 ## Setup
 
@@ -78,7 +78,7 @@ Actions OIDC, so the first real publish waits on that regardless.
 ## Changelog
 
 Any user-visible change — a new flag, a changed default, a new diagnostic code, a fixed bug
-someone could have hit — needs an entry under `## [Unreleased]` in [`../CHANGELOG.md`](../CHANGELOG.md),
+someone could have hit — needs an entry under `## [Unreleased]` in [`../CHANGELOG.md`](https://github.com/nitin27may/mcp-generator/blob/main/CHANGELOG.md),
 in the same pull request. Reconstructing one at release time means guessing what mattered.
 
 Internal refactors, test-only changes and documentation fixes do not need an entry.
@@ -91,4 +91,4 @@ pnpm --filter @mcpgen/web dev
 
 Projects are stored under an ephemeral, disk-backed workspace (`MCPGEN_WORKSPACE_ROOT`, default
 `$TMPDIR/mcpgen-workspace`) — no accounts, no database. The full environment variable list is in
-[`apps/web/src/server/env.ts`](../apps/web/src/server/env.ts).
+[`apps/web/src/server/env.ts`](https://github.com/nitin27may/mcp-generator/blob/main/apps/web/src/server/env.ts).

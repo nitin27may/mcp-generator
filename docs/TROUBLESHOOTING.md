@@ -64,7 +64,7 @@ Either the file is not where you said it was, is not valid JSON, or does not mat
 schema. Unknown keys are a hard error rather than being ignored, so a typo like
 `requiredScope` for `requiredScopes` lands here rather than silently doing nothing.
 
-Point your editor at [`schemas/mcp.config.schema.json`](../schemas/mcp.config.schema.json)
+Point your editor at [`schemas/mcp.config.schema.json`](https://github.com/nitin27may/mcp-generator/blob/main/schemas/mcp.config.schema.json)
 via a `$schema` key and most of these become visible before you run anything — see
 [`CONFIG.md`](CONFIG.md#editor-support).
 
@@ -215,6 +215,6 @@ and projects expire on a TTL. Do not expose it beyond localhost.
 
 - [`CONFIG.md`](CONFIG.md) — every config field
 - [`OAUTH.md`](OAUTH.md) — both authentication planes, with a runnable sandbox
-- [`examples/oauth-sandbox/`](../examples/oauth-sandbox/) — a working stack to compare against
+- [`examples/oauth-sandbox/`](https://github.com/nitin27may/mcp-generator/tree/main/examples/oauth-sandbox/) — a working stack to compare against
 - Open an issue with the exit code, the diagnostic codes, and a minimal spec fragment —
   **never** a real credential or internal hostname.
