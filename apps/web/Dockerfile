@@ -15,7 +15,7 @@
 # (e.g. building on Debian, running on Alpine/musl) is exactly the kind of thing that builds
 # clean and fails silently at runtime.
 
-FROM node:22-bookworm-slim AS base
+FROM node:25-bookworm-slim AS base
 RUN corepack enable
 WORKDIR /app
 
