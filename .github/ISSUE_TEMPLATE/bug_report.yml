@@ -1,0 +1,84 @@
+name: Bug report
+description: Something behaved differently from what the documentation says
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, a quick check: several behaviours look like bugs and are not — `validate`
+        reporting `BND-005` on a fresh clone, a `DELETE` staying disabled after
+        `--enable-read-only`, `init` ignoring an `authorizationCode` flow. All are covered in
+        [TROUBLESHOOTING.md](https://github.com/nitin27may/mcp-generator/blob/main/docs/TROUBLESHOOTING.md).
+
+  - type: checkboxes
+    id: no-secrets
+    attributes:
+      label: Credentials
+      options:
+        - label: This report contains no real tokens, keys, passwords or internal hostnames
+          required: true
+
+  - type: checkboxes
+    id: not-security
+    attributes:
+      label: Not a vulnerability
+      description: Security issues go through private reporting, not a public issue.
+      options:
+        - label: This is not a security vulnerability (see SECURITY.md)
+          required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where
+      options: [CLI, Web wizard, Generated package, Both CLI and wizard, Not sure]
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Output of `mcpgen --version`, or the commit SHA if running from source.
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Node version and OS
+      placeholder: Node 22.11.0, Ubuntu 24.04
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: What you ran
+      description: The exact command or the steps through the wizard.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: What happened
+      description: Full output including the exit code and any diagnostic codes (`AUT-001`, `BND-005`, …).
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: spec
+    attributes:
+      label: Minimal reproducing spec or config
+      description: The smallest fragment that shows the problem. Redact anything private.
+      render: json

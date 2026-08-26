@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/nitin27may/mcp-generator/security/advisories/new
+    about: Report privately. Never in a public issue, and never with a real credential.
+  - name: Documentation
+    url: https://github.com/nitin27may/mcp-generator/blob/main/docs/README.md
+    about: Config reference, CLI reference, OAuth guide, troubleshooting.
+  - name: Is it meant to do that?
+    url: https://github.com/nitin27may/mcp-generator/blob/main/docs/TROUBLESHOOTING.md
+    about: Several expected behaviours look like bugs. Worth a read first.

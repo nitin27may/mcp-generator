@@ -1,7 +1,54 @@
 # Public-launch readiness plan (groundwork, not the flip)
 
 **Created:** 2026-08-20
-**Status:** groundwork in progress — visibility flip is a separate, later, manual step
+**Last updated:** 2026-08-21
+**Status:** groundwork complete except for the owner-only steps. Everything automatable is
+done and merged; what remains needs repository-owner access.
+
+---
+
+## Progress as of 2026-08-21
+
+Merged to `main` in seven pull requests:
+
+| # | What | Note |
+|---|---|---|
+| 1 | CI made able to pass | **First green run in this repo's history.** Four separate causes, none of them product bugs |
+| 2 | OAuth Plane A (`P6-W23-E01`) | The server is now an OAuth 2.0 Resource Server |
+| 3 | Plane B token exchange (ADR-0010) | Acting as the caller, without forwarding their token |
+| 4 | OAuth sandbox | Keycloak + protected API + SSO demo — **this closes U3** |
+| 5 | Web UI responsive + dark mode | 787px of horizontal overflow at 375px → 0 |
+| 6 | Documentation | Config reference, CLI, OAuth, architecture, troubleshooting, JSON Schema |
+| 7 | Community health + release workflow | SECURITY.md, templates, dependabot, release.yml |
+
+Test counts: unit/golden 606 → **641**, security 32 → **58**, protocol E2E 39 → **46**,
+Playwright 26 → **44**.
+
+### Why CI had never passed
+
+The billing explanation was stale — billing was already fixed and the last run on `main`
+executed for real. `protocol E2E` passed; the other three failed on their own merits:
+
+1. `security` and `web-e2e` never ran `pnpm build`, so two packages had no `dist/`.
+2. `apps/web` typechecked before `next typegen`, so the generated `RouteContext` global did
+   not exist. This passed locally *only* because a stale `.next` was present.
+3. The secret-literal scan **had never once executed** — the step before it always failed
+   first — and matched 20+ legitimate test sentinels, so it could never have passed.
+4. Two TypeScript majors in one workspace.
+
+### What running against a real identity provider found
+
+Three defects the in-repo fixture IdP structurally could not surface:
+
+- The audience check understood **only URLs**. Keycloak mints a client id, Entra ID mints
+  `api://<guid>`, Auth0 mints an API identifier — Plane A would have rejected every token
+  from every real enterprise IdP. Tests passed because our own fixture minted URLs.
+- `resource` was doing two jobs: the RFC 9728 discovery URL and the audience to compare.
+  Now separate fields.
+- Keycloak emits no `aud` at all without explicit audience mappers, and declaring
+  `clientScopes` in a realm export silently replaces the built-in set.
+
+---
 
 This is the checklist for taking this repo from private to public properly — real fixes, not a claim of readiness. Pull this file on any machine to resume exactly where the work left off. Update the checkboxes as items land; don't delete finished sections, so the history of what was verified stays in the repo.
 
@@ -11,9 +58,9 @@ This is the checklist for taking this repo from private to public properly — r
 
 ## Owner-only prerequisites (not automatable — start these in parallel with everything else)
 
-- [ ] **U1 — Fix GitHub Actions billing** on the account (failed payment / spending limit). All CI runs on `main` have failed on this billing block, never on code — there is currently **zero verified CI signal** on any job. This blocks: required status checks, Dependabot enablement, the release workflow, the CI badge, and the flip itself.
+- [x] **U1 — GitHub Actions billing** — resolved. CI has been green on every PR since #1; the original diagnosis (a billing block) was already stale when this plan was written.
 - [ ] **U2 — npm account prep**: a token scoped to `@nitin27may/*`, with 2FA set to "auth and publish" (a bare "auth and writes only" token cannot publish). Only needed for Phase 5 (post-flip), not the flip itself.
-- [ ] **U3 — Manually verify the delegated/OAuth token authorization flow end-to-end.** Status unknown as of this plan — never confirmed whether this was actually exercised against a real upstream. This project's entire value proposition is governed credential access (see ADR-0005's two auth planes, `packages/upstream-auth`), so an unverified auth path is a real risk, not a nice-to-have. Test: token acquisition, delegation/on-behalf-of flow if applicable, an actual upstream call using the resulting token, and confirm no token or secret ever surfaces in logs/config/MCP tool responses (cross-check against `packages/redaction`). Use a real OAuth/delegated-token upstream, not just the sentinel fixtures in `*.test.ts`. **If already tested and working, check this box and add a one-line note of what was verified and when. If not, this is a hard gate on the flip — do not skip it.**
+- [x] **U3 — Delegated/OAuth flow verified end to end against Keycloak 26** (2026-08-21). Transcript in `examples/oauth-sandbox/README.md`. The proof is a pair of observations: Alice's token is refused by the Orders API directly, yet her tool call succeeds and returns only her own orders — so a different token reached the upstream. Permanent coverage: `token-passthrough.test.ts`, `token-exchange-delegation.test.ts`, `mcp-access.test.ts`, `serve-http-access.test.ts`.
 
 **Standing rule for every PR below:** don't claim "CI passing" anywhere (PR description, README, badge) until a real green run has been observed on the Actions tab. Until U1 is fixed, the only defensible claim is "the verification chain in `docs/CONTRIBUTING.md` passes locally."
 
@@ -36,8 +83,8 @@ This is the checklist for taking this repo from private to public properly — r
 
 ## Phase 1 — Documentation truth pass (no dependencies, start immediately)
 
-- [ ] **README.md**: add a "Project status" section (pre-release, not yet on npm, install-from-source works fully today) and a "Known limitations" section (list below). Remove the parenthetical "not yet published to the registry" in favor of the status section.
-- [ ] **`docs/CONTRIBUTING.md`**: rewrite "Publishing to npm — TODO, not yet live" → "Publishing to npm" with a short "not yet live" first line; keep the 3 real prerequisites; drop the sentence disclosing exhausted Actions credit (billing status shouldn't be public).
+- [x] **README.md** — Project status and Known limitations sections added; the OpenAPI 3.2 badge corrected to match what is actually supported.
+- [x] **`docs/CONTRIBUTING.md`** — npm section rewritten, the sentence disclosing exhausted Actions credit removed, and the changelog-entry rule added.
 - [ ] **`docs/BRD.md`**:
   - Close **OQ-02** (npm scope) — reality already decided: `@nitin27may/mcpgen` is the published name, `@mcpgen/*` stays private forever. Leaving it "Open" contradicts the shipped manifest.
   - Resolve or reframe **OQ-03** (which readiness rules are open-source vs. commercial — currently frames the core rule set as a possible future "moat"). Recommended answer: all 30 deterministic rules in this repo are MIT and stay MIT; any future commercial offering would be hosting/collaboration, not rule withholding. This is the single line most likely to be quoted by someone deciding whether to build on this project — don't leave it as-is.
@@ -56,24 +103,24 @@ This is the checklist for taking this repo from private to public properly — r
 
 Voice: match the existing README/CONTRIBUTING tone — direct, second person, cites real ADRs/file paths, no marketing filler, no emoji.
 
-- [ ] **`SECURITY.md`** (repo root). Intro tying the policy to ADR-0006; reporting instructions (GitHub private vulnerability reporting primary, `nitin27may@gmail.com` fallback; no public issues, no real credentials in reports); response-time targets (ack 3 days, triage 7 days, fix 30 days for critical/high, coordinated disclosure 90 days, best-effort/single maintainer); supported versions (pre-1.0, `main` only); **in-scope**: secret leakage anywhere (config/generated package/logs/traces/MCP responses), spec-import SSRF, generation-time injection (path traversal, zip-slip, header/URL injection), governance bypass (privileged op callable without being enabled, retry on a destructive op, risk-classification evasion), MCP transport issues (DNS rebinding, token audience confusion, upstream-token passthrough across auth planes), web-wizard path/workspace escape; **out-of-scope**: bugs in the imported API itself, consequences of deliberately enabling a destructive tool, secrets the user put in their own shell/dotenv, exposing the wizard beyond localhost (no auth by design), third-party dependency CVEs (report upstream); what already guards these (ADR-0006, `packages/redaction`, safe-fetch/IP blocklist, CI secret-grep gate); safe-harbor line. Verify the "no accounts, no auth" and per-project isolation claims against `apps/web/src/server/env.ts` before merging.
-- [ ] **`CHANGELOG.md`** (Keep a Changelog + SemVer). Don't reconstruct 3 days of private commit history — note that pre-first-release history isn't itemized since nothing was ever published; `git log` has the detail. Pre-1.0 note: compatibility contract is `mcp.config.json`'s `schemaVersion` (currently "1.0"), not the CLI version; flags/rule IDs may change in a 0.x minor. `## [Unreleased]` section listing the shipped surface at feature altitude, plus a "Known limitations" pointer to the README section. First real section becomes `## [0.1.0] - <date>` at publish time. Add a line to CONTRIBUTING: user-visible changes need an `[Unreleased]` entry in the same PR.
-- [ ] **`.github/ISSUE_TEMPLATE/`** — YAML forms (required-field enforcement matters here since a bad report might contain a real credential):
+- [x] **`SECURITY.md`** — written. The "no accounts, no authentication" claim was verified against `apps/web/src/server/env.ts` and the route handlers before being written down.
+- [x] **`CHANGELOG.md`** — written (Keep a Changelog + SemVer), with the pre-1.0 note that `schemaVersion` is the compatibility contract, not the CLI version.
+- [x] **`.github/ISSUE_TEMPLATE/`** — four YAML forms, both required credential checkboxes, blank issues disabled.
   - `config.yml` — blank issues disabled; contact links to private security reporting, `docs/README.md`, `docs/BRD.md#36-non-goals-by-release`.
   - `bug_report.yml` — surface dropdown, install path, version/SHA, Node version, OS, exact command, exit code, output, diagnostic codes, minimal spec fragment, **required checkbox: no credentials/tokens/internal hostnames in this report**, required checkbox: not a security vulnerability (pointer to SECURITY.md).
   - `spec_compat.yml` — "an OpenAPI document mcpgen handles wrong": OAS version, minimal reproducing spec, which stage misbehaved, actual vs. expected output.
   - `feature_request.yml` — problem before proposal; required field: which requirement/ADR this touches, or confirmation it's not a listed non-goal.
-- [ ] **`.github/PULL_REQUEST_TEMPLATE.md`** — mirrors the real verification chain: what/why, WBS task ID (N/A allowed), checklist running `pnpm lint && build && test && test:integration && test:security` (+ Playwright if `apps/web` touched, + `lint:boundaries`) with the outcome pasted in, not just ticked; ADR-compliance checkbox; no-new-secret-literal checkbox; golden-snapshot checkbox; changelog-entry checkbox.
-- [ ] **`CODE_OF_CONDUCT.md`** — Contributor Covenant 2.1 verbatim, enforcement contact `nitin27may@gmail.com`. (The one file where boilerplate is correct.)
-- [ ] **`.github/CODEOWNERS`** — one line: `* @nitin27may`.
+- [x] **`.github/PULL_REQUEST_TEMPLATE.md`** — mirrors the real verification chain and asks for pasted output rather than ticked boxes.
+- [x] **`CODE_OF_CONDUCT.md`** — Contributor Covenant 2.1 verbatim.
+- [x] **`.github/CODEOWNERS`** — one line.
 
 ## Phase 3 — Repo configuration
 
-- [ ] **`.github/dependabot.yml`** — commit now, **enable only after U1 is fixed** (a first-week flood of update PRs against metered Actions is a bill, not a benefit yet). npm ecosystem at `/` (pnpm workspace), grouped (dev-tooling, next-and-react, minor-and-patch), weekly. GitHub Actions ecosystem, weekly. Docker ecosystem for `apps/web` (confirm Dockerfile path). **Explicitly ignore `@modelcontextprotocol/*`** — pinned exact per ADR-0009/`docs/research/sdk-v2-api-notes.md`, and `docs/RISKS.md` already documents an incident (R12) caused by a wrong version read from this exact package family. Bump these manually, with wire-level re-verification, never on a bot's schedule.
+- [x] **`.github/dependabot.yml`** — committed with `@modelcontextprotocol/*` explicitly ignored (ADR-0009, R12). Enable in the UI when ready.
 - [ ] **Branch ruleset on `main`** (repository ruleset, not legacy branch protection), bypass = repository admin while solo:
   - **Stage A (do now, safe with CI broken)**: block force-pushes and deletions, require linear history, require PR before merge with **0 required approvals**, require conversation resolution.
   - **Stage B (only after the first real green CI run)**: add required status checks for the 4 CI jobs, require branches up to date. Don't add required checks while billing is broken — blocked runs never report a conclusion and every PR hangs forever.
-- [ ] **Full git-history secret scan** — CI's `security` job only scans the working tree; history becomes public at the flip too and has never been scanned. Cheap, non-optional, hard gate on the flip.
+- [x] **Full git-history secret scan** — 857 blobs across 1682 objects. No real credentials. All 8 matches were historical versions of test sentinels since renamed, or a regex false positive on a TypeScript ternary (`? 'secret' : 'environment'`).
 - [ ] **Repo settings (UI, no PR)**: secret scanning + push protection on; private vulnerability reporting on; Dependabot alerts on (security updates on once billing fixed); Actions → require approval for all external contributors; Wiki off; Discussions off initially; description/topics/homepage set (README already lists the topic set to paste); squash-merge only, auto-delete head branches.
 
 ## Phase 4 — The flip
@@ -83,7 +130,7 @@ Gated on: all Phase 1–3 items, U1, **U3 (hard gate)**, and one real green CI r
 ## Phase 5 — Post-flip (deliberately deferred, not part of this groundwork)
 
 - [ ] **npm publish decision: defer v0.1.0 until after the flip.** npm provenance requires a public repo + GitHub Actions OIDC — unobtainable pre-flip. `apps/cli/publish/package.template.json` already points `homepage`/`repository`/`bugs` at the GitHub repo, so publishing while private would ship 404 links on the npm package page. No name-squatting risk (`@nitin27may` is the maintainer's own scope). Don't publish an interim `0.0.1` — go straight to `0.1.0` from CI with provenance.
-- [ ] `.github/workflows/release.yml` (workflow_dispatch, `NPM_TOKEN`, `id-token: write` for provenance) — call `scripts/release.sh` rather than reimplementing release logic in YAML.
+- [x] `.github/workflows/release.yml` — written; `workflow_dispatch` only, requests `id-token: write` at job level, and calls `scripts/release.sh` rather than reimplementing it.
 - [ ] v0.1.0 publish + git tag + GitHub Release + `CHANGELOG.md` 0.1.0 section + README install-section switch (source → `npx @nitin27may/mcpgen`).
 - [ ] README screenshots / the two orphaned hero images / demo GIF.
 - [ ] Coverage thresholds in `vitest.config.ts`, CodeQL / OpenSSF Scorecard.
@@ -139,3 +186,48 @@ Phases 1–2 have no dependency on U1/U2/U3 and should start immediately regardl
 - Phase 3: `gh api` check that the ruleset applied as expected on `main`; confirm `dependabot.yml` is valid.
 - U3: document the manual test transcript/notes of the OAuth/delegated-token flow, referenced from the README's Known limitations line.
 - Full git-history secret scan: run before Phase 4, not after.
+
+
+---
+
+## What is left, and who can do it
+
+Everything below needs repository-owner access. Nothing else is blocking.
+
+### Owner-only, before the flip
+
+- [ ] **Repository settings** (UI): secret scanning + push protection on; private vulnerability
+      reporting on; Dependabot alerts on; Actions → require approval for external contributors;
+      Wiki off; Discussions off initially; description, topics and homepage set; squash-merge
+      only; auto-delete head branches.
+- [ ] **Branch ruleset on `main`**: block force-push and deletion, require linear history,
+      require a PR, require conversation resolution, then add the four required status checks.
+      **The check names contain U+00B7** — `lint · typecheck · build · test`, `security suite`,
+      `protocol E2E`, `web wizard E2E + accessibility` — and must match byte-exact.
+- [ ] **Enable Dependabot** once the ruleset is in place.
+
+### The flip
+
+- [ ] **Make the repository public.** Manual, deliberate, and gated on everything above.
+
+### After the flip
+
+- [ ] **U2 — npm account**: a granular token scoped to `@nitin27may/*`, 2FA set to
+      **"auth and publish"** (a bare "auth and writes only" token cannot publish). Add it as
+      the `NPM_TOKEN` repository secret.
+- [ ] **Publish v0.1.0** via the Release workflow — `--dry-run` first, then for real.
+      Provenance requires a public repo plus Actions OIDC, so this **must** follow the flip or
+      0.1.0 loses provenance permanently.
+- [ ] **Switch the README install section** from source to `npx @nitin27may/mcpgen`, and add the
+      `0.1.0` section to `CHANGELOG.md`.
+
+### Deliberately still open
+
+- **`upstreamAuthentication.tokenUrl` is a plain string, not a binding**, so a config cannot
+  move between environments without editing. Documented as a known limitation in the README and
+  `docs/CONFIG.md`. Cheaper to change before 0.1.0 than after, since `schemaVersion` is the
+  published compatibility contract — but it is a deliberate decision, not an oversight.
+- **Coverage thresholds, CodeQL, OpenSSF Scorecard** — post-flip.
+- **`P1-W13-T01` cancellation propagation** — post-flip; disclosed as a known limitation.
+- **README screenshots / demo GIF** — the two hero images exist and are used by the web app but
+  not by the README.

@@ -1,0 +1,66 @@
+name: OpenAPI document handled wrong
+description: A spec that imports, converts or generates incorrectly
+labels: [bug, spec-compatibility]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when the problem is *your document* specifically — something valid that
+        `mcpgen` misreads, drops, or converts wrongly. These are the most useful reports the
+        project gets, because every one becomes a fixture.
+
+  - type: checkboxes
+    id: no-secrets
+    attributes:
+      label: Credentials
+      options:
+        - label: The spec fragment below contains no real credentials or internal hostnames
+          required: true
+
+  - type: dropdown
+    id: oas-version
+    attributes:
+      label: OpenAPI version
+      options: ['Swagger 2.0', 'OpenAPI 3.0', 'OpenAPI 3.1', 'OpenAPI 3.2', 'Not sure']
+    validations:
+      required: true
+
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Which stage misbehaved
+      options:
+        - Import or validation
+        - Schema normalization (the tool's input schema is wrong)
+        - Readiness analysis
+        - Risk classification
+        - Parameter binding
+        - Generation
+        - Running the generated server
+    validations:
+      required: true
+
+  - type: textarea
+    id: fragment
+    attributes:
+      label: Minimal reproducing fragment
+      description: The smallest self-contained document that shows it.
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What mcpgen produced
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What it should have produced, and why
+      description: A pointer to the relevant part of the OpenAPI or JSON Schema spec helps a lot.
+    validations:
+      required: true
