@@ -144,6 +144,11 @@ carrying the user's identity.
 Requires `mcpAccess.mode: "oauth2"` — without a verified caller there is nothing to exchange,
 and the server errors rather than quietly falling back to its own identity.
 
+Note the asymmetry in that example: `clientId` and `clientSecret` are bindings, but
+`tokenUrl` is a literal. It cannot currently be sourced from the environment, so a config
+that moves between environments needs `tokenUrl` edited per environment. Tracked as work
+in progress; see the project status section of the README.
+
 ### Why not an authorization-code flow upstream?
 
 Because a tool call is headless. There is no browser to redirect, no session to park a

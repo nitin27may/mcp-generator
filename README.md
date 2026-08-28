@@ -6,6 +6,7 @@
 
 [![Docs](https://img.shields.io/badge/docs-nitinksingh.com-0f766e)](https://nitinksingh.com/mcp-generator/)
 [![MCP](https://img.shields.io/badge/MCP-2026--07--28-0f766e)](docs/adr/0009-mcp-sdk-v2-and-modern-era.md)
+[![Upstream auth config](https://img.shields.io/badge/upstream%20auth%20config-work%20in%20progress-c2410c)](#project-status)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-2.0%20%7C%203.0%20%7C%203.1-c2410c)](docs/BRD.md#102-openapi-import)
 [![Node](https://img.shields.io/badge/node-22%20LTS-15803d)](docs/README.md)
 [![License](https://img.shields.io/badge/license-MIT-64748b)](LICENSE)
@@ -48,6 +49,13 @@ still change in a `0.x` release.
 
 Both authentication planes have been verified end to end against a real identity provider,
 not only against in-repo fixtures — see [`examples/oauth-sandbox/`](examples/oauth-sandbox/).
+
+> **Work in progress — upstream authentication configuration.** The auth planes themselves are
+> implemented and verified; what is still hardening is how upstream auth is *configured*.
+> `upstreamAuthentication.tokenUrl` is a plain string rather than an environment binding, and
+> auth is project-level only — no per-tag or per-operation override (`FR-AUTH-UP-004`). Practical
+> consequence today: one config cannot move between environments without editing `tokenUrl`.
+> Both land before 1.0.
 
 ### Known limitations
 
