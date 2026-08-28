@@ -28,6 +28,11 @@ OpenAPI / Swagger → Validation + Normalization → Agent Readiness Analysis �
     diagnostic codes may still change in a `0.x` release. The [project README](https://github.com/nitin27may/mcp-generator/blob/main/README.md)
     lists the known limitations in full, stated plainly.
 
+    **Upstream authentication configuration is work in progress.** The auth planes themselves are
+    implemented and verified end to end — what is still hardening is how upstream auth is
+    *configured*: `tokenUrl` cannot be sourced from the environment, and auth is project-level
+    only, with no per-tag or per-operation override. Both land before 1.0.
+
 ## What makes it different
 
 | | Basic generator | This platform |
