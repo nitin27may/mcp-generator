@@ -6,6 +6,6 @@
   "devDependencies": {
     "@mcpgen/config-schema": "workspace:*",
     "ajv": "^8.17.1",
-    "zod": "4.4.3"
+    "zod": "4.5.4"
   }
 }
