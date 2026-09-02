@@ -19,7 +19,7 @@
     "@mcpgen/readiness-engine": "workspace:*",
     "@mcpgen/risk-engine": "workspace:*",
     "@mcpgen/upstream-auth": "workspace:*",
-    "zod": "4.4.3"
+    "zod": "4.5.4"
   },
   "devDependencies": {
     "@types/node": "^22.19.0"
