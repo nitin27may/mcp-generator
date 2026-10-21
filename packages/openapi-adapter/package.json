@@ -15,10 +15,10 @@
   },
   "dependencies": {
     "@mcpgen/domain": "workspace:*",
-    "@scalar/openapi-parser": "0.28.14",
-    "@scalar/json-magic": "0.13.0"
+    "@scalar/openapi-parser": "0.29.14",
+    "@scalar/json-magic": "0.16.0"
   },
   "devDependencies": {
-    "@types/node": "^26.6.2"
+    "@types/node": "^26.6.5"
   }
 }

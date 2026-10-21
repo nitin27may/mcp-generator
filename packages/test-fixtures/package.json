@@ -27,9 +27,9 @@
     "@mcpgen/mcp-protocol": "workspace:*",
     "@mcpgen/openapi-adapter": "workspace:*",
     "@modelcontextprotocol/client": "2.0.0",
-    "@types/node": "^26.6.2"
+    "@types/node": "^26.6.5"
   },
   "dependencies": {
-    "jose": "6.2.9"
+    "jose": "6.2.12"
   }
 }
