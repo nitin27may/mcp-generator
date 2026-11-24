@@ -4,24 +4,31 @@
   "private": true,
   "type": "module",
   "description": "Shared request/response schemas and computeGates() for apps/web — the only piece of gating logic that legitimately runs both server- and client-side. Must never import react/next (contracts-pure, boundaries.mjs).",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@mcpgen/domain": "workspace:*",
     "@mcpgen/config-schema": "workspace:*",
+    "@mcpgen/domain": "workspace:*",
     "@mcpgen/readiness-engine": "workspace:*",
     "@mcpgen/risk-engine": "workspace:*",
     "@mcpgen/upstream-auth": "workspace:*",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
   },
   "devDependencies": {
-    "@types/node": "^26.6.2"
+    "@types/node": "^26.6.6"
   }
 }

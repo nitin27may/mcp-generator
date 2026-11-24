@@ -4,10 +4,17 @@
   "private": true,
   "type": "module",
   "description": "OpenAPI/Swagger -> CanonicalApi. The only package permitted to import @scalar/openapi-parser — ADR-0003.",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -15,10 +22,10 @@
   },
   "dependencies": {
     "@mcpgen/domain": "workspace:*",
-    "@scalar/openapi-parser": "0.28.14",
-    "@scalar/json-magic": "0.13.0"
+    "@scalar/json-magic": "0.22.0",
+    "@scalar/openapi-parser": "0.29.27"
   },
   "devDependencies": {
-    "@types/node": "^26.6.2"
+    "@types/node": "^26.6.6"
   }
 }

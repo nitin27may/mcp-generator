@@ -197,7 +197,8 @@ export async function createMcpAccessGate(
   const expectedAudience = config.audience ?? resourceUrl.href;
 
   const metadata = await discoverAuthorizationServer(issuer, fetchImpl);
-  const jwksUri = config.jwksUri ?? metadata.jwks_uri;
+  const discoveredJwksUri = typeof metadata.jwks_uri === 'string' ? metadata.jwks_uri : undefined;
+  const jwksUri = config.jwksUri ?? discoveredJwksUri;
   if (!jwksUri) {
     throw new Error(
       `authorization server "${issuer.href}" published no jwks_uri and none was configured — tokens cannot be verified`,

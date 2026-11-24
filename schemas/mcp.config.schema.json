@@ -48,16 +48,10 @@
                   "type": "boolean"
                 },
                 "defaultValue": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "boolean"
-                    }
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean"
                   ]
                 }
               },
@@ -75,19 +69,11 @@
                   "const": "static"
                 },
                 "value": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "boolean"
-                    },
-                    {
-                      "type": "null"
-                    }
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
                   ]
                 },
                 "sensitive": {
@@ -148,16 +134,10 @@
                       "type": "boolean"
                     },
                     "defaultValue": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean"
                       ]
                     }
                   },
@@ -175,19 +155,11 @@
                       "const": "static"
                     },
                     "value": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "sensitive": {
@@ -220,16 +192,10 @@
                       "type": "boolean"
                     },
                     "defaultValue": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean"
                       ]
                     }
                   },
@@ -247,19 +213,11 @@
                       "const": "static"
                     },
                     "value": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "sensitive": {
@@ -296,16 +254,10 @@
                       "type": "boolean"
                     },
                     "defaultValue": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean"
                       ]
                     }
                   },
@@ -323,19 +275,11 @@
                       "const": "static"
                     },
                     "value": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "sensitive": {
@@ -426,16 +370,10 @@
                       "type": "boolean"
                     },
                     "defaultValue": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean"
                       ]
                     }
                   },
@@ -478,19 +416,11 @@
                       "const": "static"
                     },
                     "value": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "sensitive": {
@@ -557,16 +487,10 @@
                       "type": "boolean"
                     },
                     "defaultValue": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean"
                       ]
                     }
                   },
@@ -609,19 +533,11 @@
                       "const": "static"
                     },
                     "value": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "sensitive": {
@@ -686,16 +602,10 @@
                       "type": "boolean"
                     },
                     "defaultValue": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean"
                       ]
                     }
                   },
@@ -738,19 +648,11 @@
                       "const": "static"
                     },
                     "value": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "sensitive": {
@@ -845,16 +747,10 @@
                       "type": "boolean"
                     },
                     "defaultValue": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean"
                       ]
                     }
                   },
@@ -897,19 +793,11 @@
                       "const": "static"
                     },
                     "value": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "sensitive": {
@@ -1012,16 +900,10 @@
                       "type": "boolean"
                     },
                     "defaultValue": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean"
                       ]
                     }
                   },
@@ -1064,19 +946,11 @@
                       "const": "static"
                     },
                     "value": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "sensitive": {
@@ -1225,16 +1099,10 @@
                       "type": "boolean"
                     },
                     "defaultValue": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean"
                       ]
                     }
                   },
@@ -1277,19 +1145,11 @@
                       "const": "static"
                     },
                     "value": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "sensitive": {
