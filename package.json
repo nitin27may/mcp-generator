@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/nitin27may/mcp-generator.git"
   },
-  "packageManager": "pnpm@11.22.0",
+  "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=22.11"
   },
