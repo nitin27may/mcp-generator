@@ -61,7 +61,7 @@ version of this side by side. It is the same shape, with the page playing the cl
 ## Prerequisites
 
 - Docker with Compose v2
-- Node.js ≥ 22.11 and `pnpm`, with this repo built once: `pnpm install && pnpm build` from the
+- Node.js ≥ 26 and `pnpm`, with this repo built once: `pnpm install && pnpm build` from the
   repo root
 - **Linux, or Docker Desktop with host networking enabled.** The Orders API and SSO demo use
   `network_mode: host` so that `localhost:8280` means the same thing inside the containers, in
