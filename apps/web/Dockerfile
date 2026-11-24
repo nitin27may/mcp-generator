@@ -17,7 +17,7 @@
 
 FROM node:26-bookworm-slim AS base
 # Node 25+ images no longer ship corepack; keep this version in step with `packageManager`.
-RUN npm install --global pnpm@10.33.0
+RUN npm install --global pnpm@11.22.0
 WORKDIR /app
 
 FROM base AS pruner

@@ -12,7 +12,7 @@ pnpm install
 pnpm build
 ```
 
-Requires Node.js ≥ 26 and pnpm 10.33 (pnpm switches to the version pinned in `packageManager` in the
+Requires Node.js ≥ 26 and pnpm 11.22 (pnpm switches to the version pinned in `packageManager` in the
 root `package.json`; Node 26 no longer bundles corepack, so install pnpm directly).
 
 ## Verification chain

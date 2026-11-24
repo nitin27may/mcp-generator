@@ -91,7 +91,7 @@ plus a generated, redistributable MCP server package.
 ### 1. Prerequisites
 
 - Node.js ≥ 26 (`engines.node` in the root `package.json`)
-- [pnpm](https://pnpm.io) 10.33 (`packageManager` in the root `package.json`; pnpm switches to the
+- [pnpm](https://pnpm.io) 11.22 (`packageManager` in the root `package.json`; pnpm switches to the
   pinned version automatically, and Node 26 no longer bundles corepack, so install pnpm directly)
 
 ### 2. Install and build

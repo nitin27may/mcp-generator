@@ -10,7 +10,7 @@ covers the invariants a change has to respect.
 
 ## Commands
 
-pnpm 10 + Turborepo. Node 26 LTS.
+pnpm 11 + Turborepo. Node 26 LTS.
 
 ```bash
 pnpm build            # turbo run build
