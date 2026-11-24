@@ -2,5 +2,5 @@ packages:
   - 'packages/*'
   - 'apps/*'
   - 'tooling/*'
-onlyBuiltDependencies:
-  - esbuild
+allowBuilds:
+  esbuild: true
