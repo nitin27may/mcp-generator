@@ -8,7 +8,7 @@
 [![MCP](https://img.shields.io/badge/MCP-2026--07--28-0f766e)](docs/adr/0009-mcp-sdk-v2-and-modern-era.md)
 [![Upstream auth config](https://img.shields.io/badge/upstream%20auth%20config-work%20in%20progress-c2410c)](#project-status)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-2.0%20%7C%203.0%20%7C%203.1-c2410c)](docs/BRD.md#102-openapi-import)
-[![Node](https://img.shields.io/badge/node-22%20LTS-15803d)](docs/README.md)
+[![Node](https://img.shields.io/badge/node-26%20LTS-15803d)](docs/README.md)
 [![License](https://img.shields.io/badge/license-MIT-64748b)](LICENSE)
 
 ## About
@@ -90,9 +90,9 @@ plus a generated, redistributable MCP server package.
 
 ### 1. Prerequisites
 
-- Node.js ≥ 22.11 (`engines.node` in the root `package.json`)
-- [pnpm](https://pnpm.io) 11.22 (`packageManager` in the root `package.json` — `corepack enable`
-  will pick up the pinned version automatically)
+- Node.js ≥ 26 (`engines.node` in the root `package.json`)
+- [pnpm](https://pnpm.io) 10.33 (`packageManager` in the root `package.json`; pnpm switches to the
+  pinned version automatically, and Node 26 no longer bundles corepack, so install pnpm directly)
 
 ### 2. Install and build
 
