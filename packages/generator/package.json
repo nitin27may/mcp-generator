@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Emits a self-contained, runnable MCP server package from a McpProjectConfig + its referenced operations (TIP \u00a729/\u00a730).",
+  "description": "Emits a self-contained, runnable MCP server package from a McpProjectConfig + its referenced operations (TIP §29/§30).",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -30,8 +30,8 @@
     "@mcpgen/upstream-auth": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^26.6.2",
     "@mcpgen/openapi-adapter": "workspace:*",
+    "@types/node": "^26.6.6",
     "esbuild": "0.28.2"
   }
 }

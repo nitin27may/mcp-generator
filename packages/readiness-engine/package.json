@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Deterministic agent-readiness analysis (TIP \u00a714, \u00a785). Must never depend on the SDK, the parser, or UI \u2014 ADR-0007.",
+  "description": "Deterministic agent-readiness analysis (TIP §14, §85). Must never depend on the SDK, the parser, or UI — ADR-0007.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -26,6 +26,6 @@
   },
   "devDependencies": {
     "@mcpgen/openapi-adapter": "workspace:*",
-    "@types/node": "^26.6.2"
+    "@types/node": "^26.6.6"
   }
 }

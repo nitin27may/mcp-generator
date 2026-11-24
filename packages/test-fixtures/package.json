@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Fixture HTTP API + protocol E2E harness for the P0 vertical slice (TIP \u00a782, \u00a769).",
+  "description": "Fixture HTTP API + protocol E2E harness for the P0 vertical slice (TIP §82, §69).",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -26,10 +26,10 @@
     "@mcpgen/generator": "workspace:*",
     "@mcpgen/mcp-protocol": "workspace:*",
     "@mcpgen/openapi-adapter": "workspace:*",
-    "@modelcontextprotocol/client": "2.0.0",
-    "@types/node": "^26.6.2"
+    "@modelcontextprotocol/client": "2.4.0",
+    "@types/node": "^26.6.6"
   },
   "dependencies": {
-    "jose": "6.2.9"
+    "jose": "6.2.18"
   }
 }

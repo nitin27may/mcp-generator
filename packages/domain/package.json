@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Canonical API model. Zero dependencies by design \u2014 see ADR-0003.",
+  "description": "Canonical API model. Zero dependencies by design — see ADR-0003.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -21,6 +21,6 @@
     "clean": "rm -rf dist .turbo"
   },
   "devDependencies": {
-    "@types/node": "^26.6.2"
+    "@types/node": "^26.6.6"
   }
 }

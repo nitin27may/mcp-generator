@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "ToolRegistry + startup sequence (TIP \u00a728, \u00a733): config load, verify secrets, validate tool refs, fail fast.",
+  "description": "ToolRegistry + startup sequence (TIP §28, §33): config load, verify secrets, validate tool refs, fail fast.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -31,6 +31,6 @@
   },
   "devDependencies": {
     "@mcpgen/openapi-adapter": "workspace:*",
-    "@types/node": "^26.6.2"
+    "@types/node": "^26.6.6"
   }
 }

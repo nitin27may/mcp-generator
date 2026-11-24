@@ -2,13 +2,15 @@ import type { Diagnostic } from '@mcpgen/domain';
 
 /** Scalar's own error shape (research notes §12) — kept internal, per ADR-0003. */
 export interface ScalarErrorObject {
-  readonly path?: string[];
+  readonly path?: string | string[] | undefined;
   readonly message: string;
-  readonly code?: string;
+  readonly code?: string | undefined;
 }
 
-function pointerFrom(path: string[] | undefined): string | undefined {
+function pointerFrom(path: string | string[] | undefined): string | undefined {
   if (!path || path.length === 0) return undefined;
+  // @scalar/openapi-parser 0.29 may report a single string instead of a segment list.
+  if (typeof path === 'string') return path.startsWith('#') ? path : `#${path.startsWith('/') ? '' : '/'}${path}`;
   return `#/${path.join('/')}`;
 }
 
